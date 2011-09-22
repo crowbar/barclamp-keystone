@@ -18,6 +18,8 @@ default[:openstack][:keystone][:debug]=true
 default[:openstack][:keystone][:user]="keystone"
 default[:openstack][:keystone][:uid]="505"
 default[:openstack][:keystone][:group]="nogroup"
+default[:openstack][:keystone][:seed_data]=true
+
 
 
 
