@@ -1,0 +1,2 @@
+This cookbook deployes the openstack common authentication and authorization server
+ 

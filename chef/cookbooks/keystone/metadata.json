@@ -1,0 +1,41 @@
+{
+  "replacing": {
+
+  },
+  "platforms": {
+
+  },
+  "license": "Apache 2.0 License, Copyright (c) 2011 Dell Inc. - http://www.apache.org/licenses/LICENSE-2.0",
+  "maintainer_email": "crowbar@Dell.com",
+  "groupings": {
+
+  },
+  "recommendations": {
+
+  },
+  "suggestions": {
+
+  },
+  "description": "Openstack Keystone server deployment recipes.",
+  "version": "1.0.0",
+  "conflicting": {
+
+  },
+  "attributes": {
+
+  },
+  "long_description": "This cookbook deployes the openstack common authentication and authorization server\r\n ",
+  "name": "keystone",
+  "recipes": {
+
+  },
+  "providing": {
+
+  },
+  "dependencies": {
+    "apt": [
+
+    ]
+  },
+  "maintainer": "Dell, Inc."
+}
