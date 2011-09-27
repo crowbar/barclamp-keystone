@@ -11,7 +11,7 @@
 		       "tenant" : "admin"
 	  },
 	  "admin" : {
-	  	  "username" : "amdin",
+	  	  "username" : "admin",
 		  "password":  "admin"
 	  }
     }

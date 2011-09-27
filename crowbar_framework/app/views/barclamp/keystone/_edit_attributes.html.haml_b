@@ -1,0 +1,24 @@
+
+%input#proposal_attributes{:type => "hidden", :name => "proposal_attributes", :value => @proposal.raw_data['attributes'][@proposal.barclamp].to_json}
+%p
+  %label{:for => "proposal_attributes"}= t('.attributes')
+  = link_to "Raw", proposal_barclamp_path(:id => @proposal.name, :controller => @proposal.barclamp, :dep_raw => @dep_raw, :attr_raw => true), :style => "float: right;"
+  %div.container
+    %p
+        %label{ :for => :username }= t('.username')
+        %input#username{:type => "text", :name => "username", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["dashboard"]["username"], :onchange => "update_value(''dashboard/username', 'username', 'string')"}
+    %p
+        %label{ :for => :tenant }= t('.tenant')
+        %input#tenant{:type => "text", :name => "tenant", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["dashboard"]["tenant"], :onchange => "update_value(''dashboard/tenant','tenant', 'string')"}
+    %p
+        %labbel{ :for => :token  }= t('.token')
+        %input#token{:type => "text", :name => "token", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["dashboard"]["long-lived-token"], :onchange => "update_value('dashboard/long-lived-token','long-lived-token','string')"}
+    %p
+        %label{ :for => :token_e  }= t('.token-expiration')
+        %input#token_e{:type => "text", :name => "expiration", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["dashboard"]["token-expiration"], :onchange => "update_value(''dashboard/token-expiration','expiration','string')"}
+    %p
+        %label{ :for => :ausername  }= t('.ausername')
+        %input#ausername{:type => "text", :name => "auser", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["admin"]["user"], :onchange => "update_value('admin/username','username', 'string')"}
+    %p
+        %label{ :for => :apass  }= t('.apass')
+        %input#apass{:type => "text", :name => "apass", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["admin"]["password"], :onchange => "update_value('admin/password','password', 'string')"}
