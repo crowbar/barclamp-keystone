@@ -1,0 +1,35 @@
+
+{
+  "id": "bc-template-keystone",
+  "description": "Centralized authentication and authorization service for OpenStack",
+  "attributes": {
+    "keystone": {
+	  "dashboard": {
+	  	       "long-lived-token":  "999888777666",
+		       "token-expiration":  "2015-02-05T00:00",
+		       "username": "admin",
+		       "tenant" : "admin"
+	  },
+	  "admin" : {
+	  	  "username" : "amdin",
+		  "password":  "admin"
+	  }
+    }
+  },
+  "deployment": {
+    "keystone": {
+      "crowbar-revision": 0,
+      "elements": {},
+      "element_order": [
+         ["keystone-server" ]       		           		     
+      ],
+      "config": {
+        "environment": "keystone-config-base",
+        "mode": "full",
+        "transitions": false,
+        "transition_list": []
+      }
+    }
+  }
+}
+
