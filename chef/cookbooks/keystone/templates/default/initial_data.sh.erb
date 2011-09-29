@@ -25,9 +25,9 @@ keystone-manage $* endpointTemplates add RegionOne swift http://<%= n%>:8080/v1/
 <% @nova_nodes.each { |n|  %>
 keystone-manage $* endpointTemplates add RegionOne nova_compat http://<%= n %>:8774/v1.0/ http://<%= n %>:8774/v1.0  http://<%= n %>:8774/v1.0 1 1
 keystone-manage $* endpointTemplates add RegionOne nova http://<%= n %>:8774/v1.1/%tenant_id% http://<%= n %>:8774/v1.1/%tenant_id%  http://<%= n %>:8774/v1.1/%tenant_id% 1 1
-%< } %>
+<% } %>
 
-<% @glance_nova_nodes.each { |n|  %>
+<% @glance_nodes.each { |n|  %>
 keystone-manage $* endpointTemplates add RegionOne glance http://<%= n  %>:9292/v1.1/%tenant_id% http://<%= n  %>:9292/v1.1/%tenant_id% http://<%= n  %>:9292/v1.1/%tenant_id% 1 1
 <% } %>
 

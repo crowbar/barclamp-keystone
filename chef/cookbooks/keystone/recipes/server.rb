@@ -20,7 +20,7 @@ end
 
 def nodes_addresses(nodes)
   result = []
-  nodes..each { |n|
+  nodes.each { |n|
     result << node_addr(n)
   }
 end
@@ -43,13 +43,13 @@ end
 
 
 cfg_name = node[:keystone][:config][:environment]
-nova_api_filter = "recipes:nova-api AND nova_config_environment: #{cfg_name}"
-swift_api_filter = "recipes:[swift-proxy TO swift-proxy-acct]  AND swift_config_environment: #{cfg_name}"
-glance_api_filter = "recipes:glance\:\:api AND glance_config_environment: #{cfg_name}"
+nova_api_filter = "recipes:nova-api AND nova_config_environment:#{cfg_name}"
+swift_api_filter = "recipes:[swift-proxy TO swift-proxy-acct]  AND swift_config_environment:#{cfg_name}"
+glance_api_filter = "recipes:glance\\:\\:api AND glance_config_environment:#{cfg_name}"
 
 nova_nodes = search(:node,nova_api_filter)
-swift_nodes = search(:node,nova_api_filter)
-glance_nodes = search(:node,nova_api_filter)
+swift_nodes = search(:node,swift_api_filter)
+glance_nodes = search(:node,glance_api_filter)
 
 nova_addrs = nodes_addresses(nova_nodes)
 swift_addrs = nodes_addresses(swift_nodes)
@@ -65,7 +65,7 @@ template "/home/keystone/initial_data.sh" do
   variables ( { :nova_addrs => nova_addrs, :swift_addrs => swift_addrs, :glance_addrs => glance_addrs, :keystone_addr => keystone_ip })
 end
 
-execute "initial data"
+execute "initial data" do
   command "home/keystone/initial_data.sh"
 end
 
