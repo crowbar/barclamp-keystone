@@ -57,16 +57,16 @@ glance_addrs = nodes_addresses(glance_nodes)
 
 keystone_ip = node_addr(node)
 
-template "/home/keystone/initial_data.sh" do
+template "/tmp/initial_data.sh" do
   source "initial_data.sh.erb"
-  mode "0644"
+  mode "0755"
   owner user
   group grp
   variables ( { :nova_addrs => nova_addrs, :swift_addrs => swift_addrs, :glance_addrs => glance_addrs, :keystone_addr => keystone_ip })
 end
 
 execute "initial data" do
-  command "home/keystone/initial_data.sh"
+  command "/tmp/initial_data.sh"
 end
 
 
