@@ -47,25 +47,17 @@ nova_api_filter = "recipes:nova\\:\\:api AND nova_config_environment:nova-config
 swift_api_filter = "recipes:swift\\:\\:proxy AND swift_config_environment:swift-config-#{cfg_name}"
 glance_api_filter = "recipes:glance\\:\\:api AND glance_config_environment:glance-config-#{cfg_name}"
 
-Chef::Log.fatal("GREG: glance_api_filter = #{glance_api_filter}")
-Chef::Log.fatal("GREG: swift_api_filter = #{swift_api_filter}")
-Chef::Log.fatal("GREG: nova_api_filter = #{nova_api_filter}")
-
 nova_nodes = search(:node,nova_api_filter)
 swift_nodes = search(:node,swift_api_filter)
 glance_nodes = search(:node,glance_api_filter)
-
-Chef::Log.fatal("GREG: glance_nodes = #{glance_nodes.nil? ? "NIL" : glance_nodes.inspect}")
-Chef::Log.fatal("GREG: swift_nodes = #{swift_nodes.nil? ? "NIL" : swift_nodes.inspect}")
-Chef::Log.fatal("GREG: nova_nodes = #{nova_nodes.nil? ? "NIL" : nova_nodes.inspect}")
 
 nova_addrs = nodes_addresses(nova_nodes)
 swift_addrs = nodes_addresses(swift_nodes)
 glance_addrs = nodes_addresses(glance_nodes)
 
-Chef::Log.fatal("GREG: glance_addrs = #{glance_addrs.nil? ? "NIL" : glance_addrs.inspect}")
-Chef::Log.fatal("GREG: swift_addrs = #{swift_addrs.nil? ? "NIL" : swift_addrs.inspect}")
-Chef::Log.fatal("GREG: nova_addrs = #{nova_addrs.nil? ? "NIL" : nova_addrs.inspect}")
+Chef::Log.debug("Keystone: glance_addrs = #{glance_addrs.nil? ? "NIL" : glance_addrs.inspect}")
+Chef::Log.debug("Keystone: swift_addrs = #{swift_addrs.nil? ? "NIL" : swift_addrs.inspect}")
+Chef::Log.debug("Keystone: nova_addrs = #{nova_addrs.nil? ? "NIL" : nova_addrs.inspect}")
 
 keystone_ip = node_addr(node)
 
