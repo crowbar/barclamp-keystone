@@ -18,16 +18,16 @@ def python_truth(v)
   v ? "True" : "False"
 end
 
-def nodes_addresses(nodes)
+def nodes_addresses(nodes, network)
   result = []
   nodes.each { |n|
-    result << node_addr(n)
+    result << node_addr(n, network)
   }
   result
 end
 
-def node_addr(n)
-  ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(n, "public").address
+def node_addr(n, network)
+  ip = Chef::Recipe::Barclamp::Inventory.get_network_by_type(n, network).address
   ip ||= Chef::Recipe::Barclamp::Inventory.get_network_by_type(n, "admin").address
   ip
 end
@@ -51,15 +51,15 @@ nova_nodes = search(:node,nova_api_filter)
 swift_nodes = search(:node,swift_api_filter)
 glance_nodes = search(:node,glance_api_filter)
 
-nova_addrs = nodes_addresses(nova_nodes)
-swift_addrs = nodes_addresses(swift_nodes)
-glance_addrs = nodes_addresses(glance_nodes)
+nova_addrs = nodes_addresses(nova_nodes, "public")
+swift_addrs = nodes_addresses(swift_nodes, "public")
+glance_addrs = nodes_addresses(glance_nodes, "admin")
 
 Chef::Log.debug("Keystone: glance_addrs = #{glance_addrs.nil? ? "NIL" : glance_addrs.inspect}")
 Chef::Log.debug("Keystone: swift_addrs = #{swift_addrs.nil? ? "NIL" : swift_addrs.inspect}")
 Chef::Log.debug("Keystone: nova_addrs = #{nova_addrs.nil? ? "NIL" : nova_addrs.inspect}")
 
-keystone_ip = node_addr(node)
+keystone_ip = node_addr(node, "public")
 
 execute "keystone initial data" do
   command "/tmp/initial_data.sh"
