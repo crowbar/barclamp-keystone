@@ -19,6 +19,8 @@ barclamp:
   name: keystone
   display: OpenStack Keystone 
   version: 0
+  member:
+    - openstack
 
 crowbar:
   layout: 1
