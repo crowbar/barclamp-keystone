@@ -31,8 +31,8 @@ class KeystoneService < ServiceObject
         "keystone-server" => [ nodes.first[:fqdn] ]
     } unless nodes.nil? or nodes.length ==0
 
-    rand_d = rand(100000)        
-    base[:attributes][:keystone][:dashboard][:"long-lived-token"] = "%x" % rand_d
+    rand_d = rand(100000000)        
+    base[:attributes][:keystone][:admin][:token] = "%x" % rand_d
 
     base
   end
