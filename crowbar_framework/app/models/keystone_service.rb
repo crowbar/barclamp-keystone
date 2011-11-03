@@ -32,7 +32,7 @@ class KeystoneService < ServiceObject
     } unless nodes.nil? or nodes.length ==0
 
     rand_d = rand(100000000)        
-    base[:attributes][:keystone][:admin][:token] = "%x" % rand_d
+    base[:attributes][:keystone][:admin][:token] = '%012d' % rand(1e12)
 
     base
   end
