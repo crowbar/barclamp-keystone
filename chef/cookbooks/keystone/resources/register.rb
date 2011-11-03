@@ -19,8 +19,8 @@
 
 actions :add_service, :add_endpoint_template
 
-attribute :host, :kind_of => string
-# attribute :port, :kind_of => string
-attribute :token, :kind_of => string
-attribute :service_name, :kind_of => string
-attribute :service_description, :kind_of => string
+attribute :host, :kind_of => String
+# attribute :port, :kind_of => String
+attribute :token, :kind_of => String
+attribute :service_name, :kind_of => String
+attribute :service_description, :kind_of => String
