@@ -71,22 +71,22 @@ elsif node[:keystone][:sql_engine] == "sqlite"
     sql_connection = "sqlite:////var/lib/keystone/keystone.db"
 end
 
-my_ipaddress = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
+# my_ipaddress = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
 
-debug = True
-verbose = True
+debug = true
+verbose = true
 
 template "/etc/keystone/keystone.conf" do
     source "keystone.conf.erb"
     mode "0644"
-    owner user
-    group grp
-    variables (
+    # owner user
+    # group grp
+    variables(
       :sql_connection => sql_connection,
       :debug => debug,
       :verbose => verbose
     )
-    notifies :restart, resources(:services => "keystone"), :immediately
+    notifies :restart, resources(:service => "keystone"), :immediately
 end
 
 # Create default tenant
@@ -105,7 +105,7 @@ end
 
 # Create admin token
 execute "Keystone: add <admin> user token" do
-  command "keystone-manage token add #{node[:keystone][:admin][:token]} #{node[:keystone][:admin][:username]} #{node[:keystone][:default][:tenant]} #{node[:keystone][:admin][:'token-expiration']"
+  command "keystone-manage token add #{node[:keystone][:admin][:token]} #{node[:keystone][:admin][:username]} #{node[:keystone][:default][:tenant]} #{node[:keystone][:admin]['token-expiration']}"
   action :run
   not_if "keystone-manage token list | grep #{node[:keystone][:admin][:token]}"
 end
@@ -137,5 +137,5 @@ execute "Keystone: grant Admin role to <admin> user for <default> tenant" do
   not_if "keystone-manage role list #{node[:keystone][:default][:tenant]}|grep Admin"
 end
 
-node[:keystone][:monitor][:svcs] <<["keystone-server"]
+#node[:keystone][:monitor][:svcs] <<["keystone-server"]
 node.save
