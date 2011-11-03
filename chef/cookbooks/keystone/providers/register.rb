@@ -17,38 +17,55 @@
 # limitations under the License.
 #
 
-include Opscode::Keystone::Register
-
 action :add_service do
-  # need to make sure not to add duplicates
-  path = 'v2.0/service/#{new_resource.service_name'
+  # Construct the http object
+  http = Net::HTTP.new(new_resource.host, 5001)
+
+  # Fill out the headers
   headers = {
     'X-Auth-Token' => new_resource.token,
     'Content-Type' => 'application/json'
   } 
-  resp, data = http.request_get(path,headers)
-  if resp == Net::HTTPOK
-    path = 'v2.0/service/'
-    data_obj = Hash.new
-    service_obj = Hash.new
-    service_obj.store("id", new_resource.service_name)
-    service_obj.store("description", new_resource.service_description)
-    data_obj.store("service", service_obj)
-    body = JSON.generate(data_obj)
-    resp, data = http.send_request('POST', path, body, headers)
+
+  # Construct the path
+  path = '/v2.0/service/'
+
+  # Lets verify that the service does not exist yet
+  resp, data = http.request_get(path + new_resource.service_name, headers)
+  if resp == Net::HTTPNotFound
+    # Service does not exist yet
+    body = _build_service_object(new_resource.service_name, new_resource.service_description) 
+    resp, data = http.send_request('POST', path, JSON.generate(body), headers)
     if resp == Net::HTTPOK
       Chef::Log.info("Created keystone service '#{new_resource.service_name}'")
+      new_resource.updated_by_last_action(true)
     else
       Chef::Log.error("Unable to create service '#{new_resource.service_name}'")
       Chef::Log.error("Response Code: #{resp.code}")
       Chef::Log.error("Response Message: #{resp.message}")
+      new_resource.updated_by_last_action(false)
     end
-
-  else
+  elsif resp == Net::HTTPOK
     Chef::Log.info "Service '#{new_resource.service_name}' already exists.. Not creating."
+    new_resource.updated_by_last_action(false)
+  else
+    Chef::Log.error "Unknown response from Keystone Server"
+    Chef::Log.error("Response Code: #{resp.code}")
+    Chef::Log.error("Response Message: #{resp.message}")
+    new_resource.updated_by_last_action(false)
   end
 end
 
-action :add_endpointTemplate do
+action :add_endpoint_template do
   # need to make sure not to add duplicates
+end
+
+private
+def _build_service_object(svc_name, svc_desc)
+  svc_obj = Hash.new
+  svc_obj.store("id", svc_name)
+  svc_obj.store("description", svc_desc)
+  ret = Hash.new
+  ret.store("service", svc_obj)
+  return ret
 end
