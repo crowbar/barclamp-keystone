@@ -41,7 +41,7 @@ locale_additions:
           admin-token: Administrator Token (long-lived)
           default-username: Regular User Username
           default-password: Regular User Password
-          admin-token-expiration: Token Expiration
+          admin-token-expiration: Administrator Token Expiration
 
 debs:
   repos:
