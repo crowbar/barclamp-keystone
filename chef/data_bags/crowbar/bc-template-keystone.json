@@ -4,6 +4,7 @@
   "description": "Centralized authentication and authorization service for OpenStack",
   "attributes": {
     "keystone": {
+          "sql_engine": "mysql",
           "admin": {
                 "username": "admin",
                 "password": "crowbar",
