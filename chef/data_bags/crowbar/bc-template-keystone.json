@@ -4,15 +4,17 @@
   "description": "Centralized authentication and authorization service for OpenStack",
   "attributes": {
     "keystone": {
-	  "dashboard": {
-	  	       "long-lived-token":  "999888777666",
-		       "token-expiration":  "2015-02-05T00:00",
-		       "username": "admin",
-		       "tenant" : "admin"
-	  },
-	  "admin" : {
-	  	  "username" : "admin",
-		  "password":  "admin"
+          "admin": {
+                "username": "admin",
+                "password": "crowbar",
+                "token": "999888777666",
+		"token-expiration":  "2015-02-05T00:00",
+          }
+          "default": {
+                "tenant": "openstack",
+                "username": "crowbar",
+                "password": "crowbar"
+          }
 	  }
     }
   },
