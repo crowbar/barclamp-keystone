@@ -34,12 +34,13 @@ locale_additions:
           deployment: Deployment
         edit_attributes: 
           attributes: Attributes
-          username: Dashboard Username
-          tenant: Dashboard Tenant
-          token-expiration: Token Expiration
-          token: Token
-          ausername: Administrator Username
-          apass: Administrator Password	  	    
+          tenant: Default Tenant
+          admin-username: Administrator Username
+          admin-password: Administrator Password
+          admin-token: Administrator Token (long-lived)
+          default-username: Regular User Username
+          default-password: Regular User Password
+          admin-token-expiration: Token Expiration
 
 debs:
   repos:
