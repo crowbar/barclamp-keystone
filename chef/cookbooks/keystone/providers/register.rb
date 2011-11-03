@@ -28,15 +28,23 @@ action :add_service do
   } 
 
   # Construct the path
-  path = '/v2.0/service/'
+  path = '/v2.0/services/'
 
   # Lets verify that the service does not exist yet
+
+  Chef::Log.error("PATH: [" + path + new_resource.service_name + "]")
+  Chef::Log.error("DESC: [" + new_resource.service_description + "]")
+  Chef::Log.error("HOST: [" + new_resource.host + "]")
+  Chef::Log.error("PORT: [5001]")
+  Chef::Log.error("TOKEN: [" + new_resource.token + "]")
+
+
   resp, data = http.request_get(path + new_resource.service_name, headers)
-  if resp == Net::HTTPNotFound
+  if resp.is_a?(Net::HTTPNotFound)
     # Service does not exist yet
     body = _build_service_object(new_resource.service_name, new_resource.service_description) 
     resp, data = http.send_request('POST', path, JSON.generate(body), headers)
-    if resp == Net::HTTPOK
+    if resp.is_a?(Net::HTTPCreated)
       Chef::Log.info("Created keystone service '#{new_resource.service_name}'")
       new_resource.updated_by_last_action(true)
     else
@@ -45,7 +53,7 @@ action :add_service do
       Chef::Log.error("Response Message: #{resp.message}")
       new_resource.updated_by_last_action(false)
     end
-  elsif resp == Net::HTTPOK
+  elsif resp.is_a?(Net::HTTPOK)
     Chef::Log.info "Service '#{new_resource.service_name}' already exists.. Not creating."
     new_resource.updated_by_last_action(false)
   else
