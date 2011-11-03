@@ -34,7 +34,7 @@ locale_additions:
           deployment: Deployment
         edit_attributes: 
           attributes: Attributes
-          tenant: Default Tenant
+          default-tenant: Default Tenant
           admin-username: Administrator Username
           admin-password: Administrator Password
           admin-token: Administrator Token (long-lived)

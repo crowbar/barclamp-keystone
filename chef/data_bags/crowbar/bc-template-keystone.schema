@@ -7,11 +7,12 @@
       "mapping": {
         "keystone": { "type": "map", "required": true, 
              "mapping": {
-                    "admin": { "type": "map", "required": true, "mapping": {
+                    "admin": { "type": "map", "required": true, 
+                      "mapping": {
                           "username": { "type" : "str", "required" : true },
                           "password": { "type" : "str", "required" : true },
                           "token": { "type": "str", "required" : true },
-                          "token-expiration": { "type": "str", "required" : true },
+                          "token-expiration": { "type": "str", "required" : true }
                     }},
                     "default" : { "type" : "map", "required" : true, "mapping": {
                        "tenant": { "type" : "str", "required" : true },
