@@ -126,6 +126,6 @@ private
 def _build_headers(token)
   ret = Hash.new
   ret.store('X-Auth-Token', token)
-  ret.store('Content-type', 'application/json)
+  ret.store('Content-type', 'application/json')
   return ret
 end
