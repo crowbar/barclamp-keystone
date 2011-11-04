@@ -22,23 +22,12 @@ action :add_service do
   http = Net::HTTP.new(new_resource.host, 5001)
 
   # Fill out the headers
-  headers = {
-    'X-Auth-Token' => new_resource.token,
-    'Content-Type' => 'application/json'
-  } 
+  headers = _build_headers(new_resource.token)
 
   # Construct the path
   path = '/v2.0/services/'
 
   # Lets verify that the service does not exist yet
-
-  Chef::Log.error("PATH: [" + path + new_resource.service_name + "]")
-  Chef::Log.error("DESC: [" + new_resource.service_description + "]")
-  Chef::Log.error("HOST: [" + new_resource.host + "]")
-  Chef::Log.error("PORT: [5001]")
-  Chef::Log.error("TOKEN: [" + new_resource.token + "]")
-
-
   resp, data = http.request_get(path + new_resource.service_name, headers)
   if resp.is_a?(Net::HTTPNotFound)
     # Service does not exist yet
@@ -65,7 +54,47 @@ action :add_service do
 end
 
 action :add_endpoint_template do
-  # need to make sure not to add duplicates
+  # Construct the http object
+  http = Net::HTTP.new(new_resource.host, 5001)
+
+  # Fill out the headers
+  headers = _build_headers(new_resource.token)
+
+  # Construct the path
+  path = '/v2.0/endpointTemplates/'
+
+  # Lets verify that the service does not exist yet
+  resp, data = http.request_get(path + new_resource.service_name, headers)
+  if resp.is_a?(Net::HTTPNotFound)
+    # Service does not exist yet
+    body = _build_endpoint_template_object(
+           new_resource.endpoint_service,
+           new_resource.endpoint_region, 
+           new_resource.endpoint_adminURL, 
+           new_resource.endpoint_internalURL, 
+           new_resource.endpoint_publicURL, 
+           new_resource.endpoint_global, 
+           new_resource.endpoint_enabled 
+    )
+    resp, data = http.send_request('POST', path, JSON.generate(body), headers)
+    if resp.is_a?(Net::HTTPCreated)
+      Chef::Log.info("Created keystone endpointTemplate for '#{new_resource.endpoint_service}'")
+      new_resource.updated_by_last_action(true)
+    else
+      Chef::Log.error("Unable to create endpointTemplate for '#{new_resource.endpoint_service}'")
+      Chef::Log.error("Response Code: #{resp.code}")
+      Chef::Log.error("Response Message: #{resp.message}")
+      new_resource.updated_by_last_action(false)
+    end
+  elsif resp.is_a?(Net::HTTPOK)
+    Chef::Log.info "endpointTemplate for '#{new_resource.endpoint_service}' already exists.. Not creating."
+    new_resource.updated_by_last_action(false)
+  else
+    Chef::Log.error "Unknown response from Keystone Server"
+    Chef::Log.error("Response Code: #{resp.code}")
+    Chef::Log.error("Response Message: #{resp.message}")
+    new_resource.updated_by_last_action(false)
+  end
 end
 
 private
@@ -75,5 +104,28 @@ def _build_service_object(svc_name, svc_desc)
   svc_obj.store("description", svc_desc)
   ret = Hash.new
   ret.store("service", svc_obj)
+  return ret
+end
+
+private
+def _build_endpoint_template_object(service, region, adminURL, internalURL, publicURL, global=1, enabled=1)
+  template_obj = Hash.new
+  template_obj.store("serviceId", service)
+  template_obj.store("region", region)
+  template_obj.store("adminURL", adminURL)
+  template_obj.store("internalURL", internalURL)
+  template_obj.store("publicURL", publicURL)
+  template_obj.store("global", global)
+  template_obj.store("enabled", enabled)
+  ret = Hash.new
+  ret.store("endpointTemplate", svc_obj)
+  return ret
+end
+
+private
+def _build_headers(token)
+  ret = Hash.new
+  ret.store('X-Auth-Token', token)
+  ret.store('Content-type', 'application/json)
   return ret
 end

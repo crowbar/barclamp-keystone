@@ -20,7 +20,18 @@
 actions :add_service, :add_endpoint_template
 
 attribute :host, :kind_of => String
-# attribute :port, :kind_of => String
+attribute :port, :kind_of => String
 attribute :token, :kind_of => String
+
+# :add_service specific attributes
 attribute :service_name, :kind_of => String
 attribute :service_description, :kind_of => String
+
+# :add_endpoint_template specific attributes
+attribute :endpoint_service, :kind_of => String
+attribute :endpoint_region, :kind_of => String
+attribute :endpoint_adminURL, :kind_of => String
+attribute :endpoint_internalURL, :kind_of => String
+attribute :endpoint_publicURL, :kind_of => String
+attribute :endpoint_global, :default => true
+attribute :endpoint_enabled, :default => true
