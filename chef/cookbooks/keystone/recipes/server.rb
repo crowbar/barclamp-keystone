@@ -71,8 +71,6 @@ elsif node[:keystone][:sql_engine] == "sqlite"
     sql_connection = "sqlite:////var/lib/keystone/keystone.db"
 end
 
-# my_ipaddress = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
-
 debug = true
 verbose = true
 
@@ -135,6 +133,29 @@ execute "Keystone: grant Admin role to <admin> user for <default> tenant" do
   command "keystone-manage role grant Admin #{node[:keystone][:admin][:username]} #{node[:keystone][:default][:tenant]}"
   action :run
   not_if "keystone-manage role list #{node[:keystone][:default][:tenant]}|grep Admin"
+end
+
+my_ipaddress = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
+
+keystone_register "register keystone service" do
+  host my_ipaddress
+  token node[:keystone][:admin][:token]
+  service_name "identity"
+  service_description "Openstack Identity Service"
+  action :add_service
+end
+
+
+keystone_register "register keystone service" do
+  host my_ipaddress
+  token node[:keystone][:admin][:token]
+  endpoint_service "identity"
+  endpoint_region "RegionOne"
+  endpoint_adminURL "http://#{my_ipaddress}:5001/v2.0"
+  endpoint_internalURL "http://#{my_ipaddress}:5000/v2.0"
+  endpoint_publicURL "http://#{my_ipaddress}:5000/v2.0"
+  endpoint_global true
+  endpoint_enabled true
 end
 
 #node[:keystone][:monitor][:svcs] <<["keystone-server"]
