@@ -1,4 +1,3 @@
-- include MysqlHelper
 %input#proposal_attributes{:type => "hidden", :name => "proposal_attributes", :value => @proposal.raw_data['attributes'][@proposal.barclamp].to_json}
 %p
   %label{:for => "proposal_attributes"}= t('.attributes')
