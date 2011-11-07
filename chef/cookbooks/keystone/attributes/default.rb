@@ -20,6 +20,10 @@ default[:openstack][:keystone][:uid]="505"
 default[:openstack][:keystone][:group]="nogroup"
 default[:openstack][:keystone][:seed_data]=true
 
+default[:keystone][:db][:database] = "keystone"
+default[:keystone][:db][:user] = "keystone"
+default[:keystone][:db][:password] = "" # Set by Recipe
+
 
 
 

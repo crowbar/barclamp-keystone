@@ -5,21 +5,27 @@
   = link_to "Raw", proposal_barclamp_path(:id => @proposal.name, :controller => @proposal.barclamp, :dep_raw => @dep_raw, :attr_raw => true), :style => "float: right;"
   %div.container
     %p
-      %label{ :for => :username }= t('.username')
-      %input#username{:type => "text", :name => "username", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["dashboard"]["username"], :onchange => "update_value('dashboard/username','username', 'string')"}
+      %label{ :for => :sql_engine }= t('.sql_engine')
+      = select_tag :sql_engine, options_for_select([['MySQL', 'mysql'], ['SQLite','sqlite']], @proposal.raw_data['attributes'][@proposal.barclamp]["sql_engine"]), :onchange => "update_value('sql_engine', 'sql_engine', 'string')"
     %p
-      %label{ :for => :tenant }= t('.tenant')
-      %input#tenant{:type => "text", :name => "tenant", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["dashboard"]["tenant"], :onchange => "update_value('dashboard/tenant','tenant','string')"}
+      %label{ :for => :default_tenant }= t('.default-tenant')
+      %input#default_tenant{:type => "text", :name => "default_tenant", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["default"]["tenant"], :onchange => "update_value('default/tenant','default_tenant','string')"}
     %p
-      %labbel{ :for => :token  }= t('.token')
-      %input#token{:type => "text", :name => "token", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["dashboard"]["long-lived-token"], :onchange => "update_value('dashboard/long-lived-token','token','string')"}
+      %label{ :for => :default_username }= t('.default-username')
+      %input#default_username{:type => "text", :name => "default_username", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["default"]["username"], :onchange => "update_value('default/username','default_username', 'string')"}
     %p
-      %label{ :for => :token_e  }= t('.token-expiration')
-      %input#token_e{:type => "text", :name => "token_e", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["dashboard"]["token-expiration"], :onchange => "update_value('dashboard/token-expiration','token_e','string')"}
+      %label{ :for => :default_password }= t('.default-password')
+      %input#default_password{:type => "text", :name => "default_password", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["default"]["password"], :onchange => "update_value('default/password','default_password', 'string')"}
     %p
-      %label{ :for => :ausername  }= t('.ausername')
-      %input#ausername{:type => "text", :name => "ausername", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["admin"]["username"], :onchange => "update_value('admin/username','ausername', 'string')"}
+      %label{ :for => :admin_username  }= t('.admin-username')
+      %input#admin_username{:type => "text", :name => "admin_username", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["admin"]["username"], :onchange => "update_value('admin/username','admin_username', 'string')"}
     %p
-      %label{ :for => :apass  }= t('.apass')
-      %input#apass{:type => "text", :name => "apass", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["admin"]["password"], :onchange => "update_value('admin/password','apass', 'string')"}
+      %label{ :for => :admin_password  }= t('.admin-password')
+      %input#admin_password{:type => "text", :name => "admin_password", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["admin"]["password"], :onchange => "update_value('admin/password','admin_password', 'string')"}
+    %p
+      %label{ :for => :admin_token  }= t('.admin-token')
+      %input#admin_token{:type => "text", :name => "admin_token", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["admin"]["token"], :onchange => "update_value('admin/token','admin_token','string')"}
+    %p
+      %label{ :for => :token_e  }= t('.admin-token-expiration')
+      %input#token_e{:type => "text", :name => "token_e", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["admin"]["token-expiration"], :onchange => "update_value('admin/token-expiration','token_e','string')"}
 
