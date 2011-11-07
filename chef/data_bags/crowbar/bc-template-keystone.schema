@@ -7,14 +7,16 @@
       "mapping": {
         "keystone": { "type": "map", "required": true, 
              "mapping": {
-                    "dashboard": { "type": "map", "required": true, 
+                    "sql_engine": { "type": "str", "required": true },
+                    "admin": { "type": "map", "required": true, 
                       "mapping": {
-                          "long-lived-token": { "type": "str", "required" : true },
-                          "token-expiration": { "type": "str", "required" : true },
-                          "username": { "type": "str", "required" : true },
-                          "tenant": { "type" : "str", "required" : true }
+                          "username": { "type" : "str", "required" : true },
+                          "password": { "type" : "str", "required" : true },
+                          "token": { "type": "str", "required" : true },
+                          "token-expiration": { "type": "str", "required" : true }
                     }},
-                    "admin" : { "type" : "map", "required" : true, "mapping": {
+                    "default" : { "type" : "map", "required" : true, "mapping": {
+                       "tenant": { "type" : "str", "required" : true },
                        "username": { "type" : "str", "required" : true },
                        "password": { "type" : "str", "required" : true }
                     }}
