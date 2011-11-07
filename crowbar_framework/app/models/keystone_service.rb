@@ -32,7 +32,7 @@ class KeystoneService < ServiceObject
       mysqls = mysqlService.list_active[1]
       base["attributes"]["keystone"]["mysql_instance"] = mysqls[0] unless mysqls.empty?
     rescue
-      @logger.info("Nova create_proposal: no mysql found")
+      @logger.info("Keystone create_proposal: no mysql found")
     end
     
     base["deployment"]["keystone"]["elements"] = {
