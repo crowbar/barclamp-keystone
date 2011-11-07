@@ -26,6 +26,14 @@ class KeystoneService < ServiceObject
     nodes = NodeObject.all
     nodes.delete_if { |n| n.nil? or n.admin? }
 
+    base["attributes"]["keystone"]["mysql_instance"] = ""
+    begin
+      mysqlService = MysqlService.new(@logger)
+      mysqls = mysqlService.list_active[1]
+      base["attributes"]["keystone"]["mysql_instance"] = mysqls[0] unless mysqls.empty?
+    rescue
+      @logger.info("Nova create_proposal: no mysql found")
+    end
     
     base["deployment"]["keystone"]["elements"] = {
         "keystone-server" => [ nodes.first[:fqdn] ]

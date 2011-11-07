@@ -8,6 +8,7 @@
         "keystone": { "type": "map", "required": true, 
              "mapping": {
                     "sql_engine": { "type": "str", "required": true },
+                    "mysql_instance": { "type": "str", "required": true },
                     "admin": { "type": "map", "required": true, 
                       "mapping": {
                           "username": { "type" : "str", "required" : true },

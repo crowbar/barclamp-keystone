@@ -5,6 +5,7 @@
   "attributes": {
     "keystone": {
           "sql_engine": "mysql",
+          "mysql_instance": "none",
           "admin": {
                 "username": "admin",
                 "password": "crowbar",
