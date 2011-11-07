@@ -63,10 +63,11 @@ action :add_endpoint_template do
   # Construct the path
   path = '/v2.0/endpointTemplates/'
 
-  # Lets verify that the service does not exist yet
-  resp, data = http.request_get(path + new_resource.service_name, headers)
+  # Lets verify that the endpointTemplate does not exist yet
+  #### THIS DOES NOT FIND ANY VALUES.. NEEDS TO BE REWORKED #####
+  resp, data = http.request_get(path + new_resource.endpoint_service, headers)
   if resp.is_a?(Net::HTTPNotFound)
-    # Service does not exist yet
+    # endpointTemplate does not exist yet
     body = _build_endpoint_template_object(
            new_resource.endpoint_service,
            new_resource.endpoint_region, 
@@ -126,7 +127,7 @@ def _build_endpoint_template_object(service, region, adminURL, internalURL, publ
     template_obj.store("enabled", 0)
   end
   ret = Hash.new
-  ret.store("endpointTemplate", svc_obj)
+  ret.store("endpointTemplate", template_obj)
   return ret
 end
 

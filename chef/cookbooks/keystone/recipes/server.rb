@@ -154,9 +154,9 @@ keystone_register "register keystone service" do
   endpoint_adminURL "http://#{my_ipaddress}:5001/v2.0"
   endpoint_internalURL "http://#{my_ipaddress}:5000/v2.0"
   endpoint_publicURL "http://#{my_ipaddress}:5000/v2.0"
-  endpoint_global true
-  endpoint_enabled true
-  :action add_endpoint_template
+#  endpoint_global true
+#  endpoint_enabled true
+  action :add_endpoint_template
 end
 
 #node[:keystone][:monitor][:svcs] <<["keystone-server"]
