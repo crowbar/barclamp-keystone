@@ -108,15 +108,23 @@ def _build_service_object(svc_name, svc_desc)
 end
 
 private
-def _build_endpoint_template_object(service, region, adminURL, internalURL, publicURL, global=1, enabled=1)
+def _build_endpoint_template_object(service, region, adminURL, internalURL, publicURL, global=true, enabled=true)
   template_obj = Hash.new
   template_obj.store("serviceId", service)
   template_obj.store("region", region)
   template_obj.store("adminURL", adminURL)
   template_obj.store("internalURL", internalURL)
   template_obj.store("publicURL", publicURL)
-  template_obj.store("global", global)
-  template_obj.store("enabled", enabled)
+  if global
+    template_obj.store("global", 1)
+  else
+    template_obj.store("global", 0)
+  end
+  if enabled
+    template_obj.store("enabled", 1)
+  else
+    template_obj.store("enabled", 0)
+  end
   ret = Hash.new
   ret.store("endpointTemplate", svc_obj)
   return ret
