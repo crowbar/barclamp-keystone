@@ -27,6 +27,8 @@ service "keystone" do
   action :enable
 end
 
+::Chef::Recipe.send(:include, Opscode::OpenSSL::Password)
+
 node.set_unless['keystone']['db']['password'] = secure_password
 
 if node[:keystone][:sql_engine] == "mysql"
@@ -42,6 +44,7 @@ if node[:keystone][:sql_engine] == "mysql"
     mysqls = search(:node, "roles:mysql-server#{env_filter}") || []
     if mysqls.length > 0
         mysql = mysqls[0]
+        mysql = node if mysql.name == name.name
     else
         mysql = node
     end
