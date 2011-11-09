@@ -64,37 +64,46 @@ action :add_endpoint_template do
   path = '/v2.0/endpointTemplates/'
 
   # Lets verify that the endpointTemplate does not exist yet
-  #### THIS DOES NOT FIND ANY VALUES.. NEEDS TO BE REWORKED #####
-  resp, data = http.request_get(path + new_resource.endpoint_service, headers)
-  if resp.is_a?(Net::HTTPNotFound)
-    # endpointTemplate does not exist yet
-    body = _build_endpoint_template_object(
-           new_resource.endpoint_service,
-           new_resource.endpoint_region, 
-           new_resource.endpoint_adminURL, 
-           new_resource.endpoint_internalURL, 
-           new_resource.endpoint_publicURL, 
-           new_resource.endpoint_global, 
-           new_resource.endpoint_enabled 
-    )
-    resp, data = http.send_request('POST', path, JSON.generate(body), headers)
-    if resp.is_a?(Net::HTTPCreated)
-      Chef::Log.info("Created keystone endpointTemplate for '#{new_resource.endpoint_service}'")
-      new_resource.updated_by_last_action(true)
-    else
-      Chef::Log.error("Unable to create endpointTemplate for '#{new_resource.endpoint_service}'")
+  resp, data = http.request_get(path, headers) 
+  if resp.is_a?(Net::HTTPOK)
+      matched_service = false
+      data = JSON.loads(data)
+      data["endpointTemplates"]["values"].each do |endpoint|
+          endpoint.each do |template|
+              if template["serviceId"] == new_resource.endpoint_service 
+                  mached_service = true
+              end
+          end
+      end
+      if mached_service
+          Chef::Log.info("Created keystone endpointTemplate for '#{new_resource.endpoint_service}'")
+          new_resource.updated_by_last_action(true)
+      else
+          # endpointTemplate does not exist yet
+          body = _build_endpoint_template_object(
+                 new_resource.endpoint_service,
+                 new_resource.endpoint_region, 
+                 new_resource.endpoint_adminURL, 
+                 new_resource.endpoint_internalURL, 
+                 new_resource.endpoint_publicURL, 
+                 new_resource.endpoint_global, 
+                 new_resource.endpoint_enabled)
+          resp, data = http.send_request('POST', path, JSON.generate(body), headers)
+          if resp.is_a?(Net::HTTPCreated)
+              Chef::Log.info("Created keystone endpointTemplate for '#{new_resource.endpoint_service}'")
+              new_resource.updated_by_last_action(true)
+          else
+              Chef::Log.error("Unable to create endpointTemplate for '#{new_resource.endpoint_service}'")
+              Chef::Log.error("Response Code: #{resp.code}")
+              Chef::Log.error("Response Message: #{resp.message}")
+              new_resource.updated_by_last_action(false)
+          end
+      end
+  else
+      Chef::Log.error "Unknown response from Keystone Server"
       Chef::Log.error("Response Code: #{resp.code}")
       Chef::Log.error("Response Message: #{resp.message}")
       new_resource.updated_by_last_action(false)
-    end
-  elsif resp.is_a?(Net::HTTPOK)
-    Chef::Log.info "endpointTemplate for '#{new_resource.endpoint_service}' already exists.. Not creating."
-    new_resource.updated_by_last_action(false)
-  else
-    Chef::Log.error "Unknown response from Keystone Server"
-    Chef::Log.error("Response Code: #{resp.code}")
-    Chef::Log.error("Response Message: #{resp.message}")
-    new_resource.updated_by_last_action(false)
   end
 end
 
