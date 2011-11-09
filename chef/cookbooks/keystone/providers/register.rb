@@ -67,17 +67,15 @@ action :add_endpoint_template do
   resp, data = http.request_get(path, headers) 
   if resp.is_a?(Net::HTTPOK)
       matched_service = false
-      data = JSON.loads(data)
+      data = JSON.parse(data)
       data["endpointTemplates"]["values"].each do |endpoint|
-          endpoint.each do |template|
-              if template["serviceId"] == new_resource.endpoint_service 
-                  mached_service = true
-              end
+          if endpoint["serviceId"] == new_resource.endpoint_service 
+              matched_service = true
           end
       end
-      if mached_service
-          Chef::Log.info("Created keystone endpointTemplate for '#{new_resource.endpoint_service}'")
-          new_resource.updated_by_last_action(true)
+      if matched_service
+          Chef::Log.info("Already existing keystone endpointTemplate for '#{new_resource.endpoint_service}' - not creating")
+          new_resource.updated_by_last_action(false)
       else
           # endpointTemplate does not exist yet
           body = _build_endpoint_template_object(
