@@ -44,7 +44,7 @@ if node[:keystone][:sql_engine] == "mysql"
     mysqls = search(:node, "roles:mysql-server#{env_filter}") || []
     if mysqls.length > 0
         mysql = mysqls[0]
-        mysql = node if mysql.name == name.name
+        mysql = node if mysql.name == node.name
     else
         mysql = node
     end
