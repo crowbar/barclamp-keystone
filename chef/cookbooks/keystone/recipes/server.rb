@@ -112,6 +112,13 @@ execute "Keystone: add <admin> user token" do
   not_if "keystone-manage token list | grep #{node[:keystone][:admin][:token]}"
 end
 
+# Create default user
+execute "Keystone: add <default> user" do
+  command "keytone-manage user add #{node[:keystone][:default][:username]} #{node[:keystone][:default][:password]} #{node[:keystone][:default][:tenant]}"
+  action :run
+  not_if "keystone-manage user list|grep #{node[:keystone][:default][:username]}"
+end
+
 # Create Admin role
 execute "Keystone: add ServiceAdmin role" do
   command "keystone-manage role add Admin"
@@ -137,6 +144,13 @@ execute "Keystone: grant Admin role to <admin> user for <default> tenant" do
   command "keystone-manage role grant Admin #{node[:keystone][:admin][:username]} #{node[:keystone][:default][:tenant]}"
   action :run
   not_if "keystone-manage role list #{node[:keystone][:default][:tenant]}|grep Admin"
+end
+
+execute "Keystone: grant Member role to <default> user for <default> tenant" do
+  # command syntax: role grant 'role' 'user' 'tenant (optional)'
+  command "keystone-manage role grant Member #{node[:keystone][:default][:username]} #{node[:keystone][:default][:tenant]}"
+  action :run
+  not_if "keystone-manage role list #{node[:keystone][:default][:tenant]}|grep Member"
 end
 
 my_ipaddress = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
