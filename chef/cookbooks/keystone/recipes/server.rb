@@ -114,7 +114,7 @@ end
 
 # Create default user
 execute "Keystone: add <default> user" do
-  command "keytone-manage user add #{node[:keystone][:default][:username]} #{node[:keystone][:default][:password]} #{node[:keystone][:default][:tenant]}"
+  command "keystone-manage user add #{node[:keystone][:default][:username]} #{node[:keystone][:default][:password]} #{node[:keystone][:default][:tenant]}"
   action :run
   not_if "keystone-manage user list|grep #{node[:keystone][:default][:username]}"
 end
