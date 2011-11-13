@@ -31,8 +31,10 @@ class KeystoneService < ServiceObject
       mysqlService = MysqlService.new(@logger)
       mysqls = mysqlService.list_active[1]
       base["attributes"]["keystone"]["mysql_instance"] = mysqls[0] unless mysqls.empty?
+      base["attributes"]["keystone"]["sql_engine"] = "mysql"
     rescue
       @logger.info("Keystone create_proposal: no mysql found")
+      base["attributes"]["keystone"]["sql_engine"] = "sqlite"
     end
     
     base["deployment"]["keystone"]["elements"] = {
