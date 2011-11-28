@@ -24,6 +24,14 @@ class KeystoneService < ServiceObject
     true
   end
 
+  def proposal_dependencies(role)
+    answer = []
+    if role.default_attributes["keystone"]["sql_engine"] == "mysql"
+      answer << { "barclamp" => "mysql", "inst" => role.default_attributes["keystone"]["mysql_instance"] }
+    end
+    answer
+  end
+
   def create_proposal
     base = super
 
@@ -33,7 +41,12 @@ class KeystoneService < ServiceObject
     base["attributes"]["keystone"]["mysql_instance"] = ""
     begin
       mysqlService = MysqlService.new(@logger)
+      # Look for active roles
       mysqls = mysqlService.list_active[1]
+      if mysqls.empty?
+        # No actives, look for proposals
+        mysqls = mysqlService.proposals[1]
+      end
       if mysqls.empty?
         base["attributes"]["keystone"]["sql_engine"] = "sqlite"
       else
