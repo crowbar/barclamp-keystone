@@ -5,10 +5,11 @@ keystone_nodes="$(knife_node_find 'roles:keystone-server' FQDN)"
     echo "Could not find nodes with the keystone-server role!"
     exit 1
 }
+unset http_proxy
 
 for node in $keystone_nodes; do
     ip=$(name_to_ip "$node")
-    token=$(curl --data-binary \
+    token=$(curl -sS --data-binary \
 	'{"passwordCredentials":{"username":"admin","password":"crowbar"}}' \
 	-L -H 'Content-Type: application/json' \
 	"http://$ip:5000/v2.0/tokens")
