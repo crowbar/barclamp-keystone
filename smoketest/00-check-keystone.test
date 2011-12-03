@@ -1,0 +1,21 @@
+#!/bin/bash
+keystone_nodes="$(knife_node_find 'roles:keystone-server' FQDN)"
+
+[[ $keystone_nodes ]] || {
+    echo "Could not find nodes with the keystone-server role!"
+    exit 1
+}
+unset http_proxy
+
+for node in $keystone_nodes; do
+    ip=$(name_to_ip "$node")
+    token=$(curl -sS --data-binary \
+	'{"passwordCredentials":{"username":"admin","password":"crowbar"}}' \
+	-L -H 'Content-Type: application/json' \
+	"http://$ip:5000/v2.0/tokens")
+    [[ $token =~ serviceCatalog ]] || {
+	echo "Did not get valid response from keystone @ $node!"
+	exit 1
+    }
+    echo "Keystone up on $node"
+done
