@@ -25,6 +25,7 @@ attribute :token, :kind_of => String
 
 # :add_service specific attributes
 attribute :service_name, :kind_of => String
+attribute :service_type, :kind_of => String
 attribute :service_description, :kind_of => String
 
 # :add_endpoint_template specific attributes

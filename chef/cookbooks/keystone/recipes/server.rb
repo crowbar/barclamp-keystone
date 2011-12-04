@@ -158,7 +158,8 @@ my_ipaddress = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admi
 keystone_register "register keystone service" do
   host my_ipaddress
   token node[:keystone][:admin][:token]
-  service_name "identity"
+  service_name "keystone"
+  service_type "identity"
   service_description "Openstack Identity Service"
   action :add_service
 end
@@ -167,7 +168,7 @@ end
 keystone_register "register keystone service" do
   host my_ipaddress
   token node[:keystone][:admin][:token]
-  endpoint_service "identity"
+  endpoint_service "keystone"
   endpoint_region "RegionOne"
   endpoint_adminURL "http://#{my_ipaddress}:5001/v2.0"
   endpoint_internalURL "http://#{my_ipaddress}:5000/v2.0"

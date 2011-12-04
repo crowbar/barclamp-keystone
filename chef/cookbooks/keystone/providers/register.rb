@@ -25,13 +25,13 @@ action :add_service do
   headers = _build_headers(new_resource.token)
 
   # Construct the path
-  path = '/v2.0/services/'
+  path = '/v2.0/OS-KSADM/services/'
 
   # Lets verify that the service does not exist yet
-  resp, data = http.request_get(path + new_resource.service_name, headers)
-  if resp.is_a?(Net::HTTPNotFound)
+  service_id, error = find_service_id(http, headers, new_resource.service_name)
+  unless service_id 
     # Service does not exist yet
-    body = _build_service_object(new_resource.service_name, new_resource.service_description) 
+    body = _build_service_object(new_resource.service_name, new_resource.service_type, new_resource.service_description) 
     resp, data = http.send_request('POST', path, JSON.generate(body), headers)
     if resp.is_a?(Net::HTTPCreated)
       Chef::Log.info("Created keystone service '#{new_resource.service_name}'")
@@ -41,14 +41,10 @@ action :add_service do
       Chef::Log.error("Response Code: #{resp.code}")
       Chef::Log.error("Response Message: #{resp.message}")
       new_resource.updated_by_last_action(false)
+      # XXX: Should really exit fail here.
     end
-  elsif resp.is_a?(Net::HTTPOK)
-    Chef::Log.info "Service '#{new_resource.service_name}' already exists.. Not creating."
-    new_resource.updated_by_last_action(false)
   else
-    Chef::Log.error "Unknown response from Keystone Server"
-    Chef::Log.error("Response Code: #{resp.code}")
-    Chef::Log.error("Response Message: #{resp.message}")
+    Chef::Log.info "Service '#{new_resource.service_name}' already exists.. Not creating." if error
     new_resource.updated_by_last_action(false)
   end
 end
@@ -63,14 +59,24 @@ action :add_endpoint_template do
   # Construct the path
   path = '/v2.0/endpointTemplates/'
 
+  # Look up my service id
+  my_service_id, error = find_service_id(http, headers, new_resource.endpoint_service)
+  unless my_service_id
+      Chef::Log.error "Couldn't find service #{new_resource.endpoint_service} in keystone"
+      new_resource.updated_by_last_action(false)
+      # XXX: Should really exit fail here.
+      return
+  end
+
   # Lets verify that the endpointTemplate does not exist yet
   resp, data = http.request_get(path, headers) 
   if resp.is_a?(Net::HTTPOK)
       matched_service = false
       data = JSON.parse(data)
       data["endpointTemplates"]["values"].each do |endpoint|
-          if endpoint["serviceId"] == new_resource.endpoint_service 
+          if endpoint["serviceId"].to_i === my_service_id.to_i
               matched_service = true
+              break
           end
       end
       if matched_service
@@ -79,7 +85,7 @@ action :add_endpoint_template do
       else
           # endpointTemplate does not exist yet
           body = _build_endpoint_template_object(
-                 new_resource.endpoint_service,
+                 my_service_id,
                  new_resource.endpoint_region, 
                  new_resource.endpoint_adminURL, 
                  new_resource.endpoint_internalURL, 
@@ -95,6 +101,7 @@ action :add_endpoint_template do
               Chef::Log.error("Response Code: #{resp.code}")
               Chef::Log.error("Response Message: #{resp.message}")
               new_resource.updated_by_last_action(false)
+              # XXX: Should really exit fail here.
           end
       end
   else
@@ -102,16 +109,41 @@ action :add_endpoint_template do
       Chef::Log.error("Response Code: #{resp.code}")
       Chef::Log.error("Response Message: #{resp.message}")
       new_resource.updated_by_last_action(false)
+      # XXX: Should really exit fail here.
   end
 end
 
 private
-def _build_service_object(svc_name, svc_desc)
+def find_service_id(http, headers, svc_name)
+  # Construct the path
+  my_service_id = nil
+  error = false
+  spath = '/v2.0/OS-KSADM/services/'
+  resp, data = http.request_get(spath, headers) 
+  if resp.is_a?(Net::HTTPOK)
+    data = JSON.parse(data)
+    data = data["OS-KSADM:services"]
+   
+    data.each do |svc|
+      my_service_id = svc["id"] if svc["name"] == svc_name
+      break if my_service_id
+    end 
+  else
+    Chef::Log.error "Unknown response from Keystone Server"
+    Chef::Log.error("Response Code: #{resp.code}")
+    Chef::Log.error("Response Message: #{resp.message}")
+    error = true
+  end
+  [ my_service_id, error ]
+end
+
+def _build_service_object(svc_name, svc_type, svc_desc)
   svc_obj = Hash.new
-  svc_obj.store("id", svc_name)
+  svc_obj.store("name", svc_name)
+  svc_obj.store("type", svc_type)
   svc_obj.store("description", svc_desc)
   ret = Hash.new
-  ret.store("service", svc_obj)
+  ret.store("OS-KSADM:service", svc_obj)
   return ret
 end
 
