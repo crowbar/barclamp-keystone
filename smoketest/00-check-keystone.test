@@ -10,7 +10,7 @@ unset http_proxy
 for node in $keystone_nodes; do
     ip=$(name_to_ip "$node")
     token=$(curl -sS --data-binary \
-	'{"passwordCredentials":{"username":"admin","password":"crowbar"}}' \
+	'{"auth":{"passwordCredentials":{"username":"admin","password":"crowbar"}}}' \
 	-L -H 'Content-Type: application/json' \
 	"http://$ip:5000/v2.0/tokens")
     [[ $token =~ serviceCatalog ]] || {
