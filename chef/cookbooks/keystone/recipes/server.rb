@@ -184,5 +184,5 @@ keystone_register "register keystone service" do
   action :add_endpoint_template
 end
 
-#node[:keystone][:monitor][:svcs] <<["keystone-server"]
+node[:keystone][:monitor][:svcs] <<["keystone"]
 node.save
