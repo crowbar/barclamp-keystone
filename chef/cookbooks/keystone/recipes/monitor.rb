@@ -22,6 +22,9 @@
 # Node addresses are dynamic and can't be set from attributes only.
 my_ipaddress = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
 
+node[:keystone][:monitor] = {} if node[:keystone][:monitor].nil?
+node[:keystone][:monitor][:svcs] = [] if node[:keystone][:monitor][:svcs].nil?
+node[:keystone][:monitor][:ports] = {} if node[:keystone][:monitor][:ports].nil?
 node[:keystone][:monitor][:ports]["keystone-service"] = [my_ipaddress, node[:keystone][:api][:service_port]]
 node[:keystone][:monitor][:ports]["keystone-admin"] = [my_ipaddress, node[:keystone][:api][:admin_port]]
 

@@ -184,5 +184,7 @@ keystone_register "register keystone service" do
   action :add_endpoint_template
 end
 
+node[:keystone][:monitor] = {} if node[:keystone][:monitor].nil?
+node[:keystone][:monitor][:svcs] = [] if node[:keystone][:monitor][:svcs].nil?
 node[:keystone][:monitor][:svcs] <<["keystone"]
 node.save
