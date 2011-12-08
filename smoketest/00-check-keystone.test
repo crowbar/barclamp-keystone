@@ -17,5 +17,6 @@ for node in $keystone_nodes; do
 	echo "Did not get valid response from keystone @ $node!"
 	exit 1
     }
+    echo "$token" > "$LOGDIR/keystone-token.json"
     echo "Keystone up on $node"
 done
