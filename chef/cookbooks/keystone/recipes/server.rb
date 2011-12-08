@@ -17,11 +17,6 @@ package "keystone" do
   action :install
 end
 
-execute "Fix Bug lp:865448" do
-  command "sed -i 's/path.abspath(sys.argv\[0\])/path.dirname(__file__)/g' /usr/share/pyshared/keystone/controllers/version.py"
-  action :run
-end
-
 service "keystone" do
   supports :status => true, :restart => true
   action :enable
@@ -75,18 +70,15 @@ elsif node[:keystone][:sql_engine] == "sqlite"
     sql_connection = "sqlite:////var/lib/keystone/keystone.db"
 end
 
-debug = true
-verbose = true
-
 template "/etc/keystone/keystone.conf" do
     source "keystone.conf.erb"
     mode "0644"
-    # owner user
-    # group grp
     variables(
       :sql_connection => sql_connection,
-      :debug => debug,
-      :verbose => verbose
+      :debug => node[:keystone][:debug],
+      :verbose => node[:keystone][:verbose],
+      :service_api_port => node[:keystone][:api][:service_port],
+      :admin_api_port => node[:keystone][:api][:admin_port]
     )
     notifies :restart, resources(:service => "keystone"), :immediately
 end
@@ -133,10 +125,22 @@ execute "Keystone: add Member role" do
   not_if "keystone-manage role list|grep Member"
 end
 
+# Hack since grant ServiceAdmin role call is not idempotent
+file "/var/lock/thisiswhywecanthavenicethings.lock" do
+  owner "root"
+  group "root"
+  action :nothing
+end
+
 execute "Keystone: grant ServiceAdmin role to <admin> user" do
+  # This command is not idempotent, there is no way to verify if this has
+  # been created before via keystone-manage
+  #
   # command syntax: role grant 'role' 'user' 'tenant (optional)'
   command "keystone-manage role grant Admin #{node[:keystone][:admin][:username]}"
   action :run
+  notifies :touch, resources(:file => "/var/lock/thisiswhywecanthavenicethings.lock"), :immediately
+  not_if do File.exists?("/var/lock/thisiswhywecanthavenicethings.lock") end 
 end
 
 execute "Keystone: grant Admin role to <admin> user for <default> tenant" do
@@ -170,9 +174,9 @@ keystone_register "register keystone service" do
   token node[:keystone][:admin][:token]
   endpoint_service "keystone"
   endpoint_region "RegionOne"
-  endpoint_adminURL "http://#{my_ipaddress}:5001/v2.0"
-  endpoint_internalURL "http://#{my_ipaddress}:5000/v2.0"
-  endpoint_publicURL "http://#{my_ipaddress}:5000/v2.0"
+  endpoint_adminURL "http://#{my_ipaddress}:#{node[:keystone][:api][:admin_port]}/v2.0"
+  endpoint_internalURL "http://#{my_ipaddress}:#{node[:keystone][:api][:service_port]}/v2.0"
+  endpoint_publicURL "http://#{my_ipaddress}:#{node[:keystone][:api][:service_port]}/v2.0"
 #  endpoint_global true
 #  endpoint_enabled true
   action :add_endpoint_template
