@@ -14,10 +14,8 @@
 # limitations under the License.
 #
 
-default[:keystone][:debug] = True
-default[:keystone][:verbose] = True
-
-default[:keystone][:debug] = True
+default[:keystone][:debug] = "True"
+default[:keystone][:verbose] = "True"
 
 default[:keystone][:db][:database] = "keystone"
 default[:keystone][:db][:user] = "keystone"
