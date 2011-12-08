@@ -161,6 +161,7 @@ my_ipaddress = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admi
 
 keystone_register "register keystone service" do
   host my_ipaddress
+  port node[:keystone][:api][:admin_port]
   token node[:keystone][:admin][:token]
   service_name "keystone"
   service_type "identity"
@@ -171,6 +172,7 @@ end
 
 keystone_register "register keystone service" do
   host my_ipaddress
+  port node[:keystone][:api][:admin_port]
   token node[:keystone][:admin][:token]
   endpoint_service "keystone"
   endpoint_region "RegionOne"
