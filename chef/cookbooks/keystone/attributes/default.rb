@@ -14,17 +14,15 @@
 # limitations under the License.
 #
 
-default[:openstack][:keystone][:debug]=true
-default[:openstack][:keystone][:user]="keystone"
-default[:openstack][:keystone][:uid]="505"
-default[:openstack][:keystone][:group]="nogroup"
-default[:openstack][:keystone][:seed_data]=true
+default[:keystone][:debug] = "True"
+default[:keystone][:verbose] = "True"
 
 default[:keystone][:db][:database] = "keystone"
 default[:keystone][:db][:user] = "keystone"
 default[:keystone][:db][:password] = "" # Set by Recipe
 
-
+default[:keystone][:api][:service_port] = "5000"
+default[:keystone][:api][:admin_port] = "35357"
 
 
 
