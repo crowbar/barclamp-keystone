@@ -19,7 +19,7 @@
 
 action :add_service do
   # Construct the http object
-  http = Net::HTTP.new(new_resource.host, 5001)
+  http = Net::HTTP.new(new_resource.host, new_resource.port)
 
   # Fill out the headers
   headers = _build_headers(new_resource.token)
@@ -51,7 +51,7 @@ end
 
 action :add_endpoint_template do
   # Construct the http object
-  http = Net::HTTP.new(new_resource.host, 5001)
+  http = Net::HTTP.new(new_resource.host, new_resource.port)
 
   # Fill out the headers
   headers = _build_headers(new_resource.token)

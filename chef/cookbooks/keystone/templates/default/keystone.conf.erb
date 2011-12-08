@@ -31,13 +31,13 @@ service-header-mappings = {
 service_host = 0.0.0.0
 
 # Port the bind the API server to
-service_port = 5000
+service_port = <%= @service_api_port %>
 
 # Address to bind the Admin API server
 admin_host = 0.0.0.0
 
 # Port the bind the Admin API server to
-admin_port = 5001
+admin_port = <%= @admin_api_port %>
 
 #Role that allows to perform admin operations.
 keystone-admin-role = Admin
