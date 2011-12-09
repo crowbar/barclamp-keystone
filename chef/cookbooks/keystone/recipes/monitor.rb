@@ -32,6 +32,8 @@ svcs = node[:keystone][:monitor][:svcs]
 ports = node[:keystone][:monitor][:ports]
 log ("will monitor keystone svcs: #{svcs.join(',')} and ports #{ports.values.join(',')}")
 
+include_recipe "nagios::common" if node["roles"].include?("nagios-client")
+
 template "/etc/nagios/nrpe.d/keystone_nrpe.cfg" do
   source "keystone_nrpe.cfg.erb"
   mode "0644"

@@ -7,3 +7,4 @@ version          "1.0"
 
 depends "openssl"
 depends "mysql"
+depends "nagios"
