@@ -157,6 +157,20 @@ execute "Keystone: grant Member role to <default> user for <default> tenant" do
   not_if "keystone-manage role list #{node[:keystone][:default][:tenant]}|grep Member"
 end
 
+execute "Keystone: add EC2 credentials to <admin> user" do
+  # command syntax: credentials add 'user' 'type' 'key' 'secret' 'tenant'
+  command "keystone-manage credentials add '#{node[:keystone][:admin][:username]}' EC2 '#{node[:keystone][:admin][:username]}' '#{node[:keystone][:admin][:password]}' '#{node[:keystone][:default][:tenant]}'"
+  action :run
+  not_if "keystone-manage credentials list | grep #{node[:keystone][:admin][:username]}"
+end
+
+execute "Keystone: add EC2 credentials to <default> user" do
+  # command syntax: credentials add 'user' 'type' 'key' 'secret' 'tenant'
+  command "keystone-manage credentials add '#{node[:keystone][:default][:username]}' EC2 '#{node[:keystone][:default][:username]}' '#{node[:keystone][:default][:password]}' '#{node[:keystone][:default][:tenant]}'"
+  action :run
+  not_if "keystone-manage credentials list | grep #{node[:keystone][:default][:username]}"
+end
+
 my_ipaddress = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
 
 keystone_register "register keystone service" do
