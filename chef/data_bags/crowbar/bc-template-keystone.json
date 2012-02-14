@@ -22,6 +22,9 @@
   "deployment": {
     "keystone": {
       "crowbar-revision": 0,
+      "element_states": {
+        "keystone-server": [ "readying", "ready", "applying" ]
+      },
       "elements": {},
       "element_order": [
          ["keystone-server" ]       		           		     
