@@ -14,15 +14,24 @@
 # limitations under the License.
 #
 
-default[:keystone][:debug] = "True"
-default[:keystone][:verbose] = "True"
+default[:keystone][:debug] = true
+default[:keystone][:verbose] = true
 
 default[:keystone][:db][:database] = "keystone"
 default[:keystone][:db][:user] = "keystone"
 default[:keystone][:db][:password] = "" # Set by Recipe
 
 default[:keystone][:api][:service_port] = "5000"
-default[:keystone][:api][:admin_port] = "35357"
+default[:keystone][:api][:service_host] = "0.0.0.0"
+default[:keystone][:api][:auth_port] = "35357"
+default[:keystone][:api][:auth_host] = "0.0.0.0"
+default[:keystone][:api][:api_port] = "35357"
+default[:keystone][:api][:api_host] = "0.0.0.0"
 
+
+default[:keystone][:sql][:idle_timeout] = 30
+default[:keystone][:sql][:min_pool_size] = 5
+default[:keystone][:sql][:max_pool_size] = 10
+default[:keystone][:sql][:pool_timeout] = 200
 
 
