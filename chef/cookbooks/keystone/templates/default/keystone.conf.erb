@@ -12,10 +12,10 @@ log_file = keystone.log
 
 # Address to bind the API server
 # TODO Properties defined within app not available via pipeline.
-service_host = <%= @service_api_host %>
+public_host = <%= @api_host %>
 
 # Port the bind the API server to
-service_port = <%= @service_api_port %>
+public_port = <%= @api_port %>
 
 # Address to bind the Admin API server
 admin_host = <%= @auth_api_host %>
@@ -26,10 +26,10 @@ admin_port = <%= @auth_api_port %>
 admin_token = <%= @admin_token %>
 
 # Address to bind the API server
-compute_host = <%= @api_host %>
+compute_host = <%= @service_api_host %>
 
 # Port the bind the Compute
-compute_port = <%= @api_port %>
+compute_port = <%= @service_api_port %>
 
 # ================= Syslog Options ============================
 # Send logs to syslog (/dev/log) instead of to file specified

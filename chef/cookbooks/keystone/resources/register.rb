@@ -20,7 +20,7 @@
 actions :add_service, :add_endpoint_template
 
 attribute :host, :kind_of => String
-attribute :port, :kind_of => String
+attribute :port, :kind_of => Integer
 attribute :token, :kind_of => String
 
 # :add_service specific attributes

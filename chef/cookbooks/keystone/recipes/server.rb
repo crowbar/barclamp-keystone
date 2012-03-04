@@ -82,11 +82,11 @@ template "/etc/keystone/keystone.conf" do
       :debug => node[:keystone][:debug],
       :verbose => node[:keystone][:verbose],
       :admin_token => node[:keystone][:service][:token],
-      :service_api_port => node[:keystone][:api][:service_port],
+      :service_api_port => node[:keystone][:api][:service_port], # Compute port
       :service_api_host => node[:keystone][:api][:service_host],
-      :auth_api_port => node[:keystone][:api][:auth_port],
+      :auth_api_port => node[:keystone][:api][:auth_port], # Auth port
       :auth_api_host => node[:keystone][:api][:auth_host],
-      :api_port => node[:keystone][:api][:api_port],
+      :api_port => node[:keystone][:api][:api_port], # public port
       :api_host => node[:keystone][:api][:api_host],
       :use_syslog => node[:keystone][:use_syslog]
     )
@@ -98,21 +98,21 @@ keystone_parms="--token #{node[:keystone][:service][:token]} --endpoint #{servic
 
 # Create admin tenant
 execute "Keystone: add <admin> tenant" do
-  command "keystone #{keystone_parms} tenant-create #{node[:keystone][:admin][:tenant]}"
+  command "keystone #{keystone_parms} tenant-create --name #{node[:keystone][:admin][:tenant]}"
   action :run
   not_if "keystone #{keystone_parms} tenant-list |grep #{node[:keystone][:admin][:tenant]}"
 end
 
 # Create service tenant
 execute "Keystone: add <service> tenant" do
-  command "keystone #{keystone_parms} tenant-create #{node[:keystone][:service][:tenant]}"
+  command "keystone #{keystone_parms} tenant-create --name #{node[:keystone][:service][:tenant]}"
   action :run
   not_if "keystone #{keystone_parms} tenant-list |grep #{node[:keystone][:service][:tenant]}"
 end
 
 # Create default tenant
 execute "Keystone: add <default> tenant" do
-  command "keystone #{keystone_parms} tenant-create #{node[:keystone][:default][:tenant]}"
+  command "keystone #{keystone_parms} tenant-create --name #{node[:keystone][:default][:tenant]}"
   action :run
   not_if "keystone #{keystone_parms} tenant-list |grep #{node[:keystone][:default][:tenant]}"
 end
