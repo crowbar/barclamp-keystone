@@ -59,11 +59,10 @@ pool_timeout = <%= @sql_pool_timeout %>
 driver = keystone.identity.backends.sql.Identity
 
 [catalog]
-driver = keystone.catalog.backends.templated.TemplatedCatalog
-template_file = /etc/keystone/default_catalog.templates
+driver = keystone.catalog.backends.sql.Catalog
 
 [token]
-driver = keystone.token.backends.kvs.Token
+driver = keystone.token.backends.sql.Token
 
 [policy]
 driver = keystone.policy.backends.simple.SimpleMatch

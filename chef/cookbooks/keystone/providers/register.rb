@@ -57,7 +57,7 @@ action :add_endpoint_template do
   headers = _build_headers(new_resource.token)
 
   # Construct the path
-  path = '/v2.0/endpointTemplates'
+  path = '/v2.0/endpoints'
 
   # Look up my service id
   my_service_id, error = find_service_id(http, headers, new_resource.endpoint_service)
@@ -68,13 +68,13 @@ action :add_endpoint_template do
       return
   end
 
-  # Lets verify that the endpointTemplate does not exist yet
+  # Lets verify that the endpoint does not exist yet
   resp, data = http.request_get(path, headers) 
   if resp.is_a?(Net::HTTPOK)
       matched_service = false
       data = JSON.parse(data)
-      data["endpointTemplates"]["values"].each do |endpoint|
-          if endpoint["serviceId"].to_i === my_service_id.to_i
+      data["endpoints"].each do |endpoint|
+          if endpoint["service_id"].to_i === my_service_id.to_i
               matched_service = true
               break
           end
@@ -150,7 +150,7 @@ end
 private
 def _build_endpoint_template_object(service, region, adminURL, internalURL, publicURL, global=true, enabled=true)
   template_obj = Hash.new
-  template_obj.store("serviceId", service)
+  template_obj.store("service_id", service)
   template_obj.store("region", region)
   template_obj.store("adminURL", adminURL)
   template_obj.store("internalURL", internalURL)
@@ -166,7 +166,7 @@ def _build_endpoint_template_object(service, region, adminURL, internalURL, publ
     template_obj.store("enabled", 0)
   end
   ret = Hash.new
-  ret.store("endpointTemplate", template_obj)
+  ret.store("endpoint", template_obj)
   return ret
 end
 

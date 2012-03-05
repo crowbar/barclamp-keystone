@@ -125,7 +125,7 @@ end
 execute "Keystone: add <admin> user" do
   command "keystone #{keystone_parms} user-create --name=#{node[:keystone][:admin][:username]} --pass='#{node[:keystone][:admin][:password]}'"
   action :run
-  not_if "keystone #{keystone_parms} user-list | grep '| #{node[:keystone][:admin][:username]} '"
+  not_if "keystone #{keystone_parms} user-list | grep \"| #{node[:keystone][:admin][:username]} \""
 end
 
 # Create default user
