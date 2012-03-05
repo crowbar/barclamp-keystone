@@ -25,7 +25,7 @@ action :add_service do
   headers = _build_headers(new_resource.token)
 
   # Construct the path
-  path = '/v2.0/OS-KSADM/services/'
+  path = '/v2.0/OS-KSADM/services'
 
   # Lets verify that the service does not exist yet
   service_id, error = find_service_id(http, headers, new_resource.service_name)
@@ -57,7 +57,7 @@ action :add_endpoint_template do
   headers = _build_headers(new_resource.token)
 
   # Construct the path
-  path = '/v2.0/endpointTemplates/'
+  path = '/v2.0/endpointTemplates'
 
   # Look up my service id
   my_service_id, error = find_service_id(http, headers, new_resource.endpoint_service)
@@ -118,7 +118,7 @@ def find_service_id(http, headers, svc_name)
   # Construct the path
   my_service_id = nil
   error = false
-  spath = '/v2.0/OS-KSADM/services/'
+  spath = '/v2.0/OS-KSADM/services'
   resp, data = http.request_get(spath, headers) 
   if resp.is_a?(Net::HTTPOK)
     data = JSON.parse(data)

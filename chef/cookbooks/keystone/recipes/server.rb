@@ -96,6 +96,10 @@ end
 service_endpoint="http://127.0.0.1:#{node[:keystone][:api][:auth_port]}/v2.0"
 keystone_parms="--token #{node[:keystone][:service][:token]} --endpoint #{service_endpoint}"
 
+execute "keystone-manage db_sync" do
+  action :run
+end
+
 # Create admin tenant
 execute "Keystone: add <admin> tenant" do
   command "keystone #{keystone_parms} tenant-create --name #{node[:keystone][:admin][:tenant]}"
@@ -121,23 +125,23 @@ end
 execute "Keystone: add <admin> user" do
   command "keystone #{keystone_parms} user-create --name=#{node[:keystone][:admin][:username]} --pass='#{node[:keystone][:admin][:password]}'"
   action :run
-  not_if "keystone #{keystone_parms} user-list | grep \"| #{node[:keystone][:admin][:username]} |\""
+  not_if "keystone #{keystone_parms} user-list | grep '| #{node[:keystone][:admin][:username]} '"
 end
 
 # Create default user
 execute "Keystone: add <default> user" do
   command "keystone #{keystone_parms} user-create --name=#{node[:keystone][:default][:username]} --pass='#{node[:keystone][:default][:password]}'"
   action :run
-  not_if "keystone #{keystone_parms} user-list | grep \"| #{node[:keystone][:default][:username]} |\""
+  not_if "keystone #{keystone_parms} user-list | grep \"| #{node[:keystone][:default][:username]} \""
 end
 
 # Create roles
-roles = %q[admin Member KeystoneAdmin KeystoneServiceAdmin sysadmin netadmin]
+roles = %w[admin Member KeystoneAdmin KeystoneServiceAdmin sysadmin netadmin]
 roles.each do |role|
   execute "Keystone: add #{role} role" do
     command "keystone #{keystone_parms} role-create --name=#{role}"
     action :run
-    not_if "keystone #{keystone_parms} role-list | grep \"| #{role} |\""
+    not_if "keystone #{keystone_parms} role-list | grep \"| #{role} \""
   end
 end
 
@@ -158,10 +162,10 @@ user_roles = [
 user_roles.each do |args|
   bash "Keystone: grant #{args[1]} role to #{args[0]} user in tenant #{args[2]}" do
     code <<EOF
-UID=`keystone #{keystone_parms} user-list | grep "| #{args[0]} |"`
-RID=`keystone #{keystone_parms} role-list | grep "| #{args[1]} |"`
-TID=`keystone #{keystone_parms} tenant-list | grep "| #{args[2]} |"`
-keystone #{keystone_parms} user-role-add --user $UID --role $RID --tenant_id $TID
+MY_UID=`keystone #{keystone_parms} user-list | grep "| #{args[0]} " | awk '{ print $2 }'`
+RID=`keystone #{keystone_parms} role-list | grep "| #{args[1]} " | awk '{ print $2 }'`
+TID=`keystone #{keystone_parms} tenant-list | grep "| #{args[2]} " | awk '{ print $2 }'`
+keystone #{keystone_parms} user-role-add --user $MY_UID --role $RID --tenant_id $TID
 EOF
     action :run
   end
@@ -177,9 +181,9 @@ ec2_creds = [
 ec2_creds.each do |args|
   bash "Keystone: add EC2 credentials to #{args[0]} user on #{args[1]}" do
     code <<EOF
-UID=`keystone #{keystone_parms} user-list | grep "| #{args[0]} |"`
-TID=`keystone #{keystone_parms} tenant-list | grep "| #{args[1]} |"`
-keystone #{keystone_parms} ec2-credentials-create --tenant_id=$TID --user=$UID
+MY_UID=`keystone #{keystone_parms} user-list | grep "| #{args[0]} " | awk '{ print $2 }'`
+TID=`keystone #{keystone_parms} tenant-list | grep "| #{args[1]} " | awk '{ print $2 }'`
+keystone #{keystone_parms} ec2-credentials-create --tenant_id=$TID --user=$MY_UID
 EOF
     action :run
   end
