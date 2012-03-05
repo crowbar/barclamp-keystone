@@ -152,9 +152,9 @@ def _build_endpoint_template_object(service, region, adminURL, internalURL, publ
   template_obj = Hash.new
   template_obj.store("service_id", service)
   template_obj.store("region", region)
-  template_obj.store("adminURL", adminURL)
-  template_obj.store("internalURL", internalURL)
-  template_obj.store("publicURL", publicURL)
+  template_obj.store("adminurl", adminURL)
+  template_obj.store("internalurl", internalURL)
+  template_obj.store("publicurl", publicURL)
   if global
     template_obj.store("global", 1)
   else
