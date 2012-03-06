@@ -17,6 +17,24 @@
 # limitations under the License.
 #
 
+action :wakeup do
+  http, headers = _build_connection(new_resource)
+
+  # Construct the path
+  path = '/v2.0/OS-KSADM/services'
+  dir = 'OS-KSADM:services'
+
+  # Lets verify that the service does not exist yet
+  count = 0
+  error = true
+  while error and count < 50 do
+    count = count + 1
+    item_id, error = _find_id(http, headers, "fred", path, dir)
+  end
+
+  new_resource.updated_by_last_action(!error)
+end
+
 action :add_service do
   http, headers = _build_connection(new_resource)
 
@@ -31,7 +49,7 @@ action :add_service do
     body = _build_service_object(new_resource.service_name, 
                                  new_resource.service_type,  
                                  new_resource.service_description) 
-    ret = _create_item(http, headers, path, JSON.generate(body), new_resource.service_name)
+    ret = _create_item(http, headers, path, body, new_resource.service_name)
     new_resource.updated_by_last_action(ret)
   else
     Chef::Log.info "Service '#{new_resource.service_name}' already exists.. Not creating." if error
@@ -49,11 +67,11 @@ action :add_tenant do
   dir = 'tenants'
 
   # Lets verify that the service does not exist yet
-  item_id, error = _find_id(http, headers, new_resource.service_name, path, dir)
+  item_id, error = _find_id(http, headers, new_resource.tenant_name, path, dir)
   unless item_id or error
     # Service does not exist yet
     body = _build_tenant_object(new_resource.tenant_name) 
-    ret = _create_item(http, headers, path, JSON.generate(body), new_resource.tenant_name)
+    ret = _create_item(http, headers, path, body, new_resource.tenant_name)
     new_resource.updated_by_last_action(ret)
   else
     Chef::Log.info "Tenant '#{new_resource.tenant_name}' already exists.. Not creating." if error
@@ -72,11 +90,11 @@ action :add_user do
   dir = 'users'
 
   # Lets verify that the service does not exist yet
-  item_id, error = _find_id(http, headers, new_resource.service_name, path, dir)
+  item_id, error = _find_id(http, headers, new_resource.user_name, path, dir)
   unless item_id or error
     # Service does not exist yet
     body = _build_user_object(new_resource.user_name, new_resource.user_password) 
-    ret = _create_item(http, headers, path, JSON.generate(body), new_resource.user_name)
+    ret = _create_item(http, headers, path, body, new_resource.user_name)
     new_resource.updated_by_last_action(ret)
   else
     Chef::Log.info "User '#{new_resource.user_name}' already exists.. Not creating." if error
@@ -90,7 +108,7 @@ action :add_role do
   http, headers = _build_connection(new_resource)
 
   # Construct the path
-  path = '/v2.0/roles'
+  path = '/v2.0/OS-KSADM/roles'
   dir = 'roles'
 
   # Lets verify that the service does not exist yet
@@ -98,7 +116,7 @@ action :add_role do
   unless item_id or error
     # Service does not exist yet
     body = _build_user_object(new_resource.role_name)
-    ret = _create_item(http, headers, path, JSON.generate(body), new_resource.role_name)
+    ret = _create_item(http, headers, path, body, new_resource.role_name)
     new_resource.updated_by_last_action(ret)
   else
     Chef::Log.info "User '#{new_resource.role_name}' already exists.. Not creating." if error
@@ -119,15 +137,16 @@ action :add_access do
   role = new_resource.role_name
   user_id, uerror = _find_id(http, headers, user, '/v2.0/users', 'users')
   tenant_id, terror = _find_id(http, headers, tenant, '/v2.0/tenants', 'tenants')
-  role_id, rerror = _find_id(http, headers, role, '/v2.0/roles', 'roles')
+  role_id, rerror = _find_id(http, headers, role, '/v2.0/OS-KSADM/roles', 'roles')
 
   path = "/v2.0/tenants/#{tenant_id}/users/#{user_id}/roles"
   t_role_id, aerror = _find_id(http, headers, role, path, 'roles')
   
-  unless role_id == t_role_id or (aerror or rerror or uerror or terror)
+  error = (aerror or rerror or uerror or terror)
+  unless role_id == t_role_id or error
     # Service does not exist yet
     body = _build_access_object(new_resource.role_name)
-    ret = _create_item(http, headers, path, JSON.generate(body), new_resource.role_name)
+    ret = _create_item(http, headers, path, body, new_resource.role_name)
     new_resource.updated_by_last_action(ret)
   else
     Chef::Log.info "Access '#{tenant}:#{user} -> #{role}}' already exists.. Not creating." if error
@@ -150,10 +169,11 @@ action :add_ec2 do
   path = "/v2.0/users/#{user_id}/credentials/OS-EC2"
   t_tenant_id, aerror = _find_id(http, headers, tenant_id, path, 'credentials', 'tenant_id', 'tenant_id')
   
-  unless tenant_id == t_tenant_id or (aerror or uerror or terror)
+  error = (aerror or uerror or terror)
+  unless tenant_id == t_tenant_id or error
     # Service does not exist yet
     body = _build_ec2_object(tenant_id)
-    ret = _create_item(http, headers, path, JSON.generate(body), new_resource.tenant)
+    ret = _create_item(http, headers, path, body, new_resource.tenant)
     new_resource.updated_by_last_action(ret)
   else
     Chef::Log.info "EC2 '#{tenant}:#{user}' already exists.. Not creating." if error
@@ -164,17 +184,20 @@ end
 action :add_endpoint_template do
   http, headers = _build_connection(new_resource)
 
-  # Construct the path
-  path = '/v2.0/endpoints'
-
   # Look up my service id
-  my_service_id, error = find_service_id(http, headers, new_resource.endpoint_service)
+  # Construct the path
+  path = '/v2.0/OS-KSADM/services'
+  dir = 'OS-KSADM:services'
+  my_service_id, error = _find_id(http, headers, new_resource.service_name, path, dir)
   unless my_service_id
       Chef::Log.error "Couldn't find service #{new_resource.endpoint_service} in keystone"
       new_resource.updated_by_last_action(false)
       # XXX: Should really exit fail here.
       return
   end
+
+  # Construct the path
+  path = '/v2.0/endpoints'
 
   # Lets verify that the endpoint does not exist yet
   resp, data = http.request_get(path, headers) 
@@ -222,6 +245,7 @@ action :add_endpoint_template do
 end
 
 
+# Return true on success
 private
 def _create_item(http, headers, path, body, name)
   resp, data = http.send_request('POST', path, JSON.generate(body), headers)
@@ -259,7 +283,7 @@ def _find_id(http, headers, svc_name, spath, dir, key = 'name', ret = 'id')
     data = data[dir]
 
     data.each do |svc|
-      my_service_id = svc[id] if svc[key] == svc_name
+      my_service_id = svc[ret] if svc[key] == svc_name
       break if my_service_id
     end 
   else
