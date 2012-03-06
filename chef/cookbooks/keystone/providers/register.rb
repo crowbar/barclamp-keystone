@@ -115,7 +115,7 @@ action :add_role do
   item_id, error = _find_id(http, headers, new_resource.role_name, path, dir)
   unless item_id or error
     # Service does not exist yet
-    body = _build_user_object(new_resource.role_name)
+    body = _build_role_object(new_resource.role_name)
     ret = _create_item(http, headers, path, body, new_resource.role_name)
     new_resource.updated_by_last_action(ret)
   else
