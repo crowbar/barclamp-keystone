@@ -36,3 +36,23 @@ attribute :endpoint_internalURL, :kind_of => String
 attribute :endpoint_publicURL, :kind_of => String
 attribute :endpoint_global, :default => true
 attribute :endpoint_enabled, :default => true
+
+# :add_tenant specific attributes
+attribute :tenant_name, :kind_of => String
+
+# :add_user specific attributes
+attribute :user_name, :kind_of => String
+attribute :user_password, :kind_of => String
+
+# :add_role specific attributes
+attribute :role_name, :kind_of => String
+
+# :add_access specific attributes
+attribute :user_name, :kind_of => String
+attribute :role_name, :kind_of => String
+attribute :tenant_name, :kind_of => String
+
+# :add_ec2 specific attributes
+attribute :user_name, :kind_of => String
+attribute :tenant_name, :kind_of => String
+

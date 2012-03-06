@@ -93,6 +93,9 @@ template "/etc/keystone/keystone.conf" do
     notifies :restart, resources(:service => "keystone"), :immediately
 end
 
+my_ipaddress = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
+pub_ipaddress = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "public").address rescue my_ipaddress
+
 service_endpoint="http://127.0.0.1:#{node[:keystone][:api][:admin_port]}/v2.0"
 keystone_parms="--token #{node[:keystone][:service][:token]} --endpoint #{service_endpoint}"
 
@@ -189,8 +192,6 @@ EOF
   end
 end
 
-my_ipaddress = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
-pub_ipaddress = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "public").address rescue my_ipaddress
 
 keystone_register "register keystone service" do
   host my_ipaddress
