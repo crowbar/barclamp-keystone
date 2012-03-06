@@ -145,7 +145,7 @@ action :add_access do
   error = (aerror or rerror or uerror or terror)
   unless role_id == t_role_id or error
     # Service does not exist yet
-    body = _build_access_object(new_resource.role_name)
+    body = _build_access_object(role_id, new_resource.role_name)
     ret = _create_item(http, headers, path, body, new_resource.role_name)
     new_resource.updated_by_last_action(ret)
   else
