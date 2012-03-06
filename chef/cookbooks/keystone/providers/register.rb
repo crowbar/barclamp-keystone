@@ -30,6 +30,7 @@ action :wakeup do
   while error and count < 50 do
     count = count + 1
     item_id, error = _find_id(http, headers, "fred", path, dir)
+    sleep 1 if error
   end
 
   new_resource.updated_by_last_action(!error)
@@ -52,7 +53,7 @@ action :add_service do
     ret = _create_item(http, headers, path, body, new_resource.service_name)
     new_resource.updated_by_last_action(ret)
   else
-    Chef::Log.info "Service '#{new_resource.service_name}' already exists.. Not creating." if error
+    Chef::Log.info "Service '#{new_resource.service_name}' already exists.. Not creating." unless error
     new_resource.updated_by_last_action(false)
   end
 end
@@ -74,7 +75,7 @@ action :add_tenant do
     ret = _create_item(http, headers, path, body, new_resource.tenant_name)
     new_resource.updated_by_last_action(ret)
   else
-    Chef::Log.info "Tenant '#{new_resource.tenant_name}' already exists.. Not creating." if error
+    Chef::Log.info "Tenant '#{new_resource.tenant_name}' already exists.. Not creating." unless error
     new_resource.updated_by_last_action(false)
   end
 end
@@ -97,7 +98,7 @@ action :add_user do
     ret = _create_item(http, headers, path, body, new_resource.user_name)
     new_resource.updated_by_last_action(ret)
   else
-    Chef::Log.info "User '#{new_resource.user_name}' already exists.. Not creating." if error
+    Chef::Log.info "User '#{new_resource.user_name}' already exists.. Not creating." unless error
     new_resource.updated_by_last_action(false)
   end
 end
@@ -115,11 +116,11 @@ action :add_role do
   item_id, error = _find_id(http, headers, new_resource.role_name, path, dir)
   unless item_id or error
     # Service does not exist yet
-    body = _build_user_object(new_resource.role_name)
+    body = _build_role_object(new_resource.role_name)
     ret = _create_item(http, headers, path, body, new_resource.role_name)
     new_resource.updated_by_last_action(ret)
   else
-    Chef::Log.info "User '#{new_resource.role_name}' already exists.. Not creating." if error
+    Chef::Log.info "User '#{new_resource.role_name}' already exists.. Not creating." unless error
     new_resource.updated_by_last_action(false)
   end
 end
@@ -141,15 +142,14 @@ action :add_access do
 
   path = "/v2.0/tenants/#{tenant_id}/users/#{user_id}/roles"
   t_role_id, aerror = _find_id(http, headers, role, path, 'roles')
-  
+
   error = (aerror or rerror or uerror or terror)
   unless role_id == t_role_id or error
     # Service does not exist yet
-    body = _build_access_object(new_resource.role_name)
-    ret = _create_item(http, headers, path, body, new_resource.role_name)
+    ret = _update_item(http, headers, "#{path}/OS-KSADM/#{role_id}", new_resource.role_name)
     new_resource.updated_by_last_action(ret)
   else
-    Chef::Log.info "Access '#{tenant}:#{user} -> #{role}}' already exists.. Not creating." if error
+    Chef::Log.info "Access '#{tenant}:#{user} -> #{role}}' already exists.. Not creating." unless error
     new_resource.updated_by_last_action(false)
   end
 end
@@ -173,10 +173,10 @@ action :add_ec2 do
   unless tenant_id == t_tenant_id or error
     # Service does not exist yet
     body = _build_ec2_object(tenant_id)
-    ret = _create_item(http, headers, path, body, new_resource.tenant)
+    ret = _create_item(http, headers, path, body, tenant)
     new_resource.updated_by_last_action(ret)
   else
-    Chef::Log.info "EC2 '#{tenant}:#{user}' already exists.. Not creating." if error
+    Chef::Log.info "EC2 '#{tenant}:#{user}' already exists.. Not creating." unless error
     new_resource.updated_by_last_action(false)
   end
 end
@@ -188,7 +188,7 @@ action :add_endpoint_template do
   # Construct the path
   path = '/v2.0/OS-KSADM/services'
   dir = 'OS-KSADM:services'
-  my_service_id, error = _find_id(http, headers, new_resource.service_name, path, dir)
+  my_service_id, error = _find_id(http, headers, new_resource.endpoint_service, path, dir)
   unless my_service_id
       Chef::Log.error "Couldn't find service #{new_resource.endpoint_service} in keystone"
       new_resource.updated_by_last_action(false)
@@ -254,6 +254,22 @@ def _create_item(http, headers, path, body, name)
     return true
   else
     Chef::Log.error("Unable to create service '#{name}'")
+    Chef::Log.error("Response Code: #{resp.code}")
+    Chef::Log.error("Response Message: #{resp.message}")
+    return false
+    # XXX: Should really exit fail here.
+  end
+end
+
+# Return true on success
+private
+def _update_item(http, headers, path, name)
+  resp, data = http.send_request('PUT', path, nil, headers)
+  if resp.is_a?(Net::HTTPOK)
+    Chef::Log.info("Updated keystone service '#{name}'")
+    return true
+  else
+    Chef::Log.error("Unable to updated item '#{name}'")
     Chef::Log.error("Response Code: #{resp.code}")
     Chef::Log.error("Response Message: #{resp.message}")
     return false
@@ -348,10 +364,8 @@ end
 
 private
 def _build_ec2_object(tenant_id)
-  svc_obj = Hash.new
-  svc_obj.store("tenant_id", tenant_id)
   ret = Hash.new
-  ret.store("credential", svc_obj)
+  ret.store("tenant_id", tenant_id)
   return ret
 end
 
