@@ -18,7 +18,7 @@
 #
 
 action :add_service do
-  http, header = _build_connection(new_resource)
+  http, headers = _build_connection(new_resource)
 
   # Construct the path
   path = '/v2.0/OS-KSADM/services'
@@ -42,7 +42,7 @@ end
 # :add_tenant specific attributes
 # attribute :tenant_name, :kind_of => String
 action :add_tenant do
-  http, header = _build_connection(new_resource)
+  http, headers = _build_connection(new_resource)
 
   # Construct the path
   path = '/v2.0/tenants'
@@ -65,7 +65,7 @@ end
 # attribute :user_name, :kind_of => String
 # attribute :user_password, :kind_of => String
 action :add_user do
-  http, header = _build_connection(new_resource)
+  http, headers = _build_connection(new_resource)
 
   # Construct the path
   path = '/v2.0/users'
@@ -87,7 +87,7 @@ end
 # :add_role specific attributes
 # attribute :role_name, :kind_of => String
 action :add_role do
-  http, header = _build_connection(new_resource)
+  http, headers = _build_connection(new_resource)
 
   # Construct the path
   path = '/v2.0/roles'
@@ -111,7 +111,7 @@ end
 # attribute :user_name, :kind_of => String
 # attribute :role_name, :kind_of => String
 action :add_access do
-  http, header = _build_connection(new_resource)
+  http, headers = _build_connection(new_resource)
 
   # Lets verify that the item does not exist yet
   tenant = new_resource.tenant_name
@@ -139,7 +139,7 @@ end
 # attribute :user_name, :kind_of => String
 # attribute :tenant_name, :kind_of => String
 action :add_ec2 do
-  http, header = _build_connection(new_resource)
+  http, headers = _build_connection(new_resource)
 
   # Lets verify that the item does not exist yet
   tenant = new_resource.tenant_name
@@ -162,7 +162,7 @@ action :add_ec2 do
 end
 
 action :add_endpoint_template do
-  http, header = _build_connection(new_resource)
+  http, headers = _build_connection(new_resource)
 
   # Construct the path
   path = '/v2.0/endpoints'
