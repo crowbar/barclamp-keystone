@@ -26,10 +26,10 @@
                     "api": { "type": "map", "required": true, "mapping": {
                       "service_port": { "type" : "int", "required" : true },
                       "api_port": { "type" : "int", "required" : true },
-                      "auth_port": { "type" : "int", "required" : true },
+                      "admin_port": { "type" : "int", "required" : true },
                       "service_host": { "type" : "str", "required" : true },
                       "api_host": { "type" : "str", "required" : true },
-                      "auth_host": { "type" : "str", "required" : true }
+                      "admin_host": { "type" : "str", "required" : true }
                     }},
                     "admin": { "type": "map", "required": true, "mapping": {
                       "tenant": { "type" : "str", "required" : true },
