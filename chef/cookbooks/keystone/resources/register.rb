@@ -17,7 +17,7 @@
 # limitations under the License.
 #
 
-actions :add_service, :add_endpoint_template
+actions :add_service, :add_endpoint_template, :add_tenant, :add_user, :add_role, :add_access, :add_ec2, :wakeup
 
 attribute :host, :kind_of => String
 attribute :port, :kind_of => Integer
