@@ -84,8 +84,8 @@ template "/etc/keystone/keystone.conf" do
       :admin_token => node[:keystone][:service][:token],
       :service_api_port => node[:keystone][:api][:service_port], # Compute port
       :service_api_host => node[:keystone][:api][:service_host],
-      :auth_api_port => node[:keystone][:api][:auth_port], # Auth port
-      :auth_api_host => node[:keystone][:api][:auth_host],
+      :admin_api_port => node[:keystone][:api][:admin_port], # Auth port
+      :admin_api_host => node[:keystone][:api][:admin_host],
       :api_port => node[:keystone][:api][:api_port], # public port
       :api_host => node[:keystone][:api][:api_host],
       :use_syslog => node[:keystone][:use_syslog]
@@ -93,7 +93,10 @@ template "/etc/keystone/keystone.conf" do
     notifies :restart, resources(:service => "keystone"), :immediately
 end
 
-service_endpoint="http://127.0.0.1:#{node[:keystone][:api][:auth_port]}/v2.0"
+my_ipaddress = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
+pub_ipaddress = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "public").address rescue my_ipaddress
+
+service_endpoint="http://127.0.0.1:#{node[:keystone][:api][:admin_port]}/v2.0"
 keystone_parms="--token #{node[:keystone][:service][:token]} --endpoint #{service_endpoint}"
 
 execute "keystone-manage db_sync" do
@@ -189,12 +192,10 @@ EOF
   end
 end
 
-my_ipaddress = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
-pub_ipaddress = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "public").address rescue my_ipaddress
 
 keystone_register "register keystone service" do
   host my_ipaddress
-  port node[:keystone][:api][:auth_port]
+  port node[:keystone][:api][:admin_port]
   token node[:keystone][:service][:token]
   service_name "keystone"
   service_type "identity"
@@ -204,11 +205,11 @@ end
 
 keystone_register "register keystone service" do
   host my_ipaddress
-  port node[:keystone][:api][:auth_port]
+  port node[:keystone][:api][:admin_port]
   token node[:keystone][:service][:token]
   endpoint_service "keystone"
   endpoint_region "RegionOne"
-  endpoint_adminURL "http://#{my_ipaddress}:#{node[:keystone][:api][:auth_port]}/v2.0"
+  endpoint_adminURL "http://#{my_ipaddress}:#{node[:keystone][:api][:admin_port]}/v2.0"
   endpoint_internalURL "http://#{my_ipaddress}:#{node[:keystone][:api][:service_port]}/v2.0"
   endpoint_publicURL "http://#{pub_ipaddress}:#{node[:keystone][:api][:service_port]}/v2.0"
 #  endpoint_global true
