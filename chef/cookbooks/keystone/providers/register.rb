@@ -188,7 +188,7 @@ action :add_endpoint_template do
   # Construct the path
   path = '/v2.0/OS-KSADM/services'
   dir = 'OS-KSADM:services'
-  my_service_id, error = _find_id(http, headers, new_resource.service_name, path, dir)
+  my_service_id, error = _find_id(http, headers, new_resource.endpoint_service, path, dir)
   unless my_service_id
       Chef::Log.error "Couldn't find service #{new_resource.endpoint_service} in keystone"
       new_resource.updated_by_last_action(false)
