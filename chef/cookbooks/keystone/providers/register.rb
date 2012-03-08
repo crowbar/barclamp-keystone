@@ -33,7 +33,9 @@ action :wakeup do
     sleep 1 if error
   end
 
-  new_resource.updated_by_last_action(!error)
+  raise "Failed to validate keystone is wake" if error
+
+  new_resource.updated_by_last_action(true)
 end
 
 action :add_service do
@@ -53,6 +55,7 @@ action :add_service do
     ret = _create_item(http, headers, path, body, new_resource.service_name)
     new_resource.updated_by_last_action(ret)
   else
+    raise "Failed to talk to keystone in add_service" if error
     Chef::Log.info "Service '#{new_resource.service_name}' already exists.. Not creating." unless error
     new_resource.updated_by_last_action(false)
   end
@@ -75,6 +78,7 @@ action :add_tenant do
     ret = _create_item(http, headers, path, body, new_resource.tenant_name)
     new_resource.updated_by_last_action(ret)
   else
+    raise "Failed to talk to keystone in add_tenant" if error
     Chef::Log.info "Tenant '#{new_resource.tenant_name}' already exists.. Not creating." unless error
     new_resource.updated_by_last_action(false)
   end
@@ -98,6 +102,7 @@ action :add_user do
     ret = _create_item(http, headers, path, body, new_resource.user_name)
     new_resource.updated_by_last_action(ret)
   else
+    raise "Failed to talk to keystone in add_user" if error
     Chef::Log.info "User '#{new_resource.user_name}' already exists.. Not creating." unless error
     new_resource.updated_by_last_action(false)
   end
@@ -120,6 +125,7 @@ action :add_role do
     ret = _create_item(http, headers, path, body, new_resource.role_name)
     new_resource.updated_by_last_action(ret)
   else
+    raise "Failed to talk to keystone in add_role" if error
     Chef::Log.info "User '#{new_resource.role_name}' already exists.. Not creating." unless error
     new_resource.updated_by_last_action(false)
   end
@@ -149,6 +155,7 @@ action :add_access do
     ret = _update_item(http, headers, "#{path}/OS-KSADM/#{role_id}", new_resource.role_name)
     new_resource.updated_by_last_action(ret)
   else
+    raise "Failed to talk to keystone in add_access" if error
     Chef::Log.info "Access '#{tenant}:#{user} -> #{role}}' already exists.. Not creating." unless error
     new_resource.updated_by_last_action(false)
   end
@@ -176,6 +183,7 @@ action :add_ec2 do
     ret = _create_item(http, headers, path, body, tenant)
     new_resource.updated_by_last_action(ret)
   else
+    raise "Failed to talk to keystone in add_ec2_creds" if error
     Chef::Log.info "EC2 '#{tenant}:#{user}' already exists.. Not creating." unless error
     new_resource.updated_by_last_action(false)
   end
@@ -191,9 +199,8 @@ action :add_endpoint_template do
   my_service_id, error = _find_id(http, headers, new_resource.endpoint_service, path, dir)
   unless my_service_id
       Chef::Log.error "Couldn't find service #{new_resource.endpoint_service} in keystone"
+      raise "Failed to talk to keystone in add_endpoint_template" if error
       new_resource.updated_by_last_action(false)
-      # XXX: Should really exit fail here.
-      return
   end
 
   # Construct the path
@@ -231,8 +238,8 @@ action :add_endpoint_template do
               Chef::Log.error("Unable to create endpointTemplate for '#{new_resource.endpoint_service}'")
               Chef::Log.error("Response Code: #{resp.code}")
               Chef::Log.error("Response Message: #{resp.message}")
+              raise "Failed to talk to keystone in add_endpoint_template (2)" if error
               new_resource.updated_by_last_action(false)
-              # XXX: Should really exit fail here.
           end
       end
   else
@@ -240,7 +247,7 @@ action :add_endpoint_template do
       Chef::Log.error("Response Code: #{resp.code}")
       Chef::Log.error("Response Message: #{resp.message}")
       new_resource.updated_by_last_action(false)
-      # XXX: Should really exit fail here.
+      raise "Failed to talk to keystone in add_endpoint_template (3)" if error
   end
 end
 
@@ -250,14 +257,16 @@ private
 def _create_item(http, headers, path, body, name)
   resp, data = http.send_request('POST', path, JSON.generate(body), headers)
   if resp.is_a?(Net::HTTPCreated)
-    Chef::Log.info("Created keystone service '#{name}'")
+    Chef::Log.info("Created keystone item '#{name}'")
+    return true
+  elsif resp.is_a?(Net::HTTPOK)
+    Chef::Log.info("Updated keystone item '#{name}'")
     return true
   else
-    Chef::Log.error("Unable to create service '#{name}'")
+    Chef::Log.error("Unable to create item '#{name}'")
     Chef::Log.error("Response Code: #{resp.code}")
     Chef::Log.error("Response Message: #{resp.message}")
-    return false
-    # XXX: Should really exit fail here.
+    raise "Failed to talk to keystone in _create_item"
   end
 end
 
@@ -266,14 +275,16 @@ private
 def _update_item(http, headers, path, name)
   resp, data = http.send_request('PUT', path, nil, headers)
   if resp.is_a?(Net::HTTPOK)
-    Chef::Log.info("Updated keystone service '#{name}'")
+    Chef::Log.info("Updated keystone item '#{name}'")
+    return true
+  elsif resp.is_a?(Net::HTTPCreated)
+    Chef::Log.info("Created keystone item '#{name}'")
     return true
   else
     Chef::Log.error("Unable to updated item '#{name}'")
     Chef::Log.error("Response Code: #{resp.code}")
     Chef::Log.error("Response Message: #{resp.message}")
-    return false
-    # XXX: Should really exit fail here.
+    raise "Failed to talk to keystone in _update_item"
   end
 end
 
