@@ -127,8 +127,8 @@ end
 end
 
 # Create users
-[ [ node[:keystone][:admin][:username], node[:keystone][:admin][:password] ],
-  [ node[:keystone][:default][:username], node[:keystone][:default][:password] ]
+[ [ node[:keystone][:admin][:username], node[:keystone][:admin][:password], node[:keystone][:admin][:tenant] ],
+  [ node[:keystone][:default][:username], node[:keystone][:default][:password], node[:keystone][:default][:tenant] ]
 ].each do |user_data|
   keystone_register "add default #{user_data[0]} user" do
     host my_ipaddress
@@ -136,6 +136,7 @@ end
     token node[:keystone][:service][:token]
     user_name user_data[0]
     user_password user_data[1]
+    tenant_name user_data[2]
     action :add_user
   end
 end
