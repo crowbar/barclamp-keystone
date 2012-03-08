@@ -87,18 +87,24 @@ end
 # :add_user specific attributes
 # attribute :user_name, :kind_of => String
 # attribute :user_password, :kind_of => String
+# attribute :tenant_name, :kind_of => String
 action :add_user do
   http, headers = _build_connection(new_resource)
+
+  # Lets verify that the item does not exist yet
+  tenant = new_resource.tenant_name
+  tenant_id, terror = _find_id(http, headers, tenant, '/v2.0/tenants', 'tenants')
 
   # Construct the path
   path = '/v2.0/users'
   dir = 'users'
 
   # Lets verify that the service does not exist yet
-  item_id, error = _find_id(http, headers, new_resource.user_name, path, dir)
+  item_id, uerror = _find_id(http, headers, new_resource.user_name, path, dir)
+  error = (uerror or terror)
   unless item_id or error
     # Service does not exist yet
-    body = _build_user_object(new_resource.user_name, new_resource.user_password) 
+    body = _build_user_object(new_resource.user_name, new_resource.user_password, tenant_id)
     ret = _create_item(http, headers, path, body, new_resource.user_name)
     new_resource.updated_by_last_action(ret)
   else
@@ -234,6 +240,9 @@ action :add_endpoint_template do
           if resp.is_a?(Net::HTTPCreated)
               Chef::Log.info("Created keystone endpointTemplate for '#{new_resource.endpoint_service}'")
               new_resource.updated_by_last_action(true)
+          elsif resp.is_a?(Net::HTTPOK)
+              Chef::Log.info("Updated keystone endpointTemplate for '#{new_resource.endpoint_service}'")
+              new_resource.updated_by_last_action(true)
           else
               Chef::Log.error("Unable to create endpointTemplate for '#{new_resource.endpoint_service}'")
               Chef::Log.error("Response Code: #{resp.code}")
@@ -334,10 +343,11 @@ def _build_service_object(svc_name, svc_type, svc_desc)
 end
 
 private
-def _build_user_object(user_name, password)
+def _build_user_object(user_name, password, tenant_id)
   svc_obj = Hash.new
   svc_obj.store("name", user_name)
   svc_obj.store("password", password)
+  svc_obj.store("tenant_id", tenant_id)
   svc_obj.store("enabled", "true")
   ret = Hash.new
   ret.store("user", svc_obj)
