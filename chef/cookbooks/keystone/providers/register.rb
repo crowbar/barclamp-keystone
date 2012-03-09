@@ -348,7 +348,7 @@ def _build_user_object(user_name, password, tenant_id)
   svc_obj.store("name", user_name)
   svc_obj.store("password", password)
   svc_obj.store("tenant_id", tenant_id)
-  svc_obj.store("enabled", "true")
+  svc_obj.store("enabled", "True")
   ret = Hash.new
   ret.store("user", svc_obj)
   return ret
@@ -367,7 +367,7 @@ private
 def _build_tenant_object(tenant_name)
   svc_obj = Hash.new
   svc_obj.store("name", tenant_name)
-  svc_obj.store("enabled", "true")
+  svc_obj.store("enabled", "True")
   ret = Hash.new
   ret.store("tenant", svc_obj)
   return ret
@@ -399,14 +399,14 @@ def _build_endpoint_template_object(service, region, adminURL, internalURL, publ
   template_obj.store("internalurl", internalURL)
   template_obj.store("publicurl", publicURL)
   if global
-    template_obj.store("global", 1)
+    template_obj.store("global", "True")
   else
-    template_obj.store("global", 0)
+    template_obj.store("global", "False")
   end
   if enabled
-    template_obj.store("enabled", 1)
+    template_obj.store("enabled", "True")
   else
-    template_obj.store("enabled", 0)
+    template_obj.store("enabled", "False")
   end
   ret = Hash.new
   ret.store("endpoint", template_obj)
