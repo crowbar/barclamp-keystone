@@ -10,26 +10,25 @@ debug = <%= @debug ? "True" : "False" %>
 log_dir = /var/log/keystone
 log_file = keystone.log
 
+# Host properties
+bind_host = <%= @admin_api_host %>
 # Address to bind the API server
-# TODO Properties defined within app not available via pipeline.
 public_host = <%= @api_host %>
-
-# Port the bind the API server to
-public_port = <%= @api_port %>
-
 # Address to bind the Admin API server
 admin_host = <%= @admin_api_host %>
-
-# Port the bind the Admin API server to
-admin_port = <%= @admin_api_port %>
-
-admin_token = <%= @admin_token %>
-
 # Address to bind the API server
 compute_host = <%= @service_api_host %>
 
+# Port the bind the API server to
+public_port = <%= @api_port %>
+# Port the bind the Admin API server to
+admin_port = <%= @admin_api_port %>
 # Port the bind the Compute
-compute_port = <%= @service_api_port %>
+compute_port = 3000
+
+# Admin access token
+admin_token = <%= @admin_token %>
+
 
 # ================= Syslog Options ============================
 # Send logs to syslog (/dev/log) instead of to file specified
@@ -48,8 +47,7 @@ connection = <%= @sql_connection %>
 
 # Period in seconds after which SQLAlchemy should reestablish its connection
 # to the database.
-# idle_timeout = <%= @sql_idle_timeout %>
-
+#idle_timeout = <%= @sql_idle_timeout %>
 min_pool_size = <%= @sql_min_pool_size %>
 max_pool_size = <%= @sql_max_pool_size %>
 pool_timeout = <%= @sql_pool_timeout %>
