@@ -218,7 +218,7 @@ action :add_endpoint_template do
       matched_service = false
       data = JSON.parse(data)
       data["endpoints"].each do |endpoint|
-          if endpoint["service_id"].to_i === my_service_id.to_i
+          if endpoint["service_id"].to_s === my_service_id.to_s
               matched_service = true
               break
           end
