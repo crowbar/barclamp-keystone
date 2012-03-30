@@ -26,46 +26,63 @@ end
 
 node.set_unless['keystone']['db']['password'] = secure_password
 
-if node[:keystone][:sql_engine] == "mysql"
-    Chef::Log.info("Configuring Keystone to use MySQL backend")
+sql_engine = node[:keystone][:sql_engine]
+if sql_engine == "mysql"
+    Chef::Log.info("Configuring Keystone to use #{sql_engine} backend")
 
-    include_recipe "mysql::client"
+    include_recipe "#{sql_engine}::client"
 
     package "python-mysqldb" do
         action :install
     end
 
-    env_filter = " AND mysql_config_environment:mysql-config-#{node[:keystone][:sql_instance]}"
-    mysqls = search(:node, "roles:mysql-server#{env_filter}") || []
-    if mysqls.length > 0
-        mysql = mysqls[0]
-        mysql = node if mysql.name == node.name
+    env_filter = " AND #{sql_engine}_config_environment:#{sql_engine}-config-#{node[:keystone][:sql_instance]}"
+    sqls = search(:node, "roles:#{sql_engine}-server#{env_filter}") || []
+    if sqls.length > 0
+        sql = sqls[0]
+        sql = node if sql.name == node.name
     else
-        mysql = node
+        sql = node
     end
 
-    mysql_address = Chef::Recipe::Barclamp::Inventory.get_network_by_type(mysql, "admin").address if mysql_address.nil?
-    Chef::Log.info("Mysql server found at #{mysql_address}")
-    
+    sql_address = Chef::Recipe::Barclamp::Inventory.get_network_by_type(sql, "admin").address if sql_address.nil?
+    Chef::Log.info("Database server found at #{sql_address}")
+
+    db_provider = Chef::Provider::Database::Mysql
+    db_user_provider = Chef::Provider::Database::MysqlUser
+    db_conn = { :host => sql_address,
+                :username => "db_maker",
+                :password => sql[:mysql][:db_maker_password] }
     # Create the Keystone Database
-    mysql_database "create #{node[:keystone][:db][:database]} database" do
-        host    mysql_address
-        username "db_maker"
-        password mysql[:mysql][:db_maker_password]
-        database node[:keystone][:db][:database]
-        action :create_db
+    database "create #{node[:keystone][:db][:database]} database" do
+        connection db_conn
+        database_name node[:keystone][:db][:database]
+        provider db_provider
+        action :create
     end
 
-    mysql_database "create dashboard database user" do
-        host    mysql_address
-        username "db_maker"
-        password mysql[:mysql][:db_maker_password]
-        database node[:keystone][:db][:database]
-        action :query
-        sql "GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, INDEX, ALTER on #{node[:keystone][:db][:database]}.* to '#{node[:keystone][:db][:user]}'@'%' IDENTIFIED BY '#{node[:keystone][:db][:password]}';"
+    database_user "create dashboard database user" do
+        connection db_conn
+        username node[:keystone][:db][:user]
+        password node[:keystone][:db][:password]
+        provider db_user_provider
+        action :create
     end
-    sql_connection = "mysql://#{node[:keystone][:db][:user]}:#{node[:keystone][:db][:password]}@#{mysql_address}/#{node[:keystone][:db][:database]}"
-elsif node[:keystone][:sql_engine] == "sqlite"
+
+    database_user "create dashboard database user" do
+        connection db_conn
+        username node[:keystone][:db][:user]
+        password node[:keystone][:db][:password]
+        database_name node[:keystone][:db][:database]
+        host sql_address
+        privileges [ "SELECT", "INSERT", "UPDATE", "DELETE", "CREATE",
+                     "DROP", "INDEX", "ALTER" ]
+        provider db_user_provider
+        action :grant
+    end
+
+    sql_connection = "#{sql_engine}://#{node[:keystone][:db][:user]}:#{node[:keystone][:db][:password]}@#{sql_address}/#{node[:keystone][:db][:database]}"
+elsif sql_engine == "sqlite"
     Chef::Log.info("Configuring Keystone to use SQLite backend")
     sql_connection = "sqlite:////var/lib/keystone/keystone.db"
     file "/var/lib/keystone/keystone.db" do

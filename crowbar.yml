@@ -20,7 +20,7 @@ barclamp:
   display: OpenStack Keystone 
   version: 0
   requires:
-    - mysql
+    - database
   member:
     - openstack
 
