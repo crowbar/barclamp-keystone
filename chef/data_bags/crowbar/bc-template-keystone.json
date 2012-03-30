@@ -8,7 +8,7 @@
       "verbose": true,
       "use_syslog": false,
       "sql_engine": "mysql",
-      "mysql_instance": "none",
+      "sql_instance": "none",
       "db": {
         "database": "keystone",
         "user": "keystone"

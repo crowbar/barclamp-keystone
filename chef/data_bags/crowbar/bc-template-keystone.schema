@@ -11,7 +11,7 @@
                     "debug": { "type": "bool", "required": true },
                     "use_syslog": { "type": "bool", "required": true },
                     "sql_engine": { "type": "str", "required": true },
-                    "mysql_instance": { "type": "str", "required": true },
+                    "sql_instance": { "type": "str", "required": true },
                     "db": { "type": "map", "required": true, "mapping": {
                       "database": { "type" : "str", "required" : true },
                       "user": { "type" : "str", "required" : true },

@@ -7,8 +7,8 @@
       %label{ :for => :sql_engine }= t('.sql_engine')
       = select_tag :sql_engine, options_for_select([['MySQL', 'mysql'], ['SQLite','sqlite']], @proposal.raw_data['attributes'][@proposal.barclamp]["sql_engine"]), :onchange => "update_value('sql_engine', 'sql_engine', 'string')"
     %p
-      %label{ :for => :mysql_instance }= t('.mysql_instance')
-      = instance_selector("mysql", :mysql_instance, "mysql_instance", @proposal)
+      %label{ :for => :sql_instance }= t('.sql_instance')
+      = instance_selector("mysql", :sql_instance, "sql_instance", @proposal)
     %p
       %label{ :for => :default_tenant }= t('.default-tenant')
       %input#default_tenant{:type => "text", :name => "default_tenant", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["default"]["tenant"], :onchange => "update_value('default/tenant','default_tenant','string')"}

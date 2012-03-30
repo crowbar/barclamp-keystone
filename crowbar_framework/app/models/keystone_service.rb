@@ -27,7 +27,7 @@ class KeystoneService < ServiceObject
   def proposal_dependencies(role)
     answer = []
     if role.default_attributes["keystone"]["sql_engine"] == "mysql"
-      answer << { "barclamp" => "mysql", "inst" => role.default_attributes["keystone"]["mysql_instance"] }
+      answer << { "barclamp" => "mysql", "inst" => role.default_attributes["keystone"]["sql_instance"] }
     end
     answer
   end
@@ -38,7 +38,7 @@ class KeystoneService < ServiceObject
     nodes = NodeObject.all
     nodes.delete_if { |n| n.nil? or n.admin? }
 
-    base["attributes"]["keystone"]["mysql_instance"] = ""
+    base["attributes"]["keystone"]["sql_instance"] = ""
     begin
       mysqlService = MysqlService.new(@logger)
       # Look for active roles
@@ -50,7 +50,7 @@ class KeystoneService < ServiceObject
       if mysqls.empty?
         base["attributes"]["keystone"]["sql_engine"] = "sqlite"
       else
-        base["attributes"]["keystone"]["mysql_instance"] = mysqls[0]
+        base["attributes"]["keystone"]["sql_instance"] = mysqls[0]
         base["attributes"]["keystone"]["sql_engine"] = "mysql"
       end
     rescue

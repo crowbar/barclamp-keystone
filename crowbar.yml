@@ -39,7 +39,7 @@ locale_additions:
         edit_attributes: 
           attributes: Attributes
           sql_engine: SQL Engine
-          mysql_instance: MySQL Instance
+          sql_instance: SQL Instance
           default-tenant: Default Tenant
           admin-username: Administrator Username
           admin-password: Administrator Password

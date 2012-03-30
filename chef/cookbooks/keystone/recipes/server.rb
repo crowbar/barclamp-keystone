@@ -35,7 +35,7 @@ if node[:keystone][:sql_engine] == "mysql"
         action :install
     end
 
-    env_filter = " AND mysql_config_environment:mysql-config-#{node[:keystone][:mysql_instance]}"
+    env_filter = " AND mysql_config_environment:mysql-config-#{node[:keystone][:sql_instance]}"
     mysqls = search(:node, "roles:mysql-server#{env_filter}") || []
     if mysqls.length > 0
         mysql = mysqls[0]
