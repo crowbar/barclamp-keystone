@@ -16,8 +16,10 @@
 
 unless platform == "suse"
   default[:keystone][:user] = "keystone"
+  default[:keystone][:service_name] = "keystone"
 else
   default[:keystone][:user] = "openstack-keystone"
+  default[:keystone][:service_name] = "openstack-keystone"
 end
 
 default[:keystone][:debug] = true

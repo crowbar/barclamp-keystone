@@ -38,7 +38,7 @@ else
   end
 
   if node[:keystone][:frontend]=='native'
-    link_service @cookbook_name do
+    link_service node[:keystone][:service_name] do
       #TODO: fix for generate templates in virtualenv
       virtualenv venv_path
       bin_name "keystone-all"
@@ -55,12 +55,14 @@ end
 
 if node[:keystone][:frontend]=='native'
   service "keystone" do
+    service_name node[:keystone][:service_name]
     supports :status => true, :restart => true
     action :enable
   end
 elsif node[:keystone][:frontend]=='apache'
 
   service "keystone" do
+    service_name node[:keystone][:service_name]
     supports :status => true, :restart => true
     action [ :disable, :stop ]
   end
@@ -131,6 +133,7 @@ if node[:keystone][:sql_engine] == "mysql"
     include_recipe "mysql::client"
 
     package "python-mysqldb" do
+        package_name "python-mysql" if node.platform == "suse"
         action :install
     end
 
