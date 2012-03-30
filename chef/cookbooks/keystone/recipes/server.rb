@@ -14,10 +14,12 @@
 #
 
 package "keystone" do
+  package_name "openstack-keystone" if node.platform == "suse"
   action :install
 end
 
 service "keystone" do
+  service_name "openstack-keystone" if node.platform == "suse"
   supports :status => true, :restart => true
   action :enable
 end
@@ -33,6 +35,7 @@ if sql_engine == "mysql"
     include_recipe "#{sql_engine}::client"
 
     package "python-mysqldb" do
+        package_name "python-mysql" if node.platform == "suse"
         action :install
     end
 
