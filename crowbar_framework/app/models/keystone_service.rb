@@ -26,8 +26,9 @@ class KeystoneService < ServiceObject
 
   def proposal_dependencies(role)
     answer = []
-    if role.default_attributes["keystone"]["sql_engine"] == "mysql"
-      answer << { "barclamp" => "mysql", "inst" => role.default_attributes["keystone"]["sql_instance"] }
+    sql_engine = role.default_attributes["keystone"]["sql_engine"]
+    if sql_engine == "mysql" or sql_engine == "postgresql"
+      answer << { "barclamp" => sql_engine, "inst" => role.default_attributes["keystone"]["sql_instance"] }
     end
     answer
   end
@@ -48,15 +49,42 @@ class KeystoneService < ServiceObject
         mysqls = mysqlService.proposals[1]
       end
       if mysqls.empty?
-        base["attributes"]["keystone"]["sql_engine"] = "sqlite"
+        @logger.info("Keystone create_proposal: no mysql proposal found")
+        base["attributes"]["keystone"]["sql_engine"] = ""
       else
         base["attributes"]["keystone"]["sql_instance"] = mysqls[0]
         base["attributes"]["keystone"]["sql_engine"] = "mysql"
       end
     rescue
       @logger.info("Keystone create_proposal: no mysql found")
-      base["attributes"]["keystone"]["sql_engine"] = "sqlite"
+      base["attributes"]["keystone"]["sql_engine"] = ""
     end
+
+    if  base["attributes"]["keystone"]["sql_engine"] == ""
+      begin
+        pgsqlService = PostgresqlService.new(@logger)
+        # Look for active roles
+        pgsqls = pgsqlService.list_active[1]
+        if pgsqls.empty?
+          @logger.info("Keystone create_proposal: no active postgresql proposal found")
+          # No actives, look for proposals
+          pgsqls = pgsqlService.proposals[1]
+        end
+        if pgsqls.empty?
+          @logger.info("Keystone create_proposal: no postgressql proposal found")
+          base["attributes"]["keystone"]["sql_engine"] = ""
+        else
+          @logger.info("Keystone create_proposal: postgresql instance #{pgsqls[0]}")
+          base["attributes"]["keystone"]["sql_instance"] = pgsqls[0]
+          base["attributes"]["keystone"]["sql_engine"] = "postgresql"
+        end
+      rescue
+        @logger.info("Keystone create_proposal: no postgresql found")
+        base["attributes"]["keystone"]["sql_engine"] = ""
+      end
+    end
+
+    base["attributes"]["keystone"]["sql_engine"] = "sqlite" if base["attributes"]["keystone"]["sql_engine"] == ""
     
     base["deployment"]["keystone"]["elements"] = {
         "keystone-server" => [ nodes.first[:fqdn] ]

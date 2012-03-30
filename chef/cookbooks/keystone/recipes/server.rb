@@ -29,16 +29,42 @@ end
 node.set_unless['keystone']['db']['password'] = secure_password
 
 sql_engine = node[:keystone][:sql_engine]
+
+db_provider = nil
+db_user_provider = nil
+privs = nil
+
+Chef::Log.info("Configuring Keystone to use #{sql_engine} backend")
+
+include_recipe "#{sql_engine}::client"
+
 if sql_engine == "mysql"
-    Chef::Log.info("Configuring Keystone to use #{sql_engine} backend")
-
-    include_recipe "#{sql_engine}::client"
-
     package "python-mysqldb" do
         package_name "python-mysql" if node.platform == "suse"
         action :install
     end
 
+    db_provider = Chef::Provider::Database::Mysql
+    db_user_provider = Chef::Provider::Database::MysqlUser
+    privs = [ "SELECT", "INSERT", "UPDATE", "DELETE", "CREATE",
+              "DROP", "INDEX", "ALTER" ]
+elsif sql_engine == "postgresql"
+    package "python-psycopg2" do
+         action :install
+    end
+
+    db_provider = Chef::Provider::Database::Postgresql
+    db_user_provider = Chef::Provider::Database::PostgresqlUser
+    privs = [ "CREATE", "CONNECT", "TEMP" ]
+end
+
+if sql_engine == "sqlite"
+    sql_connection = "sqlite:////var/lib/keystone/keystone.db"
+    file "/var/lib/keystone/keystone.db" do
+        owner "keystone"
+        action :create_if_missing
+    end
+else
     env_filter = " AND #{sql_engine}_config_environment:#{sql_engine}-config-#{node[:keystone][:sql_instance]}"
     sqls = search(:node, "roles:#{sql_engine}-server#{env_filter}") || []
     if sqls.length > 0
@@ -51,11 +77,10 @@ if sql_engine == "mysql"
     sql_address = Chef::Recipe::Barclamp::Inventory.get_network_by_type(sql, "admin").address if sql_address.nil?
     Chef::Log.info("Database server found at #{sql_address}")
 
-    db_provider = Chef::Provider::Database::Mysql
-    db_user_provider = Chef::Provider::Database::MysqlUser
     db_conn = { :host => sql_address,
                 :username => "db_maker",
-                :password => sql[:mysql][:db_maker_password] }
+                :password => sql[sql_engine][:db_maker_password] }
+
     # Create the Keystone Database
     database "create #{node[:keystone][:db][:database]} database" do
         connection db_conn
@@ -78,20 +103,12 @@ if sql_engine == "mysql"
         password node[:keystone][:db][:password]
         database_name node[:keystone][:db][:database]
         host sql_address
-        privileges [ "SELECT", "INSERT", "UPDATE", "DELETE", "CREATE",
-                     "DROP", "INDEX", "ALTER" ]
+        privileges privs
         provider db_user_provider
         action :grant
     end
 
     sql_connection = "#{sql_engine}://#{node[:keystone][:db][:user]}:#{node[:keystone][:db][:password]}@#{sql_address}/#{node[:keystone][:db][:database]}"
-elsif sql_engine == "sqlite"
-    Chef::Log.info("Configuring Keystone to use SQLite backend")
-    sql_connection = "sqlite:////var/lib/keystone/keystone.db"
-    file "/var/lib/keystone/keystone.db" do
-        owner "keystone"
-        action :create_if_missing
-    end
 end
 
 template "/etc/keystone/keystone.conf" do
