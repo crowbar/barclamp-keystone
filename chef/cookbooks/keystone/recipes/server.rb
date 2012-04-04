@@ -24,10 +24,6 @@ service "keystone" do
   action :enable
 end
 
-::Chef::Recipe.send(:include, Opscode::OpenSSL::Password)
-
-node.set_unless['keystone']['db']['password'] = secure_password
-
 sql_engine = node[:keystone][:sql_engine]
 
 db_provider = nil
@@ -35,8 +31,6 @@ db_user_provider = nil
 privs = nil
 
 Chef::Log.info("Configuring Keystone to use #{sql_engine} backend")
-
-include_recipe "#{sql_engine}::client"
 
 if sql_engine == "mysql"
     package "python-mysqldb" do
@@ -65,6 +59,11 @@ if sql_engine == "sqlite"
         action :create_if_missing
     end
 else
+    include_recipe "#{sql_engine}::client"
+
+    ::Chef::Recipe.send(:include, Opscode::OpenSSL::Password)
+    node.set_unless['keystone']['db']['password'] = secure_password
+
     env_filter = " AND #{sql_engine}_config_environment:#{sql_engine}-config-#{node[:keystone][:sql_instance]}"
     sqls = search(:node, "roles:#{sql_engine}-server#{env_filter}") || []
     if sqls.length > 0
@@ -89,7 +88,7 @@ else
         action :create
     end
 
-    database_user "create dashboard database user" do
+    database_user "create keystone database user" do
         connection db_conn
         username node[:keystone][:db][:user]
         password node[:keystone][:db][:password]
@@ -97,7 +96,7 @@ else
         action :create
     end
 
-    database_user "create dashboard database user" do
+    database_user "grant database access for keystone database user" do
         connection db_conn
         username node[:keystone][:db][:user]
         password node[:keystone][:db][:password]
