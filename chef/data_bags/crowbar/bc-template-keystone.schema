@@ -7,19 +7,43 @@
       "mapping": {
         "keystone": { "type": "map", "required": true, 
              "mapping": {
+                    "verbose": { "type": "bool", "required": true },
+                    "debug": { "type": "bool", "required": true },
+                    "use_syslog": { "type": "bool", "required": true },
                     "sql_engine": { "type": "str", "required": true },
                     "mysql_instance": { "type": "str", "required": true },
-                    "admin": { "type": "map", "required": true, 
-                      "mapping": {
-                          "username": { "type" : "str", "required" : true },
-                          "password": { "type" : "str", "required" : true },
-                          "token": { "type": "str", "required" : true },
-                          "token-expiration": { "type": "str", "required" : true }
+                    "db": { "type": "map", "required": true, "mapping": {
+                      "database": { "type" : "str", "required" : true },
+                      "user": { "type" : "str", "required" : true },
+                      "password": { "type" : "str" }
+                    }},
+                    "sql": { "type": "map", "required": true, "mapping": {
+                      "idle_timeout": { "type" : "int", "required" : true },
+                      "min_pool_size": { "type" : "int", "required" : true },
+                      "max_pool_size": { "type" : "int", "required" : true },
+                      "pool_timeout": { "type" : "int", "required" : true }
+                    }},
+                    "api": { "type": "map", "required": true, "mapping": {
+                      "service_port": { "type" : "int", "required" : true },
+                      "api_port": { "type" : "int", "required" : true },
+                      "admin_port": { "type" : "int", "required" : true },
+                      "service_host": { "type" : "str", "required" : true },
+                      "api_host": { "type" : "str", "required" : true },
+                      "admin_host": { "type" : "str", "required" : true }
+                    }},
+                    "admin": { "type": "map", "required": true, "mapping": {
+                      "tenant": { "type" : "str", "required" : true },
+                      "username": { "type" : "str", "required" : true },
+                      "password": { "type" : "str", "required" : true }
+                    }},
+                    "service": { "type": "map", "required": true, "mapping": {
+                      "tenant": { "type" : "str", "required" : true },
+                      "token": { "type": "str", "required" : true }
                     }},
                     "default" : { "type" : "map", "required" : true, "mapping": {
-                       "tenant": { "type" : "str", "required" : true },
-                       "username": { "type" : "str", "required" : true },
-                       "password": { "type" : "str", "required" : true }
+                      "tenant": { "type" : "str", "required" : true },
+                      "username": { "type" : "str", "required" : true },
+                      "password": { "type" : "str", "required" : true }
                     }}
               }}
      }},

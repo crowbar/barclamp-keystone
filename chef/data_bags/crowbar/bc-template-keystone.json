@@ -4,19 +4,43 @@
   "description": "Centralized authentication and authorization service for OpenStack",
   "attributes": {
     "keystone": {
-          "sql_engine": "mysql",
-          "mysql_instance": "none",
-          "admin": {
-                "username": "admin",
-                "password": "crowbar",
-                "token": "999888777666",
-		"token-expiration":  "2015-02-05T00:00"
-          },
-          "default": {
-                "tenant": "openstack",
-                "username": "crowbar",
-                "password": "crowbar"
-	  }
+      "debug": true,
+      "verbose": true,
+      "use_syslog": false,
+      "sql_engine": "mysql",
+      "mysql_instance": "none",
+      "db": {
+        "database": "keystone",
+        "user": "keystone"
+      },
+      "sql": {
+        "idle_timeout": 30,
+        "min_pool_size": 5,
+        "max_pool_size": 10,
+        "pool_timeout": 200
+      },
+      "api": {
+        "service_port": 5000,
+        "service_host": "0.0.0.0",
+        "api_port": 5000,
+        "api_host": "0.0.0.0",
+        "admin_port": 35357,
+        "admin_host": "0.0.0.0"
+      },
+      "admin": {
+        "tenant": "admin",
+        "username": "admin",
+        "password": "crowbar"
+      },
+      "service": {
+        "tenant": "service",
+        "token": "999888777666"
+      },
+      "default": {
+        "tenant": "openstack",
+        "username": "crowbar",
+        "password": "crowbar"
+      }
     }
   },
   "deployment": {

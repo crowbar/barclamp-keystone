@@ -68,6 +68,10 @@ if node[:keystone][:sql_engine] == "mysql"
 elsif node[:keystone][:sql_engine] == "sqlite"
     Chef::Log.info("Configuring Keystone to use SQLite backend")
     sql_connection = "sqlite:////var/lib/keystone/keystone.db"
+    file "/var/lib/keystone/keystone.db" do
+        owner "keystone"
+        action :create_if_missing
+    end
 end
 
 template "/etc/keystone/keystone.conf" do
@@ -75,124 +79,142 @@ template "/etc/keystone/keystone.conf" do
     mode "0644"
     variables(
       :sql_connection => sql_connection,
+      :sql_idle_timeout => node[:keystone][:sql][:idle_timeout],
+      :sql_min_pool_size => node[:keystone][:sql][:min_pool_size],
+      :sql_max_pool_size => node[:keystone][:sql][:max_pool_size],
+      :sql_pool_timeout => node[:keystone][:sql][:pool_timeout],
       :debug => node[:keystone][:debug],
       :verbose => node[:keystone][:verbose],
-      :service_api_port => node[:keystone][:api][:service_port],
-      :admin_api_port => node[:keystone][:api][:admin_port]
+      :admin_token => node[:keystone][:service][:token],
+      :service_api_port => node[:keystone][:api][:service_port], # Compute port
+      :service_api_host => node[:keystone][:api][:service_host],
+      :admin_api_port => node[:keystone][:api][:admin_port], # Auth port
+      :admin_api_host => node[:keystone][:api][:admin_host],
+      :api_port => node[:keystone][:api][:api_port], # public port
+      :api_host => node[:keystone][:api][:api_host],
+      :use_syslog => node[:keystone][:use_syslog]
     )
     notifies :restart, resources(:service => "keystone"), :immediately
 end
 
-# Create default tenant
-execute "Keystone: add <default> tenant" do
-  command "keystone-manage tenant add #{node[:keystone][:default][:tenant]}"
+execute "keystone-manage db_sync" do
   action :run
-  not_if "keystone-manage tenant list|grep #{node[:keystone][:default][:tenant]}"
-end
-
-# Create admin user
-execute "Keystone: add <admin> user" do
-  command "keystone-manage user add #{node[:keystone][:admin][:username]} #{node[:keystone][:admin][:password]} #{node[:keystone][:default][:tenant]}"
-  action :run
-  not_if "keystone-manage user list|grep #{node[:keystone][:admin][:username]}"
-end
-
-# Create admin token
-execute "Keystone: add <admin> user token" do
-  command "keystone-manage token add #{node[:keystone][:admin][:token]} #{node[:keystone][:admin][:username]} #{node[:keystone][:default][:tenant]} #{node[:keystone][:admin]['token-expiration']}"
-  action :run
-  not_if "keystone-manage token list | grep #{node[:keystone][:admin][:token]}"
-end
-
-# Create default user
-execute "Keystone: add <default> user" do
-  command "keystone-manage user add #{node[:keystone][:default][:username]} #{node[:keystone][:default][:password]} #{node[:keystone][:default][:tenant]}"
-  action :run
-  not_if "keystone-manage user list|grep #{node[:keystone][:default][:username]}"
-end
-
-# Create Admin role
-execute "Keystone: add ServiceAdmin role" do
-  command "keystone-manage role add Admin"
-  action :run
-  not_if "keystone-manage role list|grep Admin"
-end
-
-# Create Member role
-execute "Keystone: add Member role" do
-  command "keystone-manage role add Member"
-  action :run
-  not_if "keystone-manage role list|grep Member"
-end
-
-# Hack since grant ServiceAdmin role call is not idempotent
-file "/var/lock/thisiswhywecanthavenicethings.lock" do
-  owner "root"
-  group "root"
-  action :nothing
-end
-
-execute "Keystone: grant ServiceAdmin role to <admin> user" do
-  # This command is not idempotent, there is no way to verify if this has
-  # been created before via keystone-manage
-  #
-  # command syntax: role grant 'role' 'user' 'tenant (optional)'
-  command "keystone-manage role grant Admin #{node[:keystone][:admin][:username]}"
-  action :run
-  notifies :touch, resources(:file => "/var/lock/thisiswhywecanthavenicethings.lock"), :immediately
-  not_if do File.exists?("/var/lock/thisiswhywecanthavenicethings.lock") end 
-end
-
-execute "Keystone: grant Admin role to <admin> user for <default> tenant" do
-  # command syntax: role grant 'role' 'user' 'tenant (optional)'
-  command "keystone-manage role grant Admin #{node[:keystone][:admin][:username]} #{node[:keystone][:default][:tenant]}"
-  action :run
-  not_if "keystone-manage role list #{node[:keystone][:default][:tenant]}|grep Admin"
-end
-
-execute "Keystone: grant Member role to <default> user for <default> tenant" do
-  # command syntax: role grant 'role' 'user' 'tenant (optional)'
-  command "keystone-manage role grant Member #{node[:keystone][:default][:username]} #{node[:keystone][:default][:tenant]}"
-  action :run
-  not_if "keystone-manage role list #{node[:keystone][:default][:tenant]}|grep Member"
-end
-
-execute "Keystone: add EC2 credentials to <admin> user" do
-  # command syntax: credentials add 'user' 'type' 'key' 'secret' 'tenant'
-  command "keystone-manage credentials add '#{node[:keystone][:admin][:username]}' EC2 '#{node[:keystone][:admin][:username]}' '#{node[:keystone][:admin][:password]}' '#{node[:keystone][:default][:tenant]}'"
-  action :run
-  not_if "keystone-manage credentials list | grep #{node[:keystone][:admin][:username]}"
-end
-
-execute "Keystone: add EC2 credentials to <default> user" do
-  # command syntax: credentials add 'user' 'type' 'key' 'secret' 'tenant'
-  command "keystone-manage credentials add '#{node[:keystone][:default][:username]}' EC2 '#{node[:keystone][:default][:username]}' '#{node[:keystone][:default][:password]}' '#{node[:keystone][:default][:tenant]}'"
-  action :run
-  not_if "keystone-manage credentials list | grep #{node[:keystone][:default][:username]}"
 end
 
 my_ipaddress = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
+pub_ipaddress = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "public").address rescue my_ipaddress
 
+# Silly wake-up call - this is a hack
+keystone_register "wakeup keystone" do
+  host my_ipaddress
+  port node[:keystone][:api][:admin_port]
+  token node[:keystone][:service][:token]
+  action :wakeup
+end
+
+# Create tenants
+[ node[:keystone][:admin][:tenant], 
+  node[:keystone][:service][:tenant], 
+  node[:keystone][:default][:tenant] 
+].each do |tenant|
+  keystone_register "add default #{tenant} tenant" do
+    host my_ipaddress
+    port node[:keystone][:api][:admin_port]
+    token node[:keystone][:service][:token]
+    tenant_name tenant
+    action :add_tenant
+  end
+end
+
+# Create users
+[ [ node[:keystone][:admin][:username], node[:keystone][:admin][:password], node[:keystone][:admin][:tenant] ],
+  [ node[:keystone][:default][:username], node[:keystone][:default][:password], node[:keystone][:default][:tenant] ]
+].each do |user_data|
+  keystone_register "add default #{user_data[0]} user" do
+    host my_ipaddress
+    port node[:keystone][:api][:admin_port]
+    token node[:keystone][:service][:token]
+    user_name user_data[0]
+    user_password user_data[1]
+    tenant_name user_data[2]
+    action :add_user
+  end
+end
+
+
+# Create roles
+roles = %w[admin Member KeystoneAdmin KeystoneServiceAdmin sysadmin netadmin]
+roles.each do |role|
+  keystone_register "add default #{role} role" do
+    host my_ipaddress
+    port node[:keystone][:api][:admin_port]
+    token node[:keystone][:service][:token]
+    role_name role
+    action :add_role
+  end
+end
+
+# Create Access info
+user_roles = [ 
+  [node[:keystone][:admin][:username], "admin", node[:keystone][:admin][:tenant]],
+  [node[:keystone][:admin][:username], "KeystoneAdmin", node[:keystone][:admin][:tenant]],
+  [node[:keystone][:admin][:username], "KeystoneServiceAdmin", node[:keystone][:admin][:tenant]],
+  [node[:keystone][:admin][:username], "admin", node[:keystone][:default][:tenant]],
+  [node[:keystone][:default][:username], "Member", node[:keystone][:default][:tenant]],
+  [node[:keystone][:default][:username], "sysadmin", node[:keystone][:default][:tenant]],
+  [node[:keystone][:default][:username], "netadmin", node[:keystone][:default][:tenant]]
+]
+user_roles.each do |args|
+  keystone_register "add default #{args[2]}:#{args[0]} -> #{args[1]} role" do
+    host my_ipaddress
+    port node[:keystone][:api][:admin_port]
+    token node[:keystone][:service][:token]
+    user_name args[0]
+    role_name args[1]
+    tenant_name args[2]
+    action :add_access
+  end
+end
+
+
+# Create EC2 creds for our users
+ec2_creds = [ 
+  [node[:keystone][:admin][:username], node[:keystone][:admin][:tenant]],
+  [node[:keystone][:admin][:username], node[:keystone][:default][:tenant]],
+  [node[:keystone][:default][:username], node[:keystone][:default][:tenant]]
+]
+ec2_creds.each do |args|
+  keystone_register "add default ec2 creds for #{args[1]}:#{args[0]}" do
+    host my_ipaddress
+    port node[:keystone][:api][:admin_port]
+    token node[:keystone][:service][:token]
+    user_name args[0]
+    tenant_name args[1]
+    action :add_ec2
+  end
+end
+
+# Create keystone service
 keystone_register "register keystone service" do
   host my_ipaddress
   port node[:keystone][:api][:admin_port]
-  token node[:keystone][:admin][:token]
+  token node[:keystone][:service][:token]
   service_name "keystone"
   service_type "identity"
   service_description "Openstack Identity Service"
   action :add_service
 end
 
-
+# Create keystone endpoint
 keystone_register "register keystone service" do
   host my_ipaddress
   port node[:keystone][:api][:admin_port]
-  token node[:keystone][:admin][:token]
+  token node[:keystone][:service][:token]
   endpoint_service "keystone"
   endpoint_region "RegionOne"
+  endpoint_publicURL "http://#{pub_ipaddress}:#{node[:keystone][:api][:service_port]}/v2.0"
   endpoint_adminURL "http://#{my_ipaddress}:#{node[:keystone][:api][:admin_port]}/v2.0"
   endpoint_internalURL "http://#{my_ipaddress}:#{node[:keystone][:api][:service_port]}/v2.0"
-  endpoint_publicURL "http://#{my_ipaddress}:#{node[:keystone][:api][:service_port]}/v2.0"
 #  endpoint_global true
 #  endpoint_enabled true
   action :add_endpoint_template
@@ -200,5 +222,5 @@ end
 
 node[:keystone][:monitor] = {} if node[:keystone][:monitor].nil?
 node[:keystone][:monitor][:svcs] = [] if node[:keystone][:monitor][:svcs].nil?
-node[:keystone][:monitor][:svcs] <<["keystone"]
+node[:keystone][:monitor][:svcs] << ["keystone"] if node[:keystone][:monitor][:svcs].empty?
 node.save
