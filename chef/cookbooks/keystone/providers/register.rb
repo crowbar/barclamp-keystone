@@ -17,64 +17,208 @@
 # limitations under the License.
 #
 
-action :add_service do
-  # Construct the http object
-  http = Net::HTTP.new(new_resource.host, new_resource.port)
-
-  # Fill out the headers
-  headers = _build_headers(new_resource.token)
+action :wakeup do
+  http, headers = _build_connection(new_resource)
 
   # Construct the path
-  path = '/v2.0/OS-KSADM/services/'
+  path = '/v2.0/OS-KSADM/services'
+  dir = 'OS-KSADM:services'
 
   # Lets verify that the service does not exist yet
-  service_id, error = find_service_id(http, headers, new_resource.service_name)
-  unless service_id 
+  count = 0
+  error = true
+  while error and count < 50 do
+    count = count + 1
+    item_id, error = _find_id(http, headers, "fred", path, dir)
+    sleep 1 if error
+  end
+
+  raise "Failed to validate keystone is wake" if error
+
+  new_resource.updated_by_last_action(true)
+end
+
+action :add_service do
+  http, headers = _build_connection(new_resource)
+
+  # Construct the path
+  path = '/v2.0/OS-KSADM/services'
+  dir = 'OS-KSADM:services'
+
+  # Lets verify that the service does not exist yet
+  item_id, error = _find_id(http, headers, new_resource.service_name, path, dir)
+  unless item_id or error
     # Service does not exist yet
-    body = _build_service_object(new_resource.service_name, new_resource.service_type, new_resource.service_description) 
-    resp, data = http.send_request('POST', path, JSON.generate(body), headers)
-    if resp.is_a?(Net::HTTPCreated)
-      Chef::Log.info("Created keystone service '#{new_resource.service_name}'")
-      new_resource.updated_by_last_action(true)
-    else
-      Chef::Log.error("Unable to create service '#{new_resource.service_name}'")
-      Chef::Log.error("Response Code: #{resp.code}")
-      Chef::Log.error("Response Message: #{resp.message}")
-      new_resource.updated_by_last_action(false)
-      # XXX: Should really exit fail here.
-    end
+    body = _build_service_object(new_resource.service_name, 
+                                 new_resource.service_type,  
+                                 new_resource.service_description) 
+    ret = _create_item(http, headers, path, body, new_resource.service_name)
+    new_resource.updated_by_last_action(ret)
   else
-    Chef::Log.info "Service '#{new_resource.service_name}' already exists.. Not creating." if error
+    raise "Failed to talk to keystone in add_service" if error
+    Chef::Log.info "Service '#{new_resource.service_name}' already exists.. Not creating." unless error
+    new_resource.updated_by_last_action(false)
+  end
+end
+
+# :add_tenant specific attributes
+# attribute :tenant_name, :kind_of => String
+action :add_tenant do
+  http, headers = _build_connection(new_resource)
+
+  # Construct the path
+  path = '/v2.0/tenants'
+  dir = 'tenants'
+
+  # Lets verify that the service does not exist yet
+  item_id, error = _find_id(http, headers, new_resource.tenant_name, path, dir)
+  unless item_id or error
+    # Service does not exist yet
+    body = _build_tenant_object(new_resource.tenant_name) 
+    ret = _create_item(http, headers, path, body, new_resource.tenant_name)
+    new_resource.updated_by_last_action(ret)
+  else
+    raise "Failed to talk to keystone in add_tenant" if error
+    Chef::Log.info "Tenant '#{new_resource.tenant_name}' already exists.. Not creating." unless error
+    new_resource.updated_by_last_action(false)
+  end
+end
+
+# :add_user specific attributes
+# attribute :user_name, :kind_of => String
+# attribute :user_password, :kind_of => String
+# attribute :tenant_name, :kind_of => String
+action :add_user do
+  http, headers = _build_connection(new_resource)
+
+  # Lets verify that the item does not exist yet
+  tenant = new_resource.tenant_name
+  tenant_id, terror = _find_id(http, headers, tenant, '/v2.0/tenants', 'tenants')
+
+  # Construct the path
+  path = '/v2.0/users'
+  dir = 'users'
+
+  # Lets verify that the service does not exist yet
+  item_id, uerror = _find_id(http, headers, new_resource.user_name, path, dir)
+  error = (uerror or terror)
+  unless item_id or error
+    # Service does not exist yet
+    body = _build_user_object(new_resource.user_name, new_resource.user_password, tenant_id)
+    ret = _create_item(http, headers, path, body, new_resource.user_name)
+    new_resource.updated_by_last_action(ret)
+  else
+    raise "Failed to talk to keystone in add_user" if error
+    Chef::Log.info "User '#{new_resource.user_name}' already exists.. Not creating." unless error
+    new_resource.updated_by_last_action(false)
+  end
+end
+
+# :add_role specific attributes
+# attribute :role_name, :kind_of => String
+action :add_role do
+  http, headers = _build_connection(new_resource)
+
+  # Construct the path
+  path = '/v2.0/OS-KSADM/roles'
+  dir = 'roles'
+
+  # Lets verify that the service does not exist yet
+  item_id, error = _find_id(http, headers, new_resource.role_name, path, dir)
+  unless item_id or error
+    # Service does not exist yet
+    body = _build_role_object(new_resource.role_name)
+    ret = _create_item(http, headers, path, body, new_resource.role_name)
+    new_resource.updated_by_last_action(ret)
+  else
+    raise "Failed to talk to keystone in add_role" if error
+    Chef::Log.info "User '#{new_resource.role_name}' already exists.. Not creating." unless error
+    new_resource.updated_by_last_action(false)
+  end
+end
+
+# :add_access specific attributes
+# attribute :tenant_name, :kind_of => String
+# attribute :user_name, :kind_of => String
+# attribute :role_name, :kind_of => String
+action :add_access do
+  http, headers = _build_connection(new_resource)
+
+  # Lets verify that the item does not exist yet
+  tenant = new_resource.tenant_name
+  user = new_resource.user_name
+  role = new_resource.role_name
+  user_id, uerror = _find_id(http, headers, user, '/v2.0/users', 'users')
+  tenant_id, terror = _find_id(http, headers, tenant, '/v2.0/tenants', 'tenants')
+  role_id, rerror = _find_id(http, headers, role, '/v2.0/OS-KSADM/roles', 'roles')
+
+  path = "/v2.0/tenants/#{tenant_id}/users/#{user_id}/roles"
+  t_role_id, aerror = _find_id(http, headers, role, path, 'roles')
+
+  error = (aerror or rerror or uerror or terror)
+  unless role_id == t_role_id or error
+    # Service does not exist yet
+    ret = _update_item(http, headers, "#{path}/OS-KSADM/#{role_id}", new_resource.role_name)
+    new_resource.updated_by_last_action(ret)
+  else
+    raise "Failed to talk to keystone in add_access" if error
+    Chef::Log.info "Access '#{tenant}:#{user} -> #{role}}' already exists.. Not creating." unless error
+    new_resource.updated_by_last_action(false)
+  end
+end
+
+# :add_ec2 specific attributes
+# attribute :user_name, :kind_of => String
+# attribute :tenant_name, :kind_of => String
+action :add_ec2 do
+  http, headers = _build_connection(new_resource)
+
+  # Lets verify that the item does not exist yet
+  tenant = new_resource.tenant_name
+  user = new_resource.user_name
+  user_id, uerror = _find_id(http, headers, user, '/v2.0/users', 'users')
+  tenant_id, terror = _find_id(http, headers, tenant, '/v2.0/tenants', 'tenants')
+
+  path = "/v2.0/users/#{user_id}/credentials/OS-EC2"
+  t_tenant_id, aerror = _find_id(http, headers, tenant_id, path, 'credentials', 'tenant_id', 'tenant_id')
+  
+  error = (aerror or uerror or terror)
+  unless tenant_id == t_tenant_id or error
+    # Service does not exist yet
+    body = _build_ec2_object(tenant_id)
+    ret = _create_item(http, headers, path, body, tenant)
+    new_resource.updated_by_last_action(ret)
+  else
+    raise "Failed to talk to keystone in add_ec2_creds" if error
+    Chef::Log.info "EC2 '#{tenant}:#{user}' already exists.. Not creating." unless error
     new_resource.updated_by_last_action(false)
   end
 end
 
 action :add_endpoint_template do
-  # Construct the http object
-  http = Net::HTTP.new(new_resource.host, new_resource.port)
-
-  # Fill out the headers
-  headers = _build_headers(new_resource.token)
-
-  # Construct the path
-  path = '/v2.0/endpointTemplates/'
+  http, headers = _build_connection(new_resource)
 
   # Look up my service id
-  my_service_id, error = find_service_id(http, headers, new_resource.endpoint_service)
+  # Construct the path
+  path = '/v2.0/OS-KSADM/services'
+  dir = 'OS-KSADM:services'
+  my_service_id, error = _find_id(http, headers, new_resource.endpoint_service, path, dir)
   unless my_service_id
       Chef::Log.error "Couldn't find service #{new_resource.endpoint_service} in keystone"
+      raise "Failed to talk to keystone in add_endpoint_template" if error
       new_resource.updated_by_last_action(false)
-      # XXX: Should really exit fail here.
-      return
   end
 
-  # Lets verify that the endpointTemplate does not exist yet
+  # Construct the path
+  path = '/v2.0/endpoints'
+
+  # Lets verify that the endpoint does not exist yet
   resp, data = http.request_get(path, headers) 
   if resp.is_a?(Net::HTTPOK)
       matched_service = false
       data = JSON.parse(data)
-      data["endpointTemplates"]["values"].each do |endpoint|
-          if endpoint["serviceId"].to_i === my_service_id.to_i
+      data["endpoints"].each do |endpoint|
+          if endpoint["service_id"].to_s === my_service_id.to_s
               matched_service = true
               break
           end
@@ -96,12 +240,15 @@ action :add_endpoint_template do
           if resp.is_a?(Net::HTTPCreated)
               Chef::Log.info("Created keystone endpointTemplate for '#{new_resource.endpoint_service}'")
               new_resource.updated_by_last_action(true)
+          elsif resp.is_a?(Net::HTTPOK)
+              Chef::Log.info("Updated keystone endpointTemplate for '#{new_resource.endpoint_service}'")
+              new_resource.updated_by_last_action(true)
           else
               Chef::Log.error("Unable to create endpointTemplate for '#{new_resource.endpoint_service}'")
               Chef::Log.error("Response Code: #{resp.code}")
               Chef::Log.error("Response Message: #{resp.message}")
+              raise "Failed to talk to keystone in add_endpoint_template (2)" if error
               new_resource.updated_by_last_action(false)
-              # XXX: Should really exit fail here.
           end
       end
   else
@@ -109,27 +256,74 @@ action :add_endpoint_template do
       Chef::Log.error("Response Code: #{resp.code}")
       Chef::Log.error("Response Message: #{resp.message}")
       new_resource.updated_by_last_action(false)
-      # XXX: Should really exit fail here.
+      raise "Failed to talk to keystone in add_endpoint_template (3)" if error
+  end
+end
+
+
+# Return true on success
+private
+def _create_item(http, headers, path, body, name)
+  resp, data = http.send_request('POST', path, JSON.generate(body), headers)
+  if resp.is_a?(Net::HTTPCreated)
+    Chef::Log.info("Created keystone item '#{name}'")
+    return true
+  elsif resp.is_a?(Net::HTTPOK)
+    Chef::Log.info("Updated keystone item '#{name}'")
+    return true
+  else
+    Chef::Log.error("Unable to create item '#{name}'")
+    Chef::Log.error("Response Code: #{resp.code}")
+    Chef::Log.error("Response Message: #{resp.message}")
+    raise "Failed to talk to keystone in _create_item"
+  end
+end
+
+# Return true on success
+private
+def _update_item(http, headers, path, name)
+  resp, data = http.send_request('PUT', path, nil, headers)
+  if resp.is_a?(Net::HTTPOK)
+    Chef::Log.info("Updated keystone item '#{name}'")
+    return true
+  elsif resp.is_a?(Net::HTTPCreated)
+    Chef::Log.info("Created keystone item '#{name}'")
+    return true
+  else
+    Chef::Log.error("Unable to updated item '#{name}'")
+    Chef::Log.error("Response Code: #{resp.code}")
+    Chef::Log.error("Response Message: #{resp.message}")
+    raise "Failed to talk to keystone in _update_item"
   end
 end
 
 private
-def find_service_id(http, headers, svc_name)
+def _build_connection(new_resource)
+  # Construct the http object
+  http = Net::HTTP.new(new_resource.host, new_resource.port)
+
+  # Fill out the headers
+  headers = _build_headers(new_resource.token)
+
+  [ http, headers ]
+end
+
+private
+def _find_id(http, headers, svc_name, spath, dir, key = 'name', ret = 'id')
   # Construct the path
   my_service_id = nil
   error = false
-  spath = '/v2.0/OS-KSADM/services/'
   resp, data = http.request_get(spath, headers) 
   if resp.is_a?(Net::HTTPOK)
     data = JSON.parse(data)
-    data = data["OS-KSADM:services"]
-   
+    data = data[dir]
+
     data.each do |svc|
-      my_service_id = svc["id"] if svc["name"] == svc_name
+      my_service_id = svc[ret] if svc[key] == svc_name
       break if my_service_id
     end 
   else
-    Chef::Log.error "Unknown response from Keystone Server"
+    Chef::Log.error "Find #{spath}: #{svc_name}: Unknown response from Keystone Server"
     Chef::Log.error("Response Code: #{resp.code}")
     Chef::Log.error("Response Message: #{resp.message}")
     error = true
@@ -137,6 +331,7 @@ def find_service_id(http, headers, svc_name)
   [ my_service_id, error ]
 end
 
+private
 def _build_service_object(svc_name, svc_type, svc_desc)
   svc_obj = Hash.new
   svc_obj.store("name", svc_name)
@@ -148,25 +343,73 @@ def _build_service_object(svc_name, svc_type, svc_desc)
 end
 
 private
+def _build_user_object(user_name, password, tenant_id)
+  svc_obj = Hash.new
+  svc_obj.store("name", user_name)
+  svc_obj.store("password", password)
+  svc_obj.store("tenant_id", tenant_id)
+  svc_obj.store("enabled", "True")
+  ret = Hash.new
+  ret.store("user", svc_obj)
+  return ret
+end
+
+private
+def _build_role_object(role_name)
+  svc_obj = Hash.new
+  svc_obj.store("name", role_name)
+  ret = Hash.new
+  ret.store("role", svc_obj)
+  return ret
+end
+
+private
+def _build_tenant_object(tenant_name)
+  svc_obj = Hash.new
+  svc_obj.store("name", tenant_name)
+  svc_obj.store("enabled", "True")
+  ret = Hash.new
+  ret.store("tenant", svc_obj)
+  return ret
+end
+
+private
+def _build_access_object(role_id, role_name)
+  svc_obj = Hash.new
+  svc_obj.store("name", role_name)
+  svc_obj.store("id", role_id)
+  ret = Hash.new
+  ret.store("role", svc_obj)
+  return ret
+end
+
+private
+def _build_ec2_object(tenant_id)
+  ret = Hash.new
+  ret.store("tenant_id", tenant_id)
+  return ret
+end
+
+private
 def _build_endpoint_template_object(service, region, adminURL, internalURL, publicURL, global=true, enabled=true)
   template_obj = Hash.new
-  template_obj.store("serviceId", service)
+  template_obj.store("service_id", service)
   template_obj.store("region", region)
-  template_obj.store("adminURL", adminURL)
-  template_obj.store("internalURL", internalURL)
-  template_obj.store("publicURL", publicURL)
+  template_obj.store("adminurl", adminURL)
+  template_obj.store("internalurl", internalURL)
+  template_obj.store("publicurl", publicURL)
   if global
-    template_obj.store("global", 1)
+    template_obj.store("global", "True")
   else
-    template_obj.store("global", 0)
+    template_obj.store("global", "False")
   end
   if enabled
-    template_obj.store("enabled", 1)
+    template_obj.store("enabled", "True")
   else
-    template_obj.store("enabled", 0)
+    template_obj.store("enabled", "False")
   end
   ret = Hash.new
-  ret.store("endpointTemplate", template_obj)
+  ret.store("endpoint", template_obj)
   return ret
 end
 

@@ -8,14 +8,13 @@ keystone_nodes="$(knife_node_find 'roles:keystone-server' FQDN)"
 unset http_proxy
 
 for node in $keystone_nodes; do
-    ip=$(name_to_ip "$node")
-    token=$(curl -sS --data-binary \
-	'{"auth":{"passwordCredentials":{"username":"admin","password":"crowbar"}}}' \
-	-L -H 'Content-Type: application/json' \
-	"http://$ip:5000/v2.0/tokens")
+    token=$(curl -sS -d \
+        $'{"auth":{"passwordCredentials":{"username":"admin","password":"crowbar"}}}' \
+        -L -H 'Content-Type: application/json' \
+        "http://$node:5000/v2.0/tokens")
     [[ $token =~ serviceCatalog ]] || {
-	echo "Did not get valid response from keystone @ $node!"
-	exit 1
+        echo "Did not get valid response from keystone @ $node!"
+        exit 1
     }
     echo "$token" > "$LOGDIR/keystone-token.json"
     echo "Keystone up on $node"
