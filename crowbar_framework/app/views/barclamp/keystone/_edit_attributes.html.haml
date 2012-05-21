@@ -24,10 +24,4 @@
     %p
       %label{ :for => :admin_password  }= t('.admin-password')
       %input#admin_password{:type => "text", :name => "admin_password", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["admin"]["password"], :onchange => "update_value('admin/password','admin_password', 'string')"}
-    %p
-      %label{ :for => :admin_token  }= t('.admin-token')
-      %input#admin_token{:type => "text", :name => "admin_token", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["admin"]["token"], :onchange => "update_value('admin/token','admin_token','string')"}
-    %p
-      %label{ :for => :token_e  }= t('.admin-token-expiration')
-      %input#token_e{:type => "text", :name => "token_e", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["admin"]["token-expiration"], :onchange => "update_value('admin/token-expiration','token_e','string')"}
 

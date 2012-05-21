@@ -43,10 +43,8 @@ locale_additions:
           default-tenant: Default Tenant
           admin-username: Administrator Username
           admin-password: Administrator Password
-          admin-token: Administrator Token (long-lived)
           default-username: Regular User Username
           default-password: Regular User Password
-          admin-token-expiration: Administrator Token Expiration
 
 debs:
   ubuntu-10.10:
