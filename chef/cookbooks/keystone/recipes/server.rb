@@ -44,7 +44,7 @@ if node[:keystone][:sql_engine] == "mysql"
         mysql = node
     end
 
-    mysql_address = Chef::Recipe::Barclamp::Inventory.get_network_by_type(mysql, "admin").address if mysql_address.nil?
+    mysql_address = mysql.address.addr
     Chef::Log.info("Mysql server found at #{mysql_address}")
     
     # Create the Keystone Database
@@ -101,8 +101,8 @@ execute "keystone-manage db_sync" do
   action :run
 end
 
-my_ipaddress = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
-pub_ipaddress = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "public").address rescue my_ipaddress
+my_ipaddress = node.address.addr
+pub_ipaddress = node.address("public").addr
 
 # Silly wake-up call - this is a hack
 keystone_register "wakeup keystone" do
