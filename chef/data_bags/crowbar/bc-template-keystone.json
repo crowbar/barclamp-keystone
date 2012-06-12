@@ -9,6 +9,7 @@
       "use_syslog": false,
       "sql_engine": "mysql",
       "mysql_instance": "none",
+      "user": "keystone",
       "db": {
         "database": "keystone",
         "user": "keystone"
