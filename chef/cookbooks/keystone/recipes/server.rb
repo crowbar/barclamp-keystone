@@ -69,7 +69,7 @@ elsif node[:keystone][:sql_engine] == "sqlite"
     Chef::Log.info("Configuring Keystone to use SQLite backend")
     sql_connection = "sqlite:////var/lib/keystone/keystone.db"
     file "/var/lib/keystone/keystone.db" do
-        owner "keystone"
+        owner node[:keystone][:user]
         action :create_if_missing
     end
 end
