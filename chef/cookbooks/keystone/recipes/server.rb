@@ -55,7 +55,7 @@ end
 if sql_engine == "sqlite"
     sql_connection = "sqlite:////var/lib/keystone/keystone.db"
     file "/var/lib/keystone/keystone.db" do
-        owner "keystone"
+        owner "openstack-keystone"
         action :create_if_missing
     end
 else
