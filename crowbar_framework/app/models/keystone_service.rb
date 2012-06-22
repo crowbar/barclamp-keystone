@@ -47,15 +47,13 @@ class KeystoneService < ServiceObject
         # No actives, look for proposals
         mysqls = mysqlService.proposals[1]
       end
-      if mysqls.empty?
-        base["attributes"]["keystone"]["sql_engine"] = "sqlite"
-      else
+      unless mysqls.empty?
         base["attributes"]["keystone"]["mysql_instance"] = mysqls[0]
-        base["attributes"]["keystone"]["sql_engine"] = "mysql"
       end
+      base["attributes"]["keystone"]["sql_engine"] = "mysql"
     rescue
       @logger.info("Keystone create_proposal: no mysql found")
-      base["attributes"]["keystone"]["sql_engine"] = "sqlite"
+      base["attributes"]["keystone"]["sql_engine"] = "mysql"
     end
     
     base["deployment"]["keystone"]["elements"] = {
