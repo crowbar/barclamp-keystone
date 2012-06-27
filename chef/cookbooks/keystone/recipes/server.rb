@@ -25,44 +25,11 @@ service "keystone" do
 end
 
 sql_engine = node[:keystone][:sql_engine]
-
-db_provider = nil
-db_user_provider = nil
-privs = nil
+url_scheme = ""
 
 Chef::Log.info("Configuring Keystone to use #{sql_engine} backend")
 
-if sql_engine == "mysql"
-    package "python-mysqldb" do
-        package_name "python-mysql" if node.platform == "suse"
-        action :install
-    end
-
-    db_provider = Chef::Provider::Database::Mysql
-    db_user_provider = Chef::Provider::Database::MysqlUser
-    privs = [ "SELECT", "INSERT", "UPDATE", "DELETE", "CREATE",
-              "DROP", "INDEX", "ALTER" ]
-elsif sql_engine == "postgresql"
-    package "python-psycopg2" do
-         action :install
-    end
-
-    db_provider = Chef::Provider::Database::Postgresql
-    db_user_provider = Chef::Provider::Database::PostgresqlUser
-    privs = [ "CREATE", "CONNECT", "TEMP" ]
-end
-
-if sql_engine == "sqlite"
-    sql_connection = "sqlite:////var/lib/keystone/keystone.db"
-    file "/var/lib/keystone/keystone.db" do
-        owner "openstack-keystone"
-        action :create_if_missing
-    end
-else
-    include_recipe "#{sql_engine}::client"
-
-    ::Chef::Recipe.send(:include, Opscode::OpenSSL::Password)
-    node.set_unless['keystone']['db']['password'] = secure_password
+if sql_engine == "database"
 
     env_filter = " AND #{sql_engine}_config_environment:#{sql_engine}-config-#{node[:keystone][:sql_instance]}"
     sqls = search(:node, "roles:#{sql_engine}-server#{env_filter}") || []
@@ -72,6 +39,19 @@ else
     else
         sql = node
     end
+    include_recipe "database::client"
+    backend_name = Chef::Recipe::Database::Util.get_backend_name(sql)
+    include_recipe "#{backend_name}::client"
+    include_recipe "#{backend_name}::python-client"
+
+    db_provider = Chef::Recipe::Database::Util.get_database_provider(sql)
+    db_user_provider = Chef::Recipe::Database::Util.get_user_provider(sql)
+    privs = Chef::Recipe::Database::Util.get_default_priviledges(sql)
+    url_scheme = backend_name
+
+    ::Chef::Recipe.send(:include, Opscode::OpenSSL::Password)
+    node.set_unless['keystone']['db']['password'] = secure_password
+
 
     sql_address = Chef::Recipe::Barclamp::Inventory.get_network_by_type(sql, "admin").address if sql_address.nil?
     Chef::Log.info("Database server found at #{sql_address}")
@@ -106,9 +86,16 @@ else
         provider db_user_provider
         action :grant
     end
-
-    sql_connection = "#{sql_engine}://#{node[:keystone][:db][:user]}:#{node[:keystone][:db][:password]}@#{sql_address}/#{node[:keystone][:db][:database]}"
+elsif sql_engine == "sqlite"
+    sql_connection = "sqlite:////var/lib/keystone/keystone.db"
+    file "/var/lib/keystone/keystone.db" do
+        owner "openstack-keystone"
+        action :create_if_missing
+    end
+    url_scheme = "sqlite"
 end
+
+sql_connection = "#{url_scheme}://#{node[:keystone][:db][:user]}:#{node[:keystone][:db][:password]}@#{sql_address}/#{node[:keystone][:db][:database]}"
 
 template "/etc/keystone/keystone.conf" do
     source "keystone.conf.erb"
