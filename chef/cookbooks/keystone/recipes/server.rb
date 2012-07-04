@@ -86,6 +86,7 @@ if sql_engine == "database"
         provider db_user_provider
         action :grant
     end
+    sql_connection = "#{url_scheme}://#{node[:keystone][:db][:user]}:#{node[:keystone][:db][:password]}@#{sql_address}/#{node[:keystone][:db][:database]}"
 elsif sql_engine == "sqlite"
     sql_connection = "sqlite:////var/lib/keystone/keystone.db"
     file "/var/lib/keystone/keystone.db" do
@@ -93,9 +94,10 @@ elsif sql_engine == "sqlite"
         action :create_if_missing
     end
     url_scheme = "sqlite"
+else
+    Chef::Log.error("Unknown sql_engine #{sql_engine}")
 end
 
-sql_connection = "#{url_scheme}://#{node[:keystone][:db][:user]}:#{node[:keystone][:db][:password]}@#{sql_address}/#{node[:keystone][:db][:database]}"
 
 template "/etc/keystone/keystone.conf" do
     source "keystone.conf.erb"
