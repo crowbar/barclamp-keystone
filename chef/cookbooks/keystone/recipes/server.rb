@@ -178,7 +178,8 @@ end
 
 template "/etc/keystone/keystone.conf" do
     source "keystone.conf.erb"
-    mode "0644"
+    owner node[:keystone][:user]
+    mode 0640
     variables(
       :sql_connection => sql_connection,
       :sql_idle_timeout => node[:keystone][:sql][:idle_timeout],
