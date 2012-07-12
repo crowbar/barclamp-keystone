@@ -90,7 +90,7 @@ if sql_engine == "database"
 elsif sql_engine == "sqlite"
     sql_connection = "sqlite:////var/lib/keystone/keystone.db"
     file "/var/lib/keystone/keystone.db" do
-        owner "openstack-keystone"
+        owner node[:keystone][:user]
         action :create_if_missing
     end
     url_scheme = "sqlite"
@@ -101,7 +101,8 @@ end
 
 template "/etc/keystone/keystone.conf" do
     source "keystone.conf.erb"
-    mode "0644"
+    owner node[:keystone][:user]
+    mode 0640
     variables(
       :sql_connection => sql_connection,
       :sql_idle_timeout => node[:keystone][:sql][:idle_timeout],

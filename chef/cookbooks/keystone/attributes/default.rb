@@ -16,6 +16,7 @@
 
 default[:keystone][:debug] = true
 default[:keystone][:verbose] = true
+default[:keystone][:user] = "openstack-keystone"
 
 default[:keystone][:db][:database] = "keystone"
 default[:keystone][:db][:user] = "keystone"
