@@ -47,6 +47,11 @@ locale_additions:
           default-username: Regular User Username
           default-password: Regular User Password
           admin-token-expiration: Administrator Token Expiration
+          ssl: Security Attributes
+          ssl_hint: Keystone will be provided by Apache2 via SSL-enabled WSGI vhost
+          protocol: Protocol
+          apache_ssl_crt_file: SSL Certificate File
+          apache_ssl_key_file: SSL Key File
 
 debs:
   ubuntu-10.10:

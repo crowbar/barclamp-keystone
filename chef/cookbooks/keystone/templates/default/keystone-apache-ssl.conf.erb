@@ -1,0 +1,66 @@
+#
+# OpenStack Identity (keystone) Apache2 SSL proxy example configuration.
+#
+# Required Apache2 modules:
+#  - mod_ssl
+#  - mod_wsgi
+#
+
+
+<IfDefine SSL>
+<IfDefine !NOSSL>
+
+# Proxy Keystone public API:
+Listen 5000
+
+<VirtualHost *:5000>
+    ServerName openstack-keystone.example.com
+    ServerAdmin webmaster@openstack-keystone.example.com
+
+    ErrorLog /var/log/apache2/openstack-keystone-error_log
+    TransferLog /var/log/apache2/openstack-keystone-access_log
+    LogLevel debug
+
+    SSLEngine on
+    SSLCertificateFile <%= @ssl_crt_file %>
+    SSLCertificateKeyFile <%= @ssl_key_file %>
+
+    # Need to run as user 'openstack-keystone' to gain access to '/etc/keystone/keystone.conf'
+    WSGIDaemonProcess keystone_main user=<%= @user %> group=<%= @group %> processes=2
+    WSGIProcessGroup keystone_main
+
+    WSGIScriptAlias / /var/lib/keystone/wsgi/main.wsgi
+    <Directory /var/lib/keystone/wsgi/>
+        Order allow,deny
+        Allow from all
+    </Directory>
+</VirtualHost>                                  
+
+
+# Proxy Keystone admin API:
+Listen 35357
+
+<VirtualHost *:35357>
+    ServerName openstack-keystone.example.com
+    ServerAdmin webmaster@openstack-keystone.example.com
+
+    ErrorLog /var/log/apache2/openstack-keystone-error_log
+    TransferLog /var/log/apache2/openstack-keystone-access_log
+
+    SSLEngine on
+    SSLCertificateFile <%= @ssl_crt_file %>
+    SSLCertificateKeyFile <%= @ssl_key_file %>
+
+    # Need to run as user 'openstack-keystone' to gain access to '/etc/keystone/keystone.conf'
+    WSGIDaemonProcess keystone_admin user=<%= @user %> group=<%= @group %> processes=2
+    WSGIProcessGroup keystone_admin
+
+    WSGIScriptAlias / /var/lib/keystone/wsgi/admin.wsgi
+    <Directory /var/lib/keystone/wsgi/>
+        Order allow,deny
+        Allow from all
+    </Directory>
+</VirtualHost>                                  
+
+</IfDefine>
+</IfDefine>

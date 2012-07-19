@@ -11,17 +11,48 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
+
+if node[:keystone][:api][:protocol] == "https"
+  include_recipe "apache2"
+  include_recipe "apache2::mod_ssl"
+  include_recipe "apache2::mod_wsgi"
+end
 
 package "keystone" do
   package_name "openstack-keystone" if node.platform == "suse"
   action :install
 end
 
-service "keystone" do
-  service_name "openstack-keystone" if node.platform == "suse"
-  supports :status => true, :restart => true
-  action :enable
+if node[:keystone][:api][:protocol] == "https"
+  Chef::Log.info("Configuring Keystone to use SSL via Apache2+mod_wsgi")
+
+  # Prepare Apache2 SSL vhost template:
+  template "#{node[:apache][:dir]}/sites-available/openstack-keystone.conf" do
+    if node.platform == "suse"
+      path "#{node[:apache][:dir]}/vhosts.d/openstack-keystone.conf"
+    end
+    source "keystone-apache-ssl.conf.erb"
+    mode 0644
+    variables(
+        :user => node[:keystone][:user],
+        :group => node[:keystone][:group],
+        :ssl_crt_file => node[:keystone][:apache][:ssl_crt_file],
+        :ssl_key_file => node[:keystone][:apache][:ssl_key_file]
+    )
+    if ::File.symlink?("#{node[:apache][:dir]}/sites-enabled/openstack-keystone.conf") or node.platform == "suse"
+      notifies :reload, resources(:service => "apache2")
+    end
+  end
+
+  apache_site "openstack-keystone.conf" do
+    enable true
+  end
+else
+  service "keystone" do
+    service_name "openstack-keystone" if node.platform == "suse"
+    supports :status => true, :restart => true
+    action :enable
+  end
 end
 
 sql_engine = node[:keystone][:sql_engine]
@@ -120,11 +151,20 @@ template "/etc/keystone/keystone.conf" do
       :api_host => node[:keystone][:api][:api_host],
       :use_syslog => node[:keystone][:use_syslog]
     )
-    notifies :restart, resources(:service => "keystone"), :immediately
+    # The service is only used if Apache2+mod_wsgi isn't configured. If it is
+    # replace the service symlink on SUSE with a symlink to /etc/init/apache2
+    if node[:keystone][:api][:protocol] == "https"
+      #TODO: replace openstack-keystone symlink
+    else
+      notifies :restart, resources(:service => "keystone"), :immediately
+    end
 end
 
 execute "keystone-manage db_sync" do
   action :run
+  if node[:keystone][:api][:protocol] == "https"
+    notifies :restart, resources(:service => "apache2"), :immediately
+  end
 end
 
 my_ipaddress = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
@@ -132,6 +172,7 @@ pub_ipaddress = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "pub
 
 # Silly wake-up call - this is a hack
 keystone_register "wakeup keystone" do
+  protocol node[:keystone][:api][:protocol]
   host my_ipaddress
   port node[:keystone][:api][:admin_port]
   token node[:keystone][:service][:token]
@@ -144,6 +185,7 @@ end
   node[:keystone][:default][:tenant] 
 ].each do |tenant|
   keystone_register "add default #{tenant} tenant" do
+    protocol node[:keystone][:api][:protocol]
     host my_ipaddress
     port node[:keystone][:api][:admin_port]
     token node[:keystone][:service][:token]
@@ -157,6 +199,7 @@ end
   [ node[:keystone][:default][:username], node[:keystone][:default][:password], node[:keystone][:default][:tenant] ]
 ].each do |user_data|
   keystone_register "add default #{user_data[0]} user" do
+    protocol node[:keystone][:api][:protocol]
     host my_ipaddress
     port node[:keystone][:api][:admin_port]
     token node[:keystone][:service][:token]
@@ -172,6 +215,7 @@ end
 roles = %w[admin Member KeystoneAdmin KeystoneServiceAdmin sysadmin netadmin]
 roles.each do |role|
   keystone_register "add default #{role} role" do
+    protocol node[:keystone][:api][:protocol]
     host my_ipaddress
     port node[:keystone][:api][:admin_port]
     token node[:keystone][:service][:token]
@@ -192,6 +236,7 @@ user_roles = [
 ]
 user_roles.each do |args|
   keystone_register "add default #{args[2]}:#{args[0]} -> #{args[1]} role" do
+    protocol node[:keystone][:api][:protocol]
     host my_ipaddress
     port node[:keystone][:api][:admin_port]
     token node[:keystone][:service][:token]
@@ -211,6 +256,7 @@ ec2_creds = [
 ]
 ec2_creds.each do |args|
   keystone_register "add default ec2 creds for #{args[1]}:#{args[0]}" do
+    protocol node[:keystone][:api][:protocol]
     host my_ipaddress
     port node[:keystone][:api][:admin_port]
     token node[:keystone][:service][:token]
@@ -222,6 +268,7 @@ end
 
 # Create keystone service
 keystone_register "register keystone service" do
+  protocol node[:keystone][:api][:protocol]
   host my_ipaddress
   port node[:keystone][:api][:admin_port]
   token node[:keystone][:service][:token]
@@ -233,6 +280,7 @@ end
 
 # Create keystone endpoint
 keystone_register "register keystone service" do
+  protocol node[:keystone][:api][:protocol]
   host my_ipaddress
   port node[:keystone][:api][:admin_port]
   token node[:keystone][:service][:token]

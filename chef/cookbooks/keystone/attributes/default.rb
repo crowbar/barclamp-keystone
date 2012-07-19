@@ -17,11 +17,13 @@
 default[:keystone][:debug] = true
 default[:keystone][:verbose] = true
 default[:keystone][:user] = "openstack-keystone"
+default[:keystone][:group] = "openstack-keystone"
 
 default[:keystone][:db][:database] = "keystone"
 default[:keystone][:db][:user] = "keystone"
 default[:keystone][:db][:password] = "" # Set by Recipe
 
+default[:keystone][:api][:protocol] = "http"
 default[:keystone][:api][:service_port] = "5000"
 default[:keystone][:api][:service_host] = "0.0.0.0"
 default[:keystone][:api][:admin_port] = "35357"
@@ -35,4 +37,6 @@ default[:keystone][:sql][:min_pool_size] = 5
 default[:keystone][:sql][:max_pool_size] = 10
 default[:keystone][:sql][:pool_timeout] = 200
 
-
+# Secure Apache config
+default[:keystone][:apache][:ssl_crt_file] = '/etc/apache2/ssl.crt/openstack-keystone-server.crt'
+default[:keystone][:apache][:ssl_key_file] = '/etc/apache2/ssl.key/openstack-keystone-server.key'

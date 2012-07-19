@@ -24,6 +24,7 @@
                       "pool_timeout": { "type" : "int", "required" : true }
                     }},
                     "api": { "type": "map", "required": true, "mapping": {
+                      "protocol": { "type": "str", "required": true },
                       "service_port": { "type" : "int", "required" : true },
                       "api_port": { "type" : "int", "required" : true },
                       "admin_port": { "type" : "int", "required" : true },
@@ -44,6 +45,10 @@
                       "tenant": { "type" : "str", "required" : true },
                       "username": { "type" : "str", "required" : true },
                       "password": { "type" : "str", "required" : true }
+                    }},
+                    "apache" : { "type" : "map", "required" : true, "mapping": {
+                      "ssl_crt_file": { "type": "str" },
+                      "ssl_key_file": { "type": "str" }
                     }}
               }}
      }},
