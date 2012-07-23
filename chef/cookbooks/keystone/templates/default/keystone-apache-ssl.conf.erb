@@ -19,7 +19,7 @@ Listen 5000
 
     ErrorLog /var/log/apache2/openstack-keystone-error_log
     TransferLog /var/log/apache2/openstack-keystone-access_log
-    LogLevel debug
+    LogLevel warn
 
     SSLEngine on
     SSLCertificateFile <%= @ssl_crt_file %>
@@ -46,6 +46,7 @@ Listen 35357
 
     ErrorLog /var/log/apache2/openstack-keystone-error_log
     TransferLog /var/log/apache2/openstack-keystone-access_log
+    LogLevel warn
 
     SSLEngine on
     SSLCertificateFile <%= @ssl_crt_file %>
