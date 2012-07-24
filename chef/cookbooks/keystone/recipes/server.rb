@@ -151,13 +151,22 @@ template "/etc/keystone/keystone.conf" do
       :api_host => node[:keystone][:api][:api_host],
       :use_syslog => node[:keystone][:use_syslog]
     )
-    # The service is only used if Apache2+mod_wsgi isn't configured. If it is
-    # replace the service symlink on SUSE with a symlink to /etc/init/apache2
-    if node[:keystone][:api][:protocol] == "https"
-      #TODO: replace openstack-keystone symlink
-    else
+    # The service is only used if the Apache2 SSL vhost isn't configured.
+    if node[:keystone][:api][:protocol] != "https"
       notifies :restart, resources(:service => "keystone"), :immediately
     end
+end
+
+# Replace the service symlink on SUSE with a symlink to /etc/init/apache2
+# if SSL is enabled:
+if node[:keystone][:api][:protocol] == "https"
+  file "/etc/init.d/openstack-keystone" do
+    action :delete
+  end if ::File.exists?("/etc/init.d/openstack-keystone")
+  link "/etc/init.d/openstack-keystone" do
+    link_type :symbolic
+    to "/etc/init.d/apache2"
+  end
 end
 
 execute "keystone-manage db_sync" do
