@@ -47,6 +47,13 @@ if node[:keystone][:api][:protocol] == "https"
   apache_site "openstack-keystone.conf" do
     enable true
   end
+
+  template "/etc/logrotate.d/openstack-keystone" do
+    source "keystone.logrotate.erb"
+    mode 0644
+    owner "root"
+    group "root"
+  end
 else
   service "keystone" do
     service_name "openstack-keystone" if node.platform == "suse"
