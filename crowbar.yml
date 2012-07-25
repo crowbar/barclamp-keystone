@@ -30,22 +30,6 @@ crowbar:
   run_order: 75
   chef_order: 75
 
-locale_additions:
-  en:
-    barclamp:
-      keystone:
-        edit_deployment: 
-          deployment: Deployment
-        edit_attributes: 
-          attributes: Attributes
-          sql_engine: SQL Engine
-          mysql_instance: MySQL Instance
-          default-tenant: Default Tenant
-          admin-username: Administrator Username
-          admin-password: Administrator Password
-          default-username: Regular User Username
-          default-password: Regular User Password
-
 debs:
   ubuntu-10.10:
     repos:
