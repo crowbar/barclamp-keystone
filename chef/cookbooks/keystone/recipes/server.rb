@@ -159,13 +159,6 @@ else
     Chef::Log.error("Unknown sql_engine #{sql_engine}")
 end
 
-execute "keystone-manage db_sync" do
-  action :run
-  if node[:keystone][:api][:protocol] == "https"
-    notifies :restart, resources(:service => "apache2"), :immediately
-  end
-end
-
 template "/etc/keystone/keystone.conf" do
     source "keystone.conf.erb"
     owner node[:keystone][:user]
@@ -191,6 +184,13 @@ template "/etc/keystone/keystone.conf" do
     if node[:keystone][:api][:protocol] != "https"
       notifies :restart, resources(:service => "keystone"), :immediately
     end
+end
+
+execute "keystone-manage db_sync" do
+  action :run
+  if node[:keystone][:api][:protocol] == "https"
+    notifies :restart, resources(:service => "apache2"), :immediately
+  end
 end
 
 my_ipaddress = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
