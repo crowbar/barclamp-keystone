@@ -23,7 +23,7 @@ end
 
 package "keystone" do
   package_name "openstack-keystone" if node.platform == "suse"
-  action :install
+  action :upgrade
 end
 
 if node[:keystone][:api][:protocol] == "https"
