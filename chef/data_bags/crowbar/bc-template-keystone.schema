@@ -47,8 +47,8 @@
                       "password": { "type" : "str", "required" : true }
                     }},
                     "apache" : { "type" : "map", "required" : true, "mapping": {
-                      "ssl_crt_file": { "type": "str" },
-                      "ssl_key_file": { "type": "str" }
+                      "ssl_crt_file": { "type": "str", "required": true },
+                      "ssl_key_file": { "type": "str", "required": true }
                     }}
               }}
      }},
