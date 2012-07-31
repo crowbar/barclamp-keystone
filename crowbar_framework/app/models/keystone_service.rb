@@ -65,6 +65,9 @@ class KeystoneService < ServiceObject
 
     # SQLite is not a fallback solution
     # base["attributes"]["keystone"]["database_engine"] = "sqlite" if base["attributes"]["keystone"]["database_engine"] == ""
+    if base["attributes"]["keystone"]["database_engine"] == ""
+      raise(I18n.t('model.service.dependency_missing', :name => @bc_name, :dependson => "database"))
+    end
     
     base["attributes"][@bc_name]["git_instance"] = ""
     begin
