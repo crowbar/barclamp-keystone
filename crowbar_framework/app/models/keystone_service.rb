@@ -26,9 +26,7 @@ class KeystoneService < ServiceObject
 
   def proposal_dependencies(role)
     answer = []
-    if role.default_attributes["keystone"]["sql_engine"] == "database"
-      answer << { "barclamp" => "database", "inst" => role.default_attributes["keystone"]["sql_instance"] }
-    end
+    answer << { "barclamp" => "database", "inst" => role.default_attributes["keystone"]["sql_instance"] }
     answer
   end
 
@@ -60,7 +58,8 @@ class KeystoneService < ServiceObject
       base["attributes"]["keystone"]["sql_engine"] = ""
     end
 
-    base["attributes"]["keystone"]["sql_engine"] = "sqlite" if base["attributes"]["keystone"]["sql_engine"] == ""
+    # SQLite setups are not supported
+    # base["attributes"]["keystone"]["sql_engine"] = "sqlite" if base["attributes"]["keystone"]["sql_engine"] == ""
 
     base["deployment"]["keystone"]["elements"] = {
         "keystone-server" => [ nodes.first[:fqdn] ]
