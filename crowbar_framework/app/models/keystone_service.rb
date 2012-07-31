@@ -60,6 +60,9 @@ class KeystoneService < ServiceObject
 
     # SQLite setups are not supported
     # base["attributes"]["keystone"]["sql_engine"] = "sqlite" if base["attributes"]["keystone"]["sql_engine"] == ""
+    if base["attributes"]["keystone"]["sql_engine"] == ""
+        raise(I18n.t('model.service.dependency_missing', :name => @bc_name, :dependson => "database"))
+    end
 
     base["deployment"]["keystone"]["elements"] = {
         "keystone-server" => [ nodes.first[:fqdn] ]
