@@ -63,7 +63,8 @@ class KeystoneService < ServiceObject
       base["attributes"]["keystone"]["database_engine"] = ""
     end
 
-    base["attributes"]["keystone"]["database_engine"] = "sqlite" if base["attributes"]["keystone"]["database_engine"] == ""
+    # SQLite is not a fallback solution
+    # base["attributes"]["keystone"]["database_engine"] = "sqlite" if base["attributes"]["keystone"]["database_engine"] == ""
     
     base["attributes"][@bc_name]["git_instance"] = ""
     begin
