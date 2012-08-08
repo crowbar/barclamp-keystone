@@ -19,6 +19,7 @@ barclamp:
   name: keystone
   display: OpenStack Keystone 
   version: 0
+  allow_multiple_proposals: true
   requires:
     - mysql
   member:
