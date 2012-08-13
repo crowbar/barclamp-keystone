@@ -1,4 +1,4 @@
-# Copyright 2011, Dell 
+# Copyright 2012, Dell 
 # 
 # Licensed under the Apache License, Version 2.0 (the "License"); 
 # you may not use this file except in compliance with the License. 
@@ -15,15 +15,11 @@
 
 class KeystoneService < ServiceObject
 
-  def initialize(thelogger)
-    @bc_name = "keystone"
-    @logger = thelogger
-  end
-
-  def proposal_dependencies(role)
+  def proposal_dependencies(prop_config)
     answer = []
-    if role.default_attributes["keystone"]["sql_engine"] == "mysql"
-      answer << { "barclamp" => "mysql", "inst" => role.default_attributes["keystone"]["mysql_instance"] }
+    hash = prop_config.config_hash
+    if hash["sql_engine"] == "mysql"
+      answer << { "barclamp" => "mysql", "inst" => hash["mysql_instance"] }
     end
     answer
   end
@@ -31,32 +27,34 @@ class KeystoneService < ServiceObject
   def create_proposal
     base = super
 
-    nodes = NodeObject.all
-    nodes.delete_if { |n| n.nil? or n.admin? }
+    nodes = Node.all
+    nodes.delete_if { |n| n.nil? or n.is_admin? }
+    if nodes.size >= 1
+      add_role_to_instance_and_node(n[0].name, base.name, "keystone-server")
+    end
 
-    base["attributes"]["keystone"]["mysql_instance"] = ""
+    hash = base.config_hash
+    hash["mysql_instance"] = ""
     begin
-      mysqlService = MysqlService.new(@logger)
+      mysql = Barclamp.find_by_name("mysql")
       # Look for active roles
-      mysqls = mysqlService.list_active[1]
+      mysqls = mysql.active_proposals
       if mysqls.empty?
         # No actives, look for proposals
-        mysqls = mysqlService.proposals[1]
+        mysqls = mysql.proposals
       end
       unless mysqls.empty?
-        base["attributes"]["keystone"]["mysql_instance"] = mysqls[0]
+        hash["mysql_instance"] = mysqls[0].name
       end
-      base["attributes"]["keystone"]["sql_engine"] = "mysql"
+      hash["sql_engine"] = "mysql"
     rescue
       @logger.info("Keystone create_proposal: no mysql found")
-      base["attributes"]["keystone"]["sql_engine"] = "mysql"
+      hash["sql_engine"] = "mysql"
     end
-    
-    base["deployment"]["keystone"]["elements"] = {
-        "keystone-server" => [ nodes.first[:fqdn] ]
-    } unless nodes.nil? or nodes.length ==0
 
-    base[:attributes][:keystone][:service][:token] = '%012d' % rand(1e12)
+    hash[:service][:token] = '%012d' % rand(1e12)
+
+    base.config_hash = hash
 
     base
   end
