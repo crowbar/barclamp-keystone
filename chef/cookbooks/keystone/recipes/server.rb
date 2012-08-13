@@ -29,6 +29,11 @@ end
 if node[:keystone][:api][:protocol] == "https"
   Chef::Log.info("Configuring Keystone to use SSL via Apache2+mod_wsgi")
 
+  service "keystone" do
+    service_name "openstack-keystone" if node.platform == "suse"
+    action [ :disable, :stop ]
+  end
+
   # Prepare Apache2 SSL vhost template:
   template "#{node[:apache][:dir]}/sites-available/openstack-keystone.conf" do
     if node.platform == "suse"
