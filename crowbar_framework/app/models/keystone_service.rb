@@ -18,7 +18,7 @@ class KeystoneService < ServiceObject
   def proposal_dependencies(prop_config)
     answer = []
     hash = prop_config.config_hash
-    if hash["sql_engine"] == "mysql"
+    if hash["keystone"]["sql_engine"] == "mysql"
       answer << { "barclamp" => "mysql", "inst" => hash["mysql_instance"] }
     end
     answer
@@ -34,7 +34,7 @@ class KeystoneService < ServiceObject
     end
 
     hash = base.config_hash
-    hash["mysql_instance"] = ""
+    hash["keystone"]["mysql_instance"] = ""
     begin
       mysql = Barclamp.find_by_name("mysql")
       # Look for active roles
@@ -44,15 +44,15 @@ class KeystoneService < ServiceObject
         mysqls = mysql.proposals
       end
       unless mysqls.empty?
-        hash["mysql_instance"] = mysqls[0].name
+        hash["keystone"]["mysql_instance"] = mysqls[0].name
       end
-      hash["sql_engine"] = "mysql"
+      hash["keystone"]["sql_engine"] = "mysql"
     rescue
       @logger.info("Keystone create_proposal: no mysql found")
-      hash["sql_engine"] = "mysql"
+      hash["keystone"]["sql_engine"] = "mysql"
     end
 
-    hash[:service][:token] = '%012d' % rand(1e12)
+    hash["keystone"][:service][:token] = '%012d' % rand(1e12)
 
     base.config_hash = hash
 
