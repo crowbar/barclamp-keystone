@@ -12,11 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Needed to check for leftover configuration files if previously SSL
-# was configured.
-include_recipe "apache2"
 
 if node[:keystone][:api][:protocol] == "https"
+  include_recipe "apache2"
   include_recipe "apache2::mod_ssl"
   include_recipe "apache2::mod_wsgi"
 end
@@ -64,23 +62,29 @@ if node[:keystone][:api][:protocol] == "https"
   end
 else
   # Remove potentially left-over Apache2 config files:
-  file "/etc/logrotate.d/openstack-keystone" do
-    action :delete
-  end if ::File.exist?("/etc/logrotate.d/openstack-keystone")
-
-  apache_site "openstack-keystone.conf" do
-    enable false
-  end
-
   if node.platform == "suse"
     vhost_config = "#{node[:apache][:dir]}/vhosts.d/openstack-keystone.conf"
   else
     vhost_config = "#{node[:apache][:dir]}/sites-available/openstack-keystone.conf"
   end
-  file vhost_config do
-    action :delete
-    notifies :reload, resources(:service => "apache2"), :immediately
-  end if ::File.exist?(vhost_config)
+  if ::File.exist?(vhost_config)
+    file "/etc/logrotate.d/openstack-keystone" do
+      action :delete
+    end
+
+    apache_site "openstack-keystone.conf" do
+      enable false
+    end
+
+    file vhost_config do
+      action :delete
+    end if node.platform != "suse"
+
+    service "keystone" do
+      service_name "openstack-keystone" if node.platform == "suse"
+      action :start
+    end
+  end
   # End of Apache2 vhost cleanup
 
   service "keystone" do
