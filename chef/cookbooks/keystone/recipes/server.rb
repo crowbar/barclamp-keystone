@@ -190,16 +190,16 @@ template "/etc/keystone/keystone.conf" do
       :use_syslog => node[:keystone][:use_syslog]
     )
     # The service is only used if the Apache2 SSL vhost isn't configured.
+    # otherwise restart apache on configuration changes
     if node[:keystone][:api][:protocol] != "https"
       notifies :restart, resources(:service => "keystone"), :immediately
+    else
+      notifies :restart, resources(:service => "apache2"), :immediately
     end
 end
 
 execute "keystone-manage db_sync" do
   action :run
-  if node[:keystone][:api][:protocol] == "https"
-    notifies :restart, resources(:service => "apache2"), :immediately
-  end
 end
 
 my_ipaddress = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
