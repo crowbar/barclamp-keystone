@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-default[:keystone][:debug] = true
+default[:keystone][:debug] = false
 default[:keystone][:verbose] = true
 default[:keystone][:user] = "openstack-keystone"
 default[:keystone][:group] = "openstack-keystone"

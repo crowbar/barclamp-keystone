@@ -4,7 +4,7 @@
   "description": "Centralized authentication and authorization service for OpenStack",
   "attributes": {
     "keystone": {
-      "debug": true,
+      "debug": false,
       "verbose": true,
       "use_syslog": false,
       "sql_engine": "mysql",
