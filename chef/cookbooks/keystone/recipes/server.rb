@@ -46,7 +46,7 @@ if node[:keystone][:api][:protocol] == "https"
         :ssl_key_file => node[:keystone][:apache][:ssl_key_file]
     )
     if ::File.symlink?("#{node[:apache][:dir]}/sites-enabled/openstack-keystone.conf") or node.platform == "suse"
-      notifies :reload, resources(:service => "apache2")
+      notifies :reload, resources(:service => "apache2"), :immediately
     end
   end
 
