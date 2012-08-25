@@ -14,8 +14,5 @@
 # 
 
 class KeystoneController < BarclampController
-  def initialize
-    @service_object = KeystoneService.new logger
-  end
 end
 
