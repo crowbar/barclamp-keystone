@@ -202,13 +202,13 @@ execute "keystone-manage db_sync" do
   action :run
 end
 
-my_ipaddress = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
-pub_ipaddress = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "public").address rescue my_ipaddress
+my_admin_host = node[:fqdn]
+my_public_host = 'public.'+node[:fqdn]
 
 # Silly wake-up call - this is a hack
 keystone_register "wakeup keystone" do
   protocol node[:keystone][:api][:protocol]
-  host my_ipaddress
+  host my_admin_host
   port node[:keystone][:api][:admin_port]
   token node[:keystone][:service][:token]
   action :wakeup
@@ -221,7 +221,7 @@ end
 ].each do |tenant|
   keystone_register "add default #{tenant} tenant" do
     protocol node[:keystone][:api][:protocol]
-    host my_ipaddress
+    host my_admin_host
     port node[:keystone][:api][:admin_port]
     token node[:keystone][:service][:token]
     tenant_name tenant
@@ -235,7 +235,7 @@ end
 ].each do |user_data|
   keystone_register "add default #{user_data[0]} user" do
     protocol node[:keystone][:api][:protocol]
-    host my_ipaddress
+    host my_admin_host
     port node[:keystone][:api][:admin_port]
     token node[:keystone][:service][:token]
     user_name user_data[0]
@@ -251,7 +251,7 @@ roles = %w[admin Member KeystoneAdmin KeystoneServiceAdmin sysadmin netadmin]
 roles.each do |role|
   keystone_register "add default #{role} role" do
     protocol node[:keystone][:api][:protocol]
-    host my_ipaddress
+    host my_admin_host
     port node[:keystone][:api][:admin_port]
     token node[:keystone][:service][:token]
     role_name role
@@ -272,7 +272,7 @@ user_roles = [
 user_roles.each do |args|
   keystone_register "add default #{args[2]}:#{args[0]} -> #{args[1]} role" do
     protocol node[:keystone][:api][:protocol]
-    host my_ipaddress
+    host my_admin_host
     port node[:keystone][:api][:admin_port]
     token node[:keystone][:service][:token]
     user_name args[0]
@@ -292,7 +292,7 @@ ec2_creds = [
 ec2_creds.each do |args|
   keystone_register "add default ec2 creds for #{args[1]}:#{args[0]}" do
     protocol node[:keystone][:api][:protocol]
-    host my_ipaddress
+    host my_admin_host
     port node[:keystone][:api][:admin_port]
     token node[:keystone][:service][:token]
     user_name args[0]
@@ -304,7 +304,7 @@ end
 # Create keystone service
 keystone_register "register keystone service" do
   protocol node[:keystone][:api][:protocol]
-  host my_ipaddress
+  host my_admin_host
   port node[:keystone][:api][:admin_port]
   token node[:keystone][:service][:token]
   service_name "keystone"
@@ -316,14 +316,14 @@ end
 # Create keystone endpoint
 keystone_register "register keystone service" do
   protocol node[:keystone][:api][:protocol]
-  host my_ipaddress
+  host my_admin_host
   port node[:keystone][:api][:admin_port]
   token node[:keystone][:service][:token]
   endpoint_service "keystone"
   endpoint_region "RegionOne"
-  endpoint_publicURL "#{node[:keystone][:api][:protocol]}://#{pub_ipaddress}:#{node[:keystone][:api][:service_port]}/v2.0"
-  endpoint_adminURL "#{node[:keystone][:api][:protocol]}://#{my_ipaddress}:#{node[:keystone][:api][:admin_port]}/v2.0"
-  endpoint_internalURL "#{node[:keystone][:api][:protocol]}://#{my_ipaddress}:#{node[:keystone][:api][:service_port]}/v2.0"
+  endpoint_publicURL "#{node[:keystone][:api][:protocol]}://#{my_public_host}:#{node[:keystone][:api][:service_port]}/v2.0"
+  endpoint_adminURL "#{node[:keystone][:api][:protocol]}://#{my_admin_host}:#{node[:keystone][:api][:admin_port]}/v2.0"
+  endpoint_internalURL "#{node[:keystone][:api][:protocol]}://#{my_admin_host}:#{node[:keystone][:api][:service_port]}/v2.0"
 #  endpoint_global true
 #  endpoint_enabled true
   action :add_endpoint_template
