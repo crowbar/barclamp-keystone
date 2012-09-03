@@ -13,8 +13,22 @@
 # limitations under the License.
 #
 
-package "keystone" do
-  action :install
+unless node[:keystone][:use_gitrepo]
+  package "keystone" do
+    package_name "openstack-keystone" if node.platform == "suse"
+    action :install
+  end
+else
+  keystone_path = "/opt/keystone"
+  pfs_and_install_deps(@cookbook_name)
+  link_service @cookbook_name do
+    bin_name "keystone-all"
+  end
+  create_user_and_dirs(@cookbook_name) 
+  execute "cp_policy.json" do
+    command "cp #{keystone_path}/etc/policy.json /etc/keystone"
+    creates "/etc/keystone/policy.json"
+  end
 end
 
 service "keystone" do
