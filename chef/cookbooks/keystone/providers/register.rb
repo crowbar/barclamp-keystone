@@ -215,18 +215,36 @@ action :add_endpoint_template do
   # Lets verify that the endpoint does not exist yet
   resp, data = http.request_get(path, headers) 
   if resp.is_a?(Net::HTTPOK)
-      matched_service = false
+      matched_endpoint = false
+      replace_old = false
+      old_endpoint_id = ""
       data = JSON.parse(data)
       data["endpoints"].each do |endpoint|
-          if endpoint["service_id"].to_s === my_service_id.to_s
-              matched_service = true
-              break
+          if endpoint["service_id"].to_s == my_service_id.to_s
+              if endpoint_needs_update endpoint, new_resource
+                  replace_old = true
+                  old_endpoint_id = endpoint["id"]
+                  break
+              else
+                  matched_endpoint = true
+                  break
+              end
           end
       end
-      if matched_service
+      if matched_endpoint
           Chef::Log.info("Already existing keystone endpointTemplate for '#{new_resource.endpoint_service}' - not creating")
           new_resource.updated_by_last_action(false)
       else
+          # Delete the old existing endpoint first if required
+          if replace_old
+              Chef::Log.info("Deleting old endpoint #{old_endpoint_id}")
+              resp, data = http.delete("#{path}/#{old_endpoint_id}", headers)
+              if !resp.is_a?(Net::HTTPNoContent) and !resp.is_a?(Net::HTTPOK)
+                  Chef::Log.warn("Failed to delete old endpoint")
+                  Chef::Log.warn("Response Code: #{resp.code}")
+                  Chef::Log.warn("Response Message: #{resp.message}")
+              end
+          end
           # endpointTemplate does not exist yet
           body = _build_endpoint_template_object(
                  my_service_id,
@@ -419,4 +437,14 @@ def _build_headers(token)
   ret.store('X-Auth-Token', token)
   ret.store('Content-type', 'application/json')
   return ret
+end
+
+def endpoint_needs_update(endpoint, new_resource)
+  if endpoint["publicurl"] == new_resource.endpoint_publicURL and
+        endpoint["adminurl"] == new_resource.endpoint_adminURL and
+        endpoint["internalurl"] == new_resource.endpoint_internalURL
+    return false
+  else
+    return true
+  end
 end
