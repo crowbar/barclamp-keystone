@@ -7,7 +7,7 @@
       "debug": true,
       "verbose": true,
       "gitrepo": "http://github.com/openstack/keystone.git",
-      "git_refspec": "folsom-rc1",
+      "git_refspec": "2012.2",
       "use_gitbarclamp": true,
       "use_gitrepo": true,
       "pfs_deps": [
