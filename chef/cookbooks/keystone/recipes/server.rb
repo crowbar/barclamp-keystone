@@ -223,6 +223,21 @@ keystone_register "register keystone service" do
   action :add_endpoint_template
 end
 
+template "/root/.openrc" do
+  source "openrc.erb"
+  owner "root"
+  group "root"
+  mode 0600
+  variables(
+    :keystone_ip_address => pub_ipaddress,
+    :keystone_service_port => node[:keystone][:api][:service_port],
+    :admin_username => node[:keystone][:admin][:username],
+    :admin_password => node[:keystone][:admin][:password],
+    :default_tenant =>  node[:keystone][:admin][:tenant]
+  )
+end
+
+
 node[:keystone][:monitor] = {} if node[:keystone][:monitor].nil?
 node[:keystone][:monitor][:svcs] = [] if node[:keystone][:monitor][:svcs].nil?
 node[:keystone][:monitor][:svcs] << ["keystone"] if node[:keystone][:monitor][:svcs].empty?
