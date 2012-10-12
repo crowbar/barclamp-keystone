@@ -7,6 +7,7 @@
       "debug": true,
       "verbose": true,
       "gitrepo": "http://github.com/openstack/keystone.git",
+      "git_instance": "",
       "git_refspec": "stable/folsom",
       "use_gitbarclamp": true,
       "use_pip_cache": true,

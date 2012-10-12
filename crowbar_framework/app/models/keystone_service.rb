@@ -29,6 +29,9 @@ class KeystoneService < ServiceObject
     if role.default_attributes["keystone"]["sql_engine"] == "mysql"
       answer << { "barclamp" => "mysql", "inst" => role.default_attributes["keystone"]["mysql_instance"] }
     end
+    if role.default_attributes[@bc_name]["use_gitrepo"]
+      answer << { "barclamp" => "git", "inst" => role.default_attributes[@bc_name]["git_instance"] }
+    end
     answer
   end
 
@@ -56,6 +59,21 @@ class KeystoneService < ServiceObject
       base["attributes"]["keystone"]["sql_engine"] = "mysql"
     end
     
+    base["attributes"][@bc_name]["git_instance"] = ""
+    begin
+      gitService = GitService.new(@logger)
+      gits = gitService.list_active[1]
+      if gits.empty?
+        # No actives, look for proposals
+        gits = gitService.proposals[1]
+      end
+      unless gits.empty?
+        base["attributes"][@bc_name]["git_instance"] = gits[0]
+      end
+    rescue
+      @logger.info("#{@bc_name} create_proposal: no git found")
+    end
+
     base["deployment"]["keystone"]["elements"] = {
         "keystone-server" => [ nodes.first[:fqdn] ]
     } unless nodes.nil? or nodes.length ==0
