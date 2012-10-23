@@ -24,8 +24,8 @@ class KeystoneService < ServiceObject
     answer
   end
 
-  def create_proposal
-    base = super
+  def create_proposal(name)
+    base = super(name)
 
     nodes = Node.all
     nodes.delete_if { |n| n.nil? or n.is_admin? }
