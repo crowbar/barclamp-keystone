@@ -7,6 +7,7 @@ keystone_nodes="$(knife_node_find 'roles:keystone-server' FQDN)"
 }
 unset http_proxy
 
+apt-get install python-keystoneclient
 for node in $keystone_nodes; do
     token=$(curl -sS -d \
         $'{"auth":{"passwordCredentials":{"username":"admin","password":"crowbar"}}}' \
@@ -18,4 +19,7 @@ for node in $keystone_nodes; do
     }
     echo "$token" > "$LOGDIR/keystone-token.json"
     echo "Keystone up on $node"
+    [[ -f $HOME/.openrc ]] || scp "$node:/root/.openrc" "$HOME/.openrc"
 done
+
+
