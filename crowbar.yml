@@ -24,6 +24,8 @@ barclamp:
     - mysql
   member:
     - openstack
+  os_support:
+    - ubuntu-12.04
 
 crowbar:
   layout: 2
