@@ -8,7 +8,7 @@
       "verbose": true,
       "gitrepo": "http://github.com/openstack/keystone.git",
       "git_instance": "",
-      "git_refspec": "stable/folsom",
+      "git_refspec": "grizzly-1",
       "use_gitbarclamp": true,
       "use_pip_cache": true,
       "use_gitrepo": true,
@@ -24,7 +24,8 @@
         "python-lxml",
         "python-pam",
         "python-iso8601",
-        "python-webob"
+        "python-webob",
+        "pip://python-keystoneclient>=0.2,<0.3"
       ],
       "use_syslog": false,
       "sql_engine": "mysql",
