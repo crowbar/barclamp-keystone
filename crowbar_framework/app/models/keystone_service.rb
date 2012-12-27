@@ -30,10 +30,10 @@ class KeystoneService < ServiceObject
     nodes = Node.all
     nodes.delete_if { |n| n.nil? or n.is_admin? }
     if nodes.size >= 1
-      add_role_to_instance_and_node(n[0].name, base.name, "keystone-server")
+      add_role_to_instance_and_node(nodes[0].name, base.name, "keystone-server")
     end
 
-    hash = base.config_hash
+    hash = base.current_config.config_hash
     hash["keystone"]["mysql_instance"] = ""
     begin
       mysql = Barclamp.find_by_name("mysql")
@@ -52,9 +52,9 @@ class KeystoneService < ServiceObject
       hash["keystone"]["sql_engine"] = "mysql"
     end
 
-    hash["keystone"][:service][:token] = '%012d' % rand(1e12)
+    hash["keystone"]["service"]["token"] = '%012d' % rand(1e12)
 
-    base.config_hash = hash
+    base.current_config.config_hash = hash
 
     base
   end
