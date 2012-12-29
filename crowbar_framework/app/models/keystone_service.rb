@@ -19,7 +19,7 @@ class KeystoneService < ServiceObject
     answer = []
     hash = prop_config.config_hash
     if hash["keystone"]["sql_engine"] == "mysql"
-      answer << { "barclamp" => "mysql", "inst" => hash["mysql_instance"] }
+      answer << { "barclamp" => "mysql", "inst" => hash["keystone"]["mysql_instance"] }
     end
     answer
   end
