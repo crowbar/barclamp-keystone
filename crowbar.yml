@@ -61,4 +61,4 @@ debs:
     - python-keystone
 
 git_repo:
-  - keystone http://github.com/openstack/keystone.git stable/folsom
+  - keystone https://github.com/openstack/keystone.git stable/folsom
