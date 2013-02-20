@@ -22,4 +22,6 @@
     %p
       %label{ :for => :admin_password  }= t('.admin-password')
       %input#admin_password{:type => "text", :name => "admin_password", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["admin"]["password"], :onchange => "update_value('admin/password','admin_password', 'string')"}
-
+    %p
+      %label{ :for => :signing }= t('.signing')
+      = select_tag :use_syslog, options_for_select([['pki','pki'], ['uuid', 'uuid']], @proposal.raw_data['attributes'][@proposal.barclamp]["signing"].to_s), :onchange => "update_value('signing', 'signing', 'string')"

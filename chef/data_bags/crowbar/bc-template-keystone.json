@@ -6,6 +6,7 @@
     "keystone": {
       "debug": true,
       "verbose": true,
+      "signing": "PKI",
       "gitrepo": "http://github.com/openstack/keystone.git",
       "git_instance": "",
       "git_refspec": "grizzly-1",
