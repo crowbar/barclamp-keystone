@@ -36,4 +36,4 @@ default[:keystone][:sql][:min_pool_size] = 5
 default[:keystone][:sql][:max_pool_size] = 10
 default[:keystone][:sql][:pool_timeout] = 200
 
-
+default[:keystone][:python_virtualenv] = "/usr/local/vitrualenv/"

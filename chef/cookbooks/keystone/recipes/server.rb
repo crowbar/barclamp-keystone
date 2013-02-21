@@ -238,3 +238,9 @@ node[:keystone][:monitor] = {} if node[:keystone][:monitor].nil?
 node[:keystone][:monitor][:svcs] = [] if node[:keystone][:monitor][:svcs].nil?
 node[:keystone][:monitor][:svcs] << ["keystone"] if node[:keystone][:monitor][:svcs].empty?
 node.save
+
+virtualenv @cookbook_name do
+  path node[:keystone][:python_virtualenv]
+  action :create
+  wrapped ["/usr/bin/keystone","/usr/bin/keystone-all","/usr/bin/keystone-manage"]
+end
