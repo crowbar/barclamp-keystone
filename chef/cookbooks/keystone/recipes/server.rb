@@ -13,18 +13,33 @@
 # limitations under the License.
 #
 
+
+#
+# Creating virtualenv for @cookbook_name and install pfs_deps with pp
+#
+
 unless node[:keystone][:use_gitrepo]
   package "keystone" do
     package_name "openstack-keystone" if node.platform == "suse"
     action :install
   end
 else
+
+
   keystone_path = "/opt/keystone"
-  pfs_and_install_deps(@cookbook_name)
+
+  virtualenv @cookbook_name do
+    path node[:keystone][:virtualenv]
+    action :create
+  end
+
+  pfs_install_with_env(@cookbook_name, :virtualenv => node[:keystone][:virtualenv])
+
   link_service @cookbook_name do
     bin_name "keystone-all"
   end
-  create_user_and_dirs(@cookbook_name) 
+
+  create_user_and_dirs(@cookbook_name)
   execute "cp_policy.json" do
     command "cp #{keystone_path}/etc/policy.json /etc/keystone"
     creates "/etc/keystone/policy.json"
@@ -238,9 +253,3 @@ node[:keystone][:monitor] = {} if node[:keystone][:monitor].nil?
 node[:keystone][:monitor][:svcs] = [] if node[:keystone][:monitor][:svcs].nil?
 node[:keystone][:monitor][:svcs] << ["keystone"] if node[:keystone][:monitor][:svcs].empty?
 node.save
-
-virtualenv @cookbook_name do
-  path node[:keystone][:python_virtualenv]
-  action :create
-  wrapped ["/usr/bin/keystone","/usr/bin/keystone-all","/usr/bin/keystone-manage"]
-end
