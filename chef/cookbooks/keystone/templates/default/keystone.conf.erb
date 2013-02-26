@@ -53,8 +53,8 @@ max_pool_size = <%= @sql_max_pool_size %>
 pool_timeout = <%= @sql_pool_timeout %>
 
 [signing]
-token_format = UUID
-#token_format = PKI
+token_format = <%= @signing %>
+#token_format = PKI #[PKI|UUID]
 #certfile = /etc/keystone/ssl/certs/signing_cert.pem
 #keyfile = /etc/keystone/ssl/private/signing_key.pem
 #ca_certs = /etc/keystone/ssl/certs/ca.pem

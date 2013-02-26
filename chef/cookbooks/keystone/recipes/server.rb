@@ -106,13 +106,21 @@ template "/etc/keystone/keystone.conf" do
       :admin_api_host => node[:keystone][:api][:admin_host],
       :api_port => node[:keystone][:api][:api_port], # public port
       :api_host => node[:keystone][:api][:api_host],
-      :use_syslog => node[:keystone][:use_syslog]
+      :use_syslog => node[:keystone][:use_syslog],
+      :signing => node[:keystone][:signing]
     )
     notifies :restart, resources(:service => "keystone"), :immediately
 end
 
 execute "keystone-manage db_sync" do
   action :run
+end
+
+if node[:keystone][:signing]=="PKI"
+  execute "keystone-manage pki_setup" do
+    command "keystone-manage pki_setup ; chown keystone -R /etc/keystone/ssl/"
+    action :run
+  end
 end
 
 my_ipaddress = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
