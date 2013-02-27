@@ -1,48 +1,71 @@
-define :virtualenv, :action => :create, :owner => "root", :site => nil,  :group => "root", :mode => 0755, :wrapped => [], :packages => {}, :root => "/opt/virtualenv/" do
-  path = params[:path] ? params[:path] : File.join(params[:root], params[:name]).to_s
+require 'find'
+
+define :virtualenv, :action => :create, :owner => "root", :group => "root", :mode => 0755, :wrapped => [], :packages => {} do
+  virtualenv_path = params[:name]
   if params[:action] == :create
     # Create VirtualEnv
-    puts "Cookbook: #{params[:name]}"
     package("python-pip")
     package("python-virtualenv")
-    directory path do
+    directory virtualenv_path do
       recursive true
       owner params[:owner]
       group params[:group]
       mode params[:mode]
     end
-    execute "create virtualenv #{path}" do
-      if params[:site] == :system
-        command "virtualenv #{path} --system-site-packages"
-      else
-        command "virtualenv #{path} --no-site-packages"
-      end
-      not_if "test -f #{path}/bin/python"
+    execute "create virtualenv #{virtualenv_path}" do
+      command "virtualenv #{virtualenv_path} --system-site-packages"
+      not_if "test -f  #{virtualenv_path}/bin/python"
     end
     params[:packages].each do |package|
-      pip = "#{path}/bin/pip"
-      execute "{pip} install #{package} -> #{path}" do
+      pip = "#{virtualenv_path}/bin/pip"
+      execute "{pip} install #{package} -> #{virtualenv_path}" do
         command "#{pip} install \"#{package}\""
         not_if "[ `#{pip} freeze | grep #{package}` ]"
       end
     end
   elsif params[:action] == :delete
-    directory path do
+    directory virtualenv_path do
       action :delete
       recursive true
     end
   end
 end
 
-define :pfs_install_with_env do
+define :virtualenv_wrapping, :env => nil, :to => "/usr/local/bin", :from => nil do
+  if params[:env] and params[:from]
+    env = File.join(params[:env],"bin")
+    from = File.join(params[:from],"bin")
+    to = params[:to]
+    Find.find("#{from}/") do |file|
+      next if FileTest.directory?(file)
+      name = file.split("/").last
+      template "#{to}/#{name}" do
+        source "virtualenv.erb"
+        mode 0755
+        owner "root"
+        group "root"
+        variables({
+          :env => "#{env}",
+          :from => "#{env}/#{name}",
+          :to => "#{to}/#{name}"
+        })
+      end
+    end
+  else
+    Chef::Log.fail "Not defined env or from params"
+  end
+end
+
+define :pfs_install_with_env, :virtualenv => nil do
   package("git")
   package("python-setuptools")
-
   package("python-pip")
+  package("python-dev")
 
   # prepare vurtualenv if invoked virtualenv for python
   package("python-virtualenv") if params[:virtualenv]
-  current_virtualenv = params[:virtualenv] ? "virtualenv #{params[:virtualenv]} && " : ""
+
+  current_virtualenv = params[:virtualenv] ? "#{params[:virtualenv]}/bin/" : ""
 
   current_name = params[:name]
   current_node = params[:node] || node
@@ -77,13 +100,11 @@ define :pfs_install_with_env do
     provisioner = search(:node, "roles:provisioner-server").first
     proxy_addr = provisioner[:fqdn]
     proxy_port = provisioner[:provisioner][:web_port]
-    current_pip_cmd = "#{current_virtualenv}pip install --index-url http://#{proxy_addr}:#{proxy_port}/files/pip_cache/simple/"
+    current_pip_cmd = "pip install --index-url http://#{proxy_addr}:#{proxy_port}/files/pip_cache/simple/"
   else
     # use external server
-    current_pip_cmd = "#{current_virtualenv}pip install"
+    current_pip_cmd = "pip install"
   end
-
-  puts current_pip_cmd
 
   # sync source with git repo
   git install_path do
@@ -106,7 +127,6 @@ define :pfs_install_with_env do
       # install apt packages
       apt_deps.each do |pkg|
         pkg_version = pkg.split("==").last
-        puts "+++ #{pkg}"
         package pkg do
           version pkg_version if pkg_version != pkg
         end
@@ -114,12 +134,10 @@ define :pfs_install_with_env do
 
       # install pip packages
       pip_deps.each do |pkg|
-        puts "+++ #{pkg}"
         execute "pip_install_#{pkg}" do
-          command "#{current_pip_cmd} '#{pkg}'"
+          command "#{current_virtualenv}#{current_pip_cmd} '#{pkg}'"
         end
       end
-
     end
   end
 
@@ -132,18 +150,18 @@ define :pfs_install_with_env do
     end
     execute "pip_install_requirements_#{current_name}" do
       cwd install_path
-      command "#{current_pip_cmd} -r tools/pip-requires"
+      command "#{current_virtualenv}#{current_pip_cmd} -r tools/pip-requires"
     end
     execute "setup_#{current_name}" do
       cwd install_path
-      command "python setup.py develop"
+      command "#{current_virtualenv}python setup.py develop"
       creates "#{install_path}/#{current_name == "nova_dashboard" ? "horizon":current_name}.egg-info"
     end
     # select pip packages include in name clients
     pip_deps = current_attrs[:pfs_deps].select{|p| p.include?("client") }.collect{|p| p.gsub(/^pip:\/\//,"") }
     pip_deps.each do |pkg|
       execute "pip_install_clients_#{pkg}_for_#{current_name}" do
-        command "#{current_pip_cmd} '#{pkg}'"
+        command "#{current_virtualenv}#{current_pip_cmd} '#{pkg}'"
       end
     end
   end
