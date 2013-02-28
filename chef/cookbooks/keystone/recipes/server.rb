@@ -19,33 +19,32 @@
 #
 
 unless node[:keystone][:use_gitrepo]
-  virtualenv node[:keystone][:virtualenv] do
-    action :delete
-  end
   package "keystone" do
     package_name "openstack-keystone" if node.platform == "suse"
     action :install
   end
 else
+
   keystone_path = "/opt/keystone"
 
-  virtualenv node[:keystone][:virtualenv] do
-    action :create
+  unless node[:keystone][:virtualenv].empty?
+    virtualenv @cookbook_name do
+      path node[:keystone][:virtualenv]
+      action :create
+    end
   end
-
-  pfs_install_with_env @cookbook_name do
+  pfs_and_install_deps @cookbook_name do
     virtualenv node[:keystone][:virtualenv]
   end
-
-  virtualenv_wrapping @cookbook_name do
-    env node[:keystone][:virtualenv]
-    from keystone_path
+  unless node[:keystone][:virtualenv].empty?
+    virtualenv_wrapping @cookbook_name do
+      env node[:keystone][:virtualenv]
+      from keystone_path
+    end
   end
-
   link_service @cookbook_name do
     bin_name "keystone-all"
   end
-
   create_user_and_dirs(@cookbook_name)
   execute "cp_policy.json" do
     command "cp #{keystone_path}/etc/policy.json /etc/keystone"

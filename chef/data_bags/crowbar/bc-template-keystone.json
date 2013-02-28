@@ -12,6 +12,7 @@
       "use_gitbarclamp": true,
       "use_pip_cache": true,
       "use_gitrepo": true,
+      "virtualenv": "/opt/virtualenv/keystone",
       "pfs_deps": [
         "python-eventlet",
         "python-greenlet",
