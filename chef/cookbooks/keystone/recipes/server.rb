@@ -43,8 +43,8 @@ else
 end
 
 service "keystone" do
-  supports :status => true, :restart => true
-  action :enable
+  supports :status => true, :restart => true, :reload => true
+  action [ :enable, :start ]
 end
 
 ::Chef::Recipe.send(:include, Opscode::OpenSSL::Password)
