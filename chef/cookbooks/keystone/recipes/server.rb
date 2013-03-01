@@ -26,17 +26,23 @@ unless node[:keystone][:use_gitrepo]
 else
 
   keystone_path = "/opt/keystone"
-  virtualenv @cookbook_name do
-    where node[:keystone][:virtualenv]
-    action :create
+
+  if (node[:keystone][:virtualenv] || "").empty?
+    virtualenv @cookbook_name do
+      where node[:keystone][:virtualenv]
+      action :create
+    end
+    pfs_and_install_deps @cookbook_name do
+      venv node[:keystone][:virtualenv]
+    end
+    virtualenv_wrapping @cookbook_name do
+      where node[:keystone][:virtualenv]
+      from keystone_path
+    end
+  else
+    pfs_and_install_deps(@cookbook_name)
   end
-  pfs_and_install_deps @cookbook_name do
-    venv node[:keystone][:virtualenv]
-  end
-  virtualenv_wrapping @cookbook_name do
-    where node[:keystone][:virtualenv]
-    from keystone_path
-  end
+
   link_service @cookbook_name do
     bin_name "keystone-all"
   end
