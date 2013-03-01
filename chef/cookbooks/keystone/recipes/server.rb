@@ -27,25 +27,14 @@ else
 
   keystone_path = "/opt/keystone"
 
-  if (node[:keystone][:virtualenv] || "").empty?
-    virtualenv @cookbook_name do
-      where node[:keystone][:virtualenv]
-      action :create
-    end
-    pfs_and_install_deps @cookbook_name do
-      venv node[:keystone][:virtualenv]
-    end
-    virtualenv_wrapping @cookbook_name do
-      where node[:keystone][:virtualenv]
-      from keystone_path
-    end
-  else
-    pfs_and_install_deps(@cookbook_name)
+  pfs_and_install_deps @cookbook_name do
+    venv node[:keystone][:virtualenv]
   end
 
   link_service @cookbook_name do
     bin_name "keystone-all"
   end
+
   create_user_and_dirs(@cookbook_name)
   execute "cp_policy.json" do
     command "cp #{keystone_path}/etc/policy.json /etc/keystone"

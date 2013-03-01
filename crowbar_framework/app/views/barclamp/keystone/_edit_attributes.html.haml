@@ -2,9 +2,6 @@
 %p
   %label{:for => "proposal_attributes"}= t('.attributes')
   = link_to "Raw", proposal_barclamp_path(:id => @proposal.name, :controller => @proposal.barclamp, :dep_raw => @dep_raw, :attr_raw => true), :style => "float: right;"
-  %p
-    %label{ :for => :default_virtualenv }= t('.default_virtualenv')
-    %input#default_tenant{:type => "text", :name => "default_virtualenv", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["default"]["virtualenv"], :onchange => "update_value('default/virtualenv','default_virtualenv','string')"}
   %div.container
     = render 'barclamp/git/pfsdeps.html.haml'
     %p
