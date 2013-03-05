@@ -29,6 +29,7 @@ else
 
   pfs_and_install_deps @cookbook_name do
     venv node[:keystone][:virtualenv]
+    venv_bins ["keystone-all", "keystone-manage"]
   end
 
   link_service @cookbook_name do
