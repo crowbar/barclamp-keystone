@@ -5,6 +5,7 @@
   "attributes": {
     "keystone": {
       "debug": true,
+      "frontend": "apache",
       "verbose": true,
       "gitrepo": "http://github.com/openstack/keystone.git",
       "git_instance": "",

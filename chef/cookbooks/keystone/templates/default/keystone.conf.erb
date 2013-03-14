@@ -69,7 +69,11 @@ driver = keystone.identity.backends.sql.Identity
 driver = keystone.catalog.backends.sql.Catalog
 
 [token]
+<% if frontend=='apache2' -%>
+driver = keystone.token.backends.sql.Token
+<% elsif frontend=='native' %->
 driver = keystone.token.backends.kvs.Token
+<% end -%>
 
 [policy]
 driver = keystone.policy.backends.sql.Policy
