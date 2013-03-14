@@ -17,6 +17,7 @@
 default[:keystone][:user] = "keystone"
 
 default[:keystone][:debug] = true
+default[:keystone][:frontend] = 'apache'
 default[:keystone][:verbose] = true
 
 default[:keystone][:db][:database] = "keystone"
