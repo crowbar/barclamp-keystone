@@ -50,8 +50,12 @@ elsif node[:keystone][:frontend]=='apache'
   include_recipe "apache2::mod_wsgi"
   include_recipe "apache2::mod_rewrite"
 
-  apache_site "000-default" do
-    enable false
+
+  directory "/usr/lib/cgi-bin/keystone/" do
+    owner "keystone"
+    mode 0755
+    action :create
+    recursive true
   end
 
   template "/usr/lib/cgi-bin/keystone/main" do
@@ -64,12 +68,10 @@ elsif node[:keystone][:frontend]=='apache'
     mode 0755
   end
 
-  directory "/usr/lib/cgi-bin/keystone/" do
-    owner "keystone"
-    mode 0755
-    action :create
-    recursive true
+  apache_site "000-default" do
+    enable false
   end
+
   template "/etc/apache2/sites-available/keystone.conf" do
     source "apache_keystone.conf.erb"
     variables(
