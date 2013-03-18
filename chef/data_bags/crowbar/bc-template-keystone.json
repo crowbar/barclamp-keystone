@@ -9,7 +9,7 @@
       "verbose": true,
       "gitrepo": "http://github.com/openstack/keystone.git",
       "git_instance": "",
-      "git_refspec": "grizzly-1",
+      "git_refspec": "grizzly-2",
       "use_gitbarclamp": true,
       "use_pip_cache": true,
       "use_gitrepo": true,
