@@ -13,27 +13,46 @@
 # limitations under the License.
 #
 
+#
+# Creating virtualenv for @cookbook_name and install pfs_deps with pp
+#
+
+keystone_path = "/opt/keystone"
+venv_path = node[:keystone][:use_virtualenv] ? "#{keystone_path}/.venv" : nil
+venv_prefix = node[:keystone][:use_virtualenv] ? ". #{venv_path}/bin/activate &&" : nil
+
 unless node[:keystone][:use_gitrepo]
+
   package "keystone" do
     package_name "openstack-keystone" if node.platform == "suse"
     action :install
   end
+
 else
-  keystone_path = "/opt/keystone"
-  pfs_and_install_deps(@cookbook_name)
+
+  pfs_and_install_deps @cookbook_name do
+    virtualenv venv_path
+    path keystone_path
+  end
+
   link_service @cookbook_name do
+    #TODO: fix for generate templates in virtualenv
+    virtualenv venv_path
     bin_name "keystone-all"
   end
-  create_user_and_dirs(@cookbook_name) 
+
+  create_user_and_dirs(@cookbook_name)
+
   execute "cp_policy.json" do
-    command "cp #{keystone_path}/etc/policy.json /etc/keystone"
+    command "cp #{keystone_path}/etc/policy.json /etc/keystone/"
     creates "/etc/keystone/policy.json"
   end
+
 end
 
 service "keystone" do
-  supports :status => true, :restart => true
-  action :enable
+  supports :status => true, :restart => true, :reload => true
+  action [ :enable, :start ]
 end
 
 ::Chef::Recipe.send(:include, Opscode::OpenSSL::Password)
@@ -113,6 +132,7 @@ template "/etc/keystone/keystone.conf" do
 end
 
 execute "keystone-manage db_sync" do
+  command "#{venv_prefix}keystone-manage db_sync"
   action :run
 end
 

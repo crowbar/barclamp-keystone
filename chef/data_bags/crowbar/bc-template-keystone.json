@@ -13,6 +13,7 @@
       "use_gitbarclamp": true,
       "use_pip_cache": true,
       "use_gitrepo": true,
+      "use_virtualenv": true,
       "pfs_deps": [
         "python-eventlet",
         "python-greenlet",
@@ -26,6 +27,7 @@
         "python-pam",
         "python-iso8601",
         "python-webob",
+        "python-virtualenv",
         "pip://python-keystoneclient>=0.2,<0.3"
       ],
       "use_syslog": false,

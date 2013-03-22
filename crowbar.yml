@@ -59,6 +59,8 @@ debs:
   pkgs:
     - keystone
     - python-keystone
+    - python-pip
+    - python-virtualenv
 
 git_repo:
   - keystone http://github.com/openstack/keystone.git grizzly-1
