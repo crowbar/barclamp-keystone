@@ -30,30 +30,86 @@ unless node[:keystone][:use_gitrepo]
 
 else
 
+
   pfs_and_install_deps @cookbook_name do
     virtualenv venv_path
     path keystone_path
   end
 
-  link_service @cookbook_name do
-    #TODO: fix for generate templates in virtualenv
-    virtualenv venv_path
-    bin_name "keystone-all"
+  if node[:keystone][:frontend]=='native'
+    link_service @cookbook_name do
+      #TODO: fix for generate templates in virtualenv
+      virtualenv venv_path
+      bin_name "keystone-all"
+    end
+
+    create_user_and_dirs(@cookbook_name)
+
+    execute "cp_policy.json" do
+      command "cp #{keystone_path}/etc/policy.json /etc/keystone/"
+      creates "/etc/keystone/policy.json"
+    end
   end
-
-  create_user_and_dirs(@cookbook_name)
-
-  execute "cp_policy.json" do
-    command "cp #{keystone_path}/etc/policy.json /etc/keystone/"
-    creates "/etc/keystone/policy.json"
-  end
-
 end
 
-service "keystone" do
-  supports :status => true, :restart => true, :reload => true
-  action [ :enable, :start ]
+if node[:keystone][:frontend]=='native'
+  service "keystone" do
+    supports :status => true, :restart => true
+    action :enable
+  end
+elsif node[:keystone][:frontend]=='apache'
+
+  service "keystone" do
+    supports :status => true, :restart => true
+    action [ :disable, :stop ]
+    ignore_failure true
+  end
+
+  include_recipe "apache2"
+  include_recipe "apache2::mod_wsgi"
+  include_recipe "apache2::mod_rewrite"
+
+
+  directory "/usr/lib/cgi-bin/keystone/" do
+    owner "keystone"
+    mode 0755
+    action :create
+    recursive true
+  end
+
+  template "/usr/lib/cgi-bin/keystone/main" do
+    source "keystone_wsgi_bin.py.erb"
+    mode 0755
+  end
+
+  template "/usr/lib/cgi-bin/keystone/admin" do
+    source "keystone_wsgi_bin.py.erb"
+    mode 0755
+  end
+
+  apache_site "000-default" do
+    enable false
+  end
+
+  template "/etc/apache2/sites-available/keystone.conf" do
+    source "apache_keystone.conf.erb"
+    variables(
+      :admin_api_port => node[:keystone][:api][:admin_port], # Auth port
+      :admin_api_host => node[:keystone][:api][:admin_host],
+      :api_port => node[:keystone][:api][:api_port], # public port
+      :api_host => node[:keystone][:api][:api_host],
+      :processes => 3,
+      :threads => 10
+    )
+    notifies :restart, resources(:service => "apache2"), :immediately
+  end
+
+  apache_site "keystone.conf" do
+    enable true
+  end
 end
+
+
 
 ::Chef::Recipe.send(:include, Opscode::OpenSSL::Password)
 
@@ -126,9 +182,17 @@ template "/etc/keystone/keystone.conf" do
       :api_port => node[:keystone][:api][:api_port], # public port
       :api_host => node[:keystone][:api][:api_host],
       :use_syslog => node[:keystone][:use_syslog],
+<<<<<<< HEAD
       :signing => node[:keystone][:signing]
+=======
+      :frontend => node[:keystone][:frontend]
+>>>>>>> feature/DCB-77/betty/grizzly
     )
-    notifies :restart, resources(:service => "keystone"), :immediately
+    if node[:keystone][:frontend]=='native'
+      notifies :restart, resources(:service => "keystone"), :immediately
+    elsif node[:keystone][:frontend]=='apache'
+      notifies :restart, resources(:service => "apache2"), :immediately
+    end
 end
 
 execute "keystone-manage db_sync" do

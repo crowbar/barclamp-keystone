@@ -5,6 +5,7 @@
   "attributes": {
     "keystone": {
       "debug": true,
+      "frontend": "apache",
       "verbose": true,
       "signing": "PKI",
       "gitrepo": "http://github.com/openstack/keystone.git",
