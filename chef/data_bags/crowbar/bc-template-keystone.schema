@@ -18,6 +18,7 @@
                     "pfs_deps": { "type": "seq", "required": true, "sequence": [ { "type": "str" } ] },
                     "use_syslog": { "type": "bool", "required": true },
                     "sql_engine": { "type": "str", "required": true },
+                    "signing": { "type": "str", "required": true },
                     "mysql_instance": { "type": "str", "required": true },
                     "user": { "type" : "str", "required" : true },
                     "db": { "type": "map", "required": true, "mapping": {
