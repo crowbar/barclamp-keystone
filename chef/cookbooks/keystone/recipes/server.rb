@@ -182,11 +182,8 @@ template "/etc/keystone/keystone.conf" do
       :api_port => node[:keystone][:api][:api_port], # public port
       :api_host => node[:keystone][:api][:api_host],
       :use_syslog => node[:keystone][:use_syslog],
-<<<<<<< HEAD
-      :signing => node[:keystone][:signing]
-=======
+      :signing => node[:keystone][:signing],
       :frontend => node[:keystone][:frontend]
->>>>>>> feature/DCB-77/betty/grizzly
     )
     if node[:keystone][:frontend]=='native'
       notifies :restart, resources(:service => "keystone"), :immediately
