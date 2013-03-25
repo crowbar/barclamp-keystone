@@ -38,6 +38,7 @@ locale_additions:
           deployment: Deployment
         edit_attributes: 
           attributes: Attributes
+          frontend: Frontend
           sql_engine: SQL Engine
           mysql_instance: MySQL Instance
           default-tenant: Default Tenant
@@ -59,6 +60,8 @@ debs:
   pkgs:
     - keystone
     - python-keystone
+    - apache2
+    - libapache2-mod-wsgi
 
 git_repo:
   - keystone http://github.com/openstack/keystone.git grizzly-1
