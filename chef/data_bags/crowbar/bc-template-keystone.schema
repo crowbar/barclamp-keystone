@@ -9,6 +9,7 @@
              "mapping": {
                     "verbose": { "type": "bool", "required": true },
                     "debug": { "type": "bool", "required": true },
+                    "frontend": { "type": "str", "required": true },
                     "gitrepo": { "type": "str", "required": true },
                     "git_instance": { "type": "str", "required": true },
                     "git_refspec": { "type": "str", "required": true },

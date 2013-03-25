@@ -8,6 +8,10 @@
       %label{ :for => :mysql_instance }= t('.mysql_instance')
       = instance_selector("mysql", :mysql_instance, "mysql_instance", @proposal)
     %p
+      %label{ :for => :frontend }= t('.frontend')
+      = select_tag :frontend, options_for_select([['native', 'native'], ['apache','apache']], @proposal.raw_data['attributes'][@proposal.barclamp]["frontend"]), :onchange => "update_value('frontend', 'frontend', 'string')"
+
+    %p
       %label{ :for => :default_tenant }= t('.default-tenant')
       %input#default_tenant{:type => "text", :name => "default_tenant", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["default"]["tenant"], :onchange => "update_value('default/tenant','default_tenant','string')"}
     %p
