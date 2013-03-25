@@ -34,6 +34,7 @@ else
   pfs_and_install_deps @cookbook_name do
     virtualenv venv_path
     path keystone_path
+    wrap_bins [ "keystone-manage", "keystone" ]
   end
 
   if node[:keystone][:frontend]=='native'
@@ -42,13 +43,13 @@ else
       virtualenv venv_path
       bin_name "keystone-all"
     end
+  end
 
-    create_user_and_dirs(@cookbook_name)
+  create_user_and_dirs(@cookbook_name)
 
-    execute "cp_policy.json" do
-      command "cp #{keystone_path}/etc/policy.json /etc/keystone/"
-      creates "/etc/keystone/policy.json"
-    end
+  execute "cp_policy.json" do
+    command "cp #{keystone_path}/etc/policy.json /etc/keystone/"
+    creates "/etc/keystone/policy.json"
   end
 end
 
@@ -99,6 +100,8 @@ elsif node[:keystone][:frontend]=='apache'
       :api_port => node[:keystone][:api][:api_port], # public port
       :api_host => node[:keystone][:api][:api_host],
       :processes => 3,
+      :venv => node[:keystone][:use_virtualenv],
+      :venv_path => venv_path,
       :threads => 10
     )
     notifies :restart, resources(:service => "apache2"), :immediately

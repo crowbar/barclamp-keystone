@@ -1,3 +1,6 @@
+<% if @venv -%>
+WSGIPythonHome <%= @venv_path %>
+<% end -%>
 WSGIDaemonProcess keystone user=keystone group=nogroup processes=<%= @processes %> threads=<%= @threads %>
 
 Listen <%= @api_host %>:<%= @api_port %>
