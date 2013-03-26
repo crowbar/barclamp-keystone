@@ -81,11 +81,19 @@ elsif node[:keystone][:frontend]=='apache'
   template "/usr/lib/cgi-bin/keystone/main" do
     source "keystone_wsgi_bin.py.erb"
     mode 0755
+    variables(
+      :venv => node[:keystone][:use_virtualenv],
+      :venv_path => venv_path
+    )
   end
 
   template "/usr/lib/cgi-bin/keystone/admin" do
     source "keystone_wsgi_bin.py.erb"
     mode 0755
+    variables(
+      :venv => node[:keystone][:use_virtualenv],
+      :venv_path => venv_path
+    )
   end
 
   apache_site "000-default" do
