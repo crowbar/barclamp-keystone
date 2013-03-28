@@ -1,3 +1,6 @@
+<% if @venv -%>
+execfile('<%= @venv_path %>/bin/activate_this.py', dict(__file__='<%= @venv_path %>/bin/activate_this.py'))
+<% end -%>
 import os
 
 from paste import deploy
