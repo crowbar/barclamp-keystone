@@ -13,22 +13,42 @@
 # limitations under the License.
 #
 
+#
+# Creating virtualenv for @cookbook_name and install pfs_deps with pp
+#
+
+keystone_path = "/opt/keystone"
+venv_path = node[:keystone][:use_virtualenv] ? "#{keystone_path}/.venv" : nil
+venv_prefix = node[:keystone][:use_virtualenv] ? ". #{venv_path}/bin/activate &&" : nil
+
 unless node[:keystone][:use_gitrepo]
+
   package "keystone" do
     package_name "openstack-keystone" if node.platform == "suse"
     action :install
   end
+
 else
-  keystone_path = "/opt/keystone"
-  pfs_and_install_deps(@cookbook_name)
+
+
+  pfs_and_install_deps @cookbook_name do
+    virtualenv venv_path
+    path keystone_path
+    wrap_bins [ "keystone-manage", "keystone" ]
+  end
+
   if node[:keystone][:frontend]=='native'
     link_service @cookbook_name do
+      #TODO: fix for generate templates in virtualenv
+      virtualenv venv_path
       bin_name "keystone-all"
     end
   end
-  create_user_and_dirs(@cookbook_name) 
+
+  create_user_and_dirs(@cookbook_name)
+
   execute "cp_policy.json" do
-    command "cp #{keystone_path}/etc/policy.json /etc/keystone"
+    command "cp #{keystone_path}/etc/policy.json /etc/keystone/"
     creates "/etc/keystone/policy.json"
   end
 end
@@ -61,11 +81,19 @@ elsif node[:keystone][:frontend]=='apache'
   template "/usr/lib/cgi-bin/keystone/main" do
     source "keystone_wsgi_bin.py.erb"
     mode 0755
+    variables(
+      :venv => node[:keystone][:use_virtualenv],
+      :venv_path => venv_path
+    )
   end
 
   template "/usr/lib/cgi-bin/keystone/admin" do
     source "keystone_wsgi_bin.py.erb"
     mode 0755
+    variables(
+      :venv => node[:keystone][:use_virtualenv],
+      :venv_path => venv_path
+    )
   end
 
   apache_site "000-default" do
@@ -80,6 +108,8 @@ elsif node[:keystone][:frontend]=='apache'
       :api_port => node[:keystone][:api][:api_port], # public port
       :api_host => node[:keystone][:api][:api_host],
       :processes => 3,
+      :venv => node[:keystone][:use_virtualenv],
+      :venv_path => venv_path,
       :threads => 10
     )
     notifies :restart, resources(:service => "apache2"), :immediately
@@ -88,7 +118,6 @@ elsif node[:keystone][:frontend]=='apache'
   apache_site "keystone.conf" do
     enable true
   end
-
 end
 
 
@@ -175,6 +204,7 @@ template "/etc/keystone/keystone.conf" do
 end
 
 execute "keystone-manage db_sync" do
+  command "#{venv_prefix}keystone-manage db_sync"
   action :run
 end
 
