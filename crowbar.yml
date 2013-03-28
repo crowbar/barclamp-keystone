@@ -61,17 +61,10 @@ debs:
   pkgs:
     - keystone
     - python-keystone
-<<<<<<< HEAD
-=======
     - python-pip
     - python-virtualenv
->>>>>>> feature/pfs/betty/grizzly
     - apache2
     - libapache2-mod-wsgi
 
 git_repo:
   - keystone http://github.com/openstack/keystone.git grizzly-1
-
-git:
-  date: Mon Mar 25 11:06:50 2013 +0000
-  commit: 73f8f8dbccca936c53c15f3d3c6fc43d4434a340
