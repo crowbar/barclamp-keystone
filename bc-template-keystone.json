@@ -44,6 +44,9 @@
       }
     }
   },
+    "roles": {
+        "keystone-server": { "jig": "chef" }
+    },
   "deployment": {
     "keystone": {
       "crowbar-revision": 0,
