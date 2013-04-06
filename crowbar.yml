@@ -62,4 +62,4 @@ debs:
     - libapache2-mod-wsgi
 
 git_repo:
-  - keystone https://github.com/openstack/keystone.git grizzly-1
+  - keystone https://github.com/openstack/keystone.git stable/grizzly
