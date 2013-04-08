@@ -56,8 +56,6 @@ debs:
   pkgs:
     - keystone
     - python-keystone
-    - python-pip
-    - python-virtualenv
     - apache2
     - libapache2-mod-wsgi
 
