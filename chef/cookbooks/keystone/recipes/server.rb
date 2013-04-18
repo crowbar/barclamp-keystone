@@ -63,7 +63,6 @@ elsif node[:keystone][:frontend]=='apache'
   service "keystone" do
     supports :status => true, :restart => true
     action [ :disable, :stop ]
-    ignore_failure true
   end
 
   include_recipe "apache2"
