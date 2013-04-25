@@ -1,0 +1,60 @@
+> NOTE: move this into Keystone Barclamp directory
+
+
+See all, [[Barclamp List]]
+
+//This is a Creole document//
+
+== Overview
+
+The Keystone barclamp provides the Openstack Identity service.
+
+Keystone is described here, [[http://docs.openstack.org/diablo/openstack-image-service/admin/content/]] and [[http://docs.openstack.org/diablo/openstack-identity/admin/content/]].
+
+== Roles
+
+The Keystone Barclamp provides a single role: keystone-server. This role provides the recipe access to instantiate the Keystone service.
+
+The Keystone cookbook provides a LWRP to other cookbooks to register services and endpoints.  Glance, Nova, and Swift automatically register their services and endpoints.
+
+== Scripts
+
+The barclamp provides a single keystone cookbook. The cookbook is used for building keystone.
+
+== Parameters
+
+The barclamp has the following parameters:
+
+| **Name** | **Default** | **Description** |
+| sql_engine | mysql or sqlite | Which database should keystone use?  mysql is defaulted if a MySQL proposal instance exists |
+| mysql_instance | Name of Instance | MySQL proposal instance string name for database use |
+| default/username | crowbar | Name of the non-admin user created by keystone |
+| default/password | crowbar | Password of the non-admin user created by keystone |
+| default/tenant | openstack | Tenant to associate the user with |
+| admin/token | Random String | Permanent token for the admin user |
+| admin/username | admin | Username of the admin user |
+| admin/password | crowbar | Password for the admin user | 
+| admin/token-expiration | "2015-02-5T00:00" | Date stamp of future time to time out the token |
+
+Once the users are created, the Nova Dashboard or command line need to be used to modify the entry.
+
+== Operations
+
+Keystone barclamp sets up an admin and a non-admin user in a single openstack tenant.  These can be used to log into the nova_dashboard to manage keystone users and access.
+
+The other barclamps used the keystone recipes to register their services and endpoints.
+
+Services should register with this type:
+| *Service* | *Type* |
+| Nova | compute |
+| Swift | object-store |
+| Glance | image |
+| Keystone | identity |
+
+== Useful Commands and Information
+
+There is a **keystone-manage** command, but it is poor.  **curl** can be used an examples are in the documents above.
+
+== Limitations and/or Futures
+
+
