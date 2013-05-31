@@ -14,7 +14,11 @@
 # limitations under the License.
 #
 
-default[:keystone][:user] = "keystone"
+unless platform == "suse"
+  default[:keystone][:user] = "keystone"
+else
+  default[:keystone][:user] = "openstack-keystone"
+end
 
 default[:keystone][:debug] = true
 default[:keystone][:frontend] = 'apache'

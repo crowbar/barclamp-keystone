@@ -71,7 +71,7 @@ elsif node[:keystone][:frontend]=='apache'
 
 
   directory "/usr/lib/cgi-bin/keystone/" do
-    owner "keystone"
+    owner node[:keystone][:user]
     mode 0755
     action :create
     recursive true
@@ -209,7 +209,7 @@ end
 
 if node[:keystone][:signing]=="PKI"
   execute "keystone-manage pki_setup" do
-    command "keystone-manage pki_setup ; chown keystone -R /etc/keystone/ssl/"
+    command "keystone-manage pki_setup ; chown #{node[:keystone][:user]} -R /etc/keystone/ssl/"
     action :run
   end
 end
