@@ -22,9 +22,9 @@ else
   default[:keystone][:service_name] = "openstack-keystone"
 end
 
-default[:keystone][:debug] = true
+default[:keystone][:debug] = false
 default[:keystone][:frontend] = 'apache'
-default[:keystone][:verbose] = true
+default[:keystone][:verbose] = false
 
 default[:keystone][:db][:database] = "keystone"
 default[:keystone][:db][:user] = "keystone"
