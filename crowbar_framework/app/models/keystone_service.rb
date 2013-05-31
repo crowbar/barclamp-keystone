@@ -26,8 +26,8 @@ class KeystoneService < ServiceObject
 
   def proposal_dependencies(role)
     answer = []
-    if role.default_attributes["keystone"]["sql_engine"] == "mysql"
-      answer << { "barclamp" => "mysql", "inst" => role.default_attributes["keystone"]["mysql_instance"] }
+    if role.default_attributes[@bc_name]["database_engine"] == "database"
+      answer << { "barclamp" => "database", "inst" => role.default_attributes["keystone"]["database_instance"] }
     end
     if role.default_attributes[@bc_name]["use_gitrepo"]
       answer << { "barclamp" => "git", "inst" => role.default_attributes[@bc_name]["git_instance"] }
@@ -41,22 +41,32 @@ class KeystoneService < ServiceObject
     nodes = NodeObject.all
     nodes.delete_if { |n| n.nil? or n.admin? }
 
-    base["attributes"]["keystone"]["mysql_instance"] = ""
+    base["attributes"]["keystone"]["database_instance"] = ""
     begin
-      mysqlService = MysqlService.new(@logger)
+      databaseService = DatabaseService.new(@logger)
       # Look for active roles
-      mysqls = mysqlService.list_active[1]
-      if mysqls.empty?
+      dbs = databaseService.list_active[1]
+      if dbs.empty?
         # No actives, look for proposals
-        mysqls = mysqlService.proposals[1]
+        dbs = databaseService.proposals[1]
       end
-      unless mysqls.empty?
-        base["attributes"]["keystone"]["mysql_instance"] = mysqls[0]
+      if dbs.empty?
+        @logger.info("Keystone create_proposal: no database proposal found")
+        base["attributes"]["keystone"]["database_engine"] = ""
+      else
+        base["attributes"]["keystone"]["database_instance"] = dbs[0]
+        base["attributes"]["keystone"]["database_engine"] = "database"
+        @logger.info("Keystone create_proposal: using database proposal: '#{dbs[0]}'")
       end
-      base["attributes"]["keystone"]["sql_engine"] = "mysql"
     rescue
-      @logger.info("Keystone create_proposal: no mysql found")
-      base["attributes"]["keystone"]["sql_engine"] = "mysql"
+      @logger.info("Keystone create_proposal: no database proposal found")
+      base["attributes"]["keystone"]["database_engine"] = ""
+    end
+
+    # SQLite is not a fallback solution
+    # base["attributes"]["keystone"]["database_engine"] = "sqlite" if base["attributes"]["keystone"]["database_engine"] == ""
+    if base["attributes"]["keystone"]["database_engine"] == ""
+      raise(I18n.t('model.service.dependency_missing', :name => @bc_name, :dependson => "database"))
     end
     
     base["attributes"][@bc_name]["git_instance"] = ""
