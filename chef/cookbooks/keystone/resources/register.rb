@@ -19,6 +19,7 @@
 
 actions :add_service, :add_endpoint_template, :add_tenant, :add_user, :add_role, :add_access, :add_ec2, :wakeup
 
+attribute :protocol, :kind_of => String
 attribute :host, :kind_of => String
 attribute :port, :kind_of => Integer
 attribute :token, :kind_of => String
