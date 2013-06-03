@@ -52,6 +52,9 @@ min_pool_size = <%= @sql_min_pool_size %>
 max_pool_size = <%= @sql_max_pool_size %>
 pool_timeout = <%= @sql_pool_timeout %>
 
+[ssl]
+enable = False
+
 [signing]
 token_format = <%= @signing %>
 #token_format = PKI #[PKI|UUID]
