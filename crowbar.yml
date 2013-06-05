@@ -20,7 +20,7 @@ barclamp:
   display: OpenStack Keystone 
   version: 0
   requires:
-    - mysql
+    - database
   member:
     - openstack
 
@@ -39,9 +39,9 @@ locale_additions:
         edit_attributes: 
           attributes: Attributes
           frontend: Frontend
-          sql_engine: SQL Engine
+          database_engine: Database Engine
+          database_instance: Database Instance
           signing: Signing
-          mysql_instance: MySQL Instance
           default-tenant: Default Tenant
           admin-username: Administrator Username
           admin-password: Administrator Password

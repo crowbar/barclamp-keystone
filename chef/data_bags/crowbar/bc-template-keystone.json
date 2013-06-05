@@ -1,12 +1,11 @@
-
 {
   "id": "bc-template-keystone",
   "description": "Centralized authentication and authorization service for OpenStack",
   "attributes": {
     "keystone": {
-      "debug": true,
+      "debug": false,
       "frontend": "apache",
-      "verbose": true,
+      "verbose": false,
       "signing": "PKI",
       "gitrepo": "http://github.com/openstack/keystone.git",
       "git_instance": "",
@@ -32,9 +31,8 @@
         "pip://python-keystoneclient>=0.2,<0.3"
       ],
       "use_syslog": false,
-      "sql_engine": "mysql",
-      "mysql_instance": "none",
-      "user": "keystone",
+      "database_engine": "database",
+      "database_instance": "none",
       "db": {
         "database": "keystone",
         "user": "keystone"
@@ -77,7 +75,7 @@
       },
       "elements": {},
       "element_order": [
-         ["keystone-server" ]       		           		     
+         ["keystone-server" ]
       ],
       "config": {
         "environment": "keystone-config-base",
@@ -88,4 +86,3 @@
     }
   }
 }
-
