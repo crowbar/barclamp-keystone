@@ -31,9 +31,8 @@
         "pip://python-keystoneclient>=0.2,<0.3"
       ],
       "use_syslog": false,
-      "sql_engine": "mysql",
-      "mysql_instance": "none",
-      "user": "keystone",
+      "database_engine": "database",
+      "database_instance": "none",
       "db": {
         "database": "keystone",
         "user": "keystone"
