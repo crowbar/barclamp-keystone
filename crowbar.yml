@@ -17,7 +17,7 @@
 
 barclamp:
   name: keystone
-  display: OpenStack Keystone 
+  display: Keystone
   version: 0
   requires:
     - database
