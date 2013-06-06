@@ -41,7 +41,7 @@ locale_additions:
           frontend: Frontend
           database_engine: Database Engine
           database_instance: Database Instance
-          signing: Signing
+          token_format: Algorithm for Token Generation
           default-tenant: Default Tenant
           admin-username: Administrator Username
           admin-password: Administrator Password
