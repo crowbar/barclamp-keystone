@@ -17,5 +17,5 @@ for node in $keystone_nodes; do
         exit 1
     }
     echo "$token" > "$LOGDIR/keystone-token.json"
-    echo "Keystone up on $node"
+    echo "Able to authenticate admin:crowbar on Keystone at $node."
 done

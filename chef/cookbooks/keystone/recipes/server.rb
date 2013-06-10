@@ -215,7 +215,7 @@ template "/etc/keystone/keystone.conf" do
       :api_port => node[:keystone][:api][:api_port], # public port
       :api_host => node[:keystone][:api][:api_host],
       :use_syslog => node[:keystone][:use_syslog],
-      :signing => node[:keystone][:signing],
+      :token_format => node[:keystone][:token_format],
       :frontend => node[:keystone][:frontend]
     )
     if node[:keystone][:frontend]=='native'
@@ -230,7 +230,7 @@ execute "keystone-manage db_sync" do
   action :run
 end
 
-if node[:keystone][:signing]=="PKI"
+if node[:keystone][:token_format] == "PKI"
   execute "keystone-manage pki_setup" do
     command "keystone-manage pki_setup ; chown #{node[:keystone][:user]} -R /etc/keystone/ssl/"
     action :run
