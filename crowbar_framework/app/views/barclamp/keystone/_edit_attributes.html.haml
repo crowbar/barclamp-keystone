@@ -13,7 +13,7 @@
 
     %p
       %label{ :for => :token_format }= t('.token_format')
-      = select_tag :token_format, options_for_select([['PKI','PKI'], ['UUID', 'UUID']], @proposal.raw_data['attributes'][@proposal.barclamp]["token_format"].to_s), :onchange => "update_value('token_format', 'token_format', 'string')"
+      = select_tag :token_format, options_for_select([['PKI','PKI']], @proposal.raw_data['attributes'][@proposal.barclamp]["token_format"].to_s), :onchange => "update_value('token_format', 'token_format', 'string')"
     %p
       %label{ :for => :default_tenant }= t('.default-tenant')
       %input#default_tenant{:type => "text", :name => "default_tenant", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["default"]["tenant"], :onchange => "update_value('default/tenant','default_tenant','string')"}
