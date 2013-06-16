@@ -121,78 +121,63 @@ elsif node[:keystone][:frontend]=='apache'
   end
 end
 
-database_engine = node[:keystone][:database_engine]
-
-Chef::Log.info("Configuring Keystone to use #{database_engine} backend")
-
-if database_engine == "database"
-
-    env_filter = " AND database_config_environment:database-config-#{node[:keystone][:database_instance]}"
-    sqls = search(:node, "roles:database-server#{env_filter}") || []
-    if sqls.length > 0
-        sql = sqls[0]
-        sql = node if sql.name == node.name
-    else
-        sql = node
-    end
-    include_recipe "database::client"
-    backend_name = Chef::Recipe::Database::Util.get_backend_name(sql)
-    include_recipe "#{backend_name}::client"
-    include_recipe "#{backend_name}::python-client"
-
-    db_provider = Chef::Recipe::Database::Util.get_database_provider(sql)
-    db_user_provider = Chef::Recipe::Database::Util.get_user_provider(sql)
-    privs = Chef::Recipe::Database::Util.get_default_priviledges(sql)
-    url_scheme = backend_name
-
-    ::Chef::Recipe.send(:include, Opscode::OpenSSL::Password)
-    node.set_unless['keystone']['db']['password'] = secure_password
-
-
-    sql_address = Chef::Recipe::Barclamp::Inventory.get_network_by_type(sql, "admin").address if sql_address.nil?
-    Chef::Log.info("Database server found at #{sql_address}")
-
-    db_conn = { :host => sql_address,
-                :username => "db_maker",
-                :password => sql[database_engine][:db_maker_password] }
-
-    # Create the Keystone Database
-    database "create #{node[:keystone][:db][:database]} database" do
-        connection db_conn
-        database_name node[:keystone][:db][:database]
-        provider db_provider
-        action :create
-    end
-
-    database_user "create keystone database user" do
-        connection db_conn
-        username node[:keystone][:db][:user]
-        password node[:keystone][:db][:password]
-        host '%'
-        provider db_user_provider
-        action :create
-    end
-
-    database_user "grant database access for keystone database user" do
-        connection db_conn
-        username node[:keystone][:db][:user]
-        password node[:keystone][:db][:password]
-        database_name node[:keystone][:db][:database]
-        host '%'
-        privileges privs
-        provider db_user_provider
-        action :grant
-    end
-    sql_connection = "#{url_scheme}://#{node[:keystone][:db][:user]}:#{node[:keystone][:db][:password]}@#{sql_address}/#{node[:keystone][:db][:database]}"
-elsif database_engine == "sqlite"
-    sql_connection = "sqlite:////var/lib/keystone/keystone.db"
-    file "/var/lib/keystone/keystone.db" do
-        owner node[:keystone][:user]
-        action :create_if_missing
-    end
+env_filter = " AND database_config_environment:database-config-#{node[:keystone][:database_instance]}"
+sqls = search(:node, "roles:database-server#{env_filter}") || []
+if sqls.length > 0
+    sql = sqls[0]
+    sql = node if sql.name == node.name
 else
-    Chef::Log.error("Unknown database engine #{database_engine}")
+    sql = node
 end
+include_recipe "database::client"
+backend_name = Chef::Recipe::Database::Util.get_backend_name(sql)
+include_recipe "#{backend_name}::client"
+include_recipe "#{backend_name}::python-client"
+
+db_provider = Chef::Recipe::Database::Util.get_database_provider(sql)
+db_user_provider = Chef::Recipe::Database::Util.get_user_provider(sql)
+privs = Chef::Recipe::Database::Util.get_default_priviledges(sql)
+url_scheme = backend_name
+
+::Chef::Recipe.send(:include, Opscode::OpenSSL::Password)
+node.set_unless['keystone']['db']['password'] = secure_password
+
+
+sql_address = Chef::Recipe::Barclamp::Inventory.get_network_by_type(sql, "admin").address if sql_address.nil?
+Chef::Log.info("Database server found at #{sql_address}")
+
+db_conn = { :host => sql_address,
+            :username => "db_maker",
+            :password => sql["database"][:db_maker_password] }
+
+# Create the Keystone Database
+database "create #{node[:keystone][:db][:database]} database" do
+    connection db_conn
+    database_name node[:keystone][:db][:database]
+    provider db_provider
+    action :create
+end
+
+database_user "create keystone database user" do
+    connection db_conn
+    username node[:keystone][:db][:user]
+    password node[:keystone][:db][:password]
+    host '%'
+    provider db_user_provider
+    action :create
+end
+
+database_user "grant database access for keystone database user" do
+    connection db_conn
+    username node[:keystone][:db][:user]
+    password node[:keystone][:db][:password]
+    database_name node[:keystone][:db][:database]
+    host '%'
+    privileges privs
+    provider db_user_provider
+    action :grant
+end
+sql_connection = "#{url_scheme}://#{node[:keystone][:db][:user]}:#{node[:keystone][:db][:password]}@#{sql_address}/#{node[:keystone][:db][:database]}"
 
 
 template "/etc/keystone/keystone.conf" do
