@@ -39,7 +39,6 @@ locale_additions:
         edit_attributes: 
           attributes: Attributes
           frontend: Frontend
-          database_engine: Database Engine
           database_instance: Database Instance
           token_format: Algorithm for Token Generation
           default-tenant: Default Tenant
