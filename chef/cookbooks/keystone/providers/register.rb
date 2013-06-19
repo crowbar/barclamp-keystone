@@ -56,7 +56,7 @@ action :add_service do
     new_resource.updated_by_last_action(ret)
   else
     raise "Failed to talk to keystone in add_service" if error
-    Chef::Log.info "Service '#{new_resource.service_name}' already exists.. Not creating." unless error
+    Chef::Log.info "Service '#{new_resource.service_name}' already exists. Not creating." unless error
     new_resource.updated_by_last_action(false)
   end
 end
@@ -79,7 +79,7 @@ action :add_tenant do
     new_resource.updated_by_last_action(ret)
   else
     raise "Failed to talk to keystone in add_tenant" if error
-    Chef::Log.info "Tenant '#{new_resource.tenant_name}' already exists.. Not creating." unless error
+    Chef::Log.info "Tenant '#{new_resource.tenant_name}' already exists. Not creating." unless error
     new_resource.updated_by_last_action(false)
   end
 end
@@ -146,7 +146,7 @@ action :add_role do
     new_resource.updated_by_last_action(ret)
   else
     raise "Failed to talk to keystone in add_role" if error
-    Chef::Log.info "User '#{new_resource.role_name}' already exists.. Not creating." unless error
+    Chef::Log.info "Role '#{new_resource.role_name}' already exists. Not creating." unless error
     new_resource.updated_by_last_action(false)
   end
 end
@@ -176,7 +176,7 @@ action :add_access do
     new_resource.updated_by_last_action(ret)
   else
     raise "Failed to talk to keystone in add_access" if error
-    Chef::Log.info "Access '#{tenant}:#{user} -> #{role}}' already exists.. Not creating." unless error
+    Chef::Log.info "Access '#{tenant}:#{user} -> #{role}}' already exists. Not creating." unless error
     new_resource.updated_by_last_action(false)
   end
 end
@@ -204,7 +204,7 @@ action :add_ec2 do
     new_resource.updated_by_last_action(ret)
   else
     raise "Failed to talk to keystone in add_ec2_creds" if error
-    Chef::Log.info "EC2 '#{tenant}:#{user}' already exists.. Not creating." unless error
+    Chef::Log.info "EC2 '#{tenant}:#{user}' already exists. Not creating." unless error
     new_resource.updated_by_last_action(false)
   end
 end
