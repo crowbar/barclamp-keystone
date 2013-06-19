@@ -101,16 +101,30 @@ action :add_user do
 
   # Lets verify that the service does not exist yet
   item_id, uerror = _find_id(http, headers, new_resource.user_name, path, dir)
-  error = (uerror or terror)
-  unless item_id or error
-    # Service does not exist yet
+
+  if uerror or terror
+    raise "Failed to talk to keystone in add_user"
+  end
+
+  unless item_id
+    # User does not exist yet
     body = _build_user_object(new_resource.user_name, new_resource.user_password, tenant_id)
     ret = _create_item(http, headers, path, body, new_resource.user_name)
     new_resource.updated_by_last_action(ret)
   else
-    raise "Failed to talk to keystone in add_user" if error
-    Chef::Log.info "User '#{new_resource.user_name}' already exists.. Not creating." unless error
-    new_resource.updated_by_last_action(false)
+    begin
+      path = "/v2.0/tokens"
+      body = _build_auth(new_resource.user_name, new_resource.user_password, tenant_id)
+      ret = _create_item(http, headers, path, body, "token for #{new_resource.user_name}")
+      Chef::Log.info "User '#{new_resource.user_name}' already exists. No password change."
+      new_resource.updated_by_last_action(false)
+    rescue
+      Chef::Log.info "User '#{new_resource.user_name}' already exists. Updating password."
+      path = "/v2.0/users/#{item_id}/OS-KSADM/password"
+      body = _build_user_password_object(item_id, new_resource.user_password)
+      ret = _update_item(http, headers, path, body, new_resource.user_name)
+      new_resource.updated_by_last_action(ret)
+    end
   end
 end
 
@@ -158,7 +172,7 @@ action :add_access do
   error = (aerror or rerror or uerror or terror)
   unless role_id == t_role_id or error
     # Service does not exist yet
-    ret = _update_item(http, headers, "#{path}/OS-KSADM/#{role_id}", new_resource.role_name)
+    ret = _update_item(http, headers, "#{path}/OS-KSADM/#{role_id}", nil, new_resource.role_name)
     new_resource.updated_by_last_action(ret)
   else
     raise "Failed to talk to keystone in add_access" if error
@@ -299,8 +313,12 @@ end
 
 # Return true on success
 private
-def _update_item(http, headers, path, name)
-  resp, data = http.send_request('PUT', path, nil, headers)
+def _update_item(http, headers, path, body, name)
+  unless body.nil?
+    resp, data = http.send_request('PUT', path, JSON.generate(body), headers)
+  else
+    resp, data = http.send_request('PUT', path, nil, headers)
+  end
   if resp.is_a?(Net::HTTPOK)
     Chef::Log.info("Updated keystone item '#{name}'")
     return true
@@ -369,6 +387,29 @@ def _build_user_object(user_name, password, tenant_id)
   svc_obj.store("enabled", true)
   ret = Hash.new
   ret.store("user", svc_obj)
+  return ret
+end
+
+private
+def _build_auth(user_name, password, tenant_id)
+  password_obj = Hash.new
+  password_obj.store("username", user_name)
+  password_obj.store("password", password)
+  auth_obj = Hash.new
+  auth_obj.store("tenantId", tenant_id)
+  auth_obj.store("passwordCredentials", password_obj)
+  ret = Hash.new
+  ret.store("auth", auth_obj)
+  return ret
+end
+
+private
+def _build_user_password_object(user_id, password)
+  user_obj = Hash.new
+  user_obj.store("id", user_id)
+  user_obj.store("password", password)
+  ret = Hash.new
+  ret.store("user", user_obj)
   return ret
 end
 
