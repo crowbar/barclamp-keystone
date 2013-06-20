@@ -317,8 +317,13 @@ end
 
 private
 def _build_connection(new_resource)
+  # Need to require net/https so that Net::HTTP gets monkey-patched
+  # to actually support SSL:
+  require 'net/https' if new_resource.protocol == "https"
+
   # Construct the http object
   http = Net::HTTP.new(new_resource.host, new_resource.port)
+  http.use_ssl = true if new_resource.protocol == "https"
 
   # Fill out the headers
   headers = _build_headers(new_resource.token)
