@@ -334,7 +334,7 @@ keystone_register "register keystone service" do
 end
 
 # Create keystone endpoint
-keystone_register "register keystone service" do
+keystone_register "register keystone endpoint" do
   protocol node[:keystone][:api][:protocol]
   host my_ipaddress
   port node[:keystone][:api][:admin_port]
