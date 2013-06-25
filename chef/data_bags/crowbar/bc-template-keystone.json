@@ -38,7 +38,14 @@
       "sql": {
         "idle_timeout": 30
       },
+      "ssl": {
+        "certfile": "/etc/keystone/ssl/certs/signing_cert.pem",
+        "keyfile": "/etc/keystone/ssl/private/signing_key.pem",
+        "ca_certs": "/etc/keystone/ssl/certs/ca.pem",
+        "cert_required": true
+      },
       "api": {
+        "protocol": "http",
         "service_port": 5000,
         "api_port": 5000,
         "api_host": "0.0.0.0",

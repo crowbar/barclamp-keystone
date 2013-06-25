@@ -28,7 +28,14 @@
                     "sql": { "type": "map", "required": true, "mapping": {
                       "idle_timeout": { "type" : "int", "required" : true }
                     }},
+                    "ssl": { "type": "map", "required": true, "mapping": {
+                      "certfile": { "type" : "str", "required" : true },
+                      "keyfile": { "type" : "str", "required" : true },
+                      "ca_certs": { "type" : "str", "required" : true },
+                      "cert_required": { "type" : "bool", "required" : true }
+                    }},
                     "api": { "type": "map", "required": true, "mapping": {
+                      "protocol": { "type" : "str", "required" : true },
                       "service_port": { "type" : "int", "required" : true },
                       "api_port": { "type" : "int", "required" : true },
                       "admin_port": { "type" : "int", "required" : true },
