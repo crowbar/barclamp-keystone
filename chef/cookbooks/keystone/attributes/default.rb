@@ -39,3 +39,8 @@ default[:keystone][:api][:api_host] = "0.0.0.0"
 
 
 default[:keystone][:sql][:idle_timeout] = 30
+
+default[:keystone][:signing][:token_format] = "PKI"
+default[:keystone][:signing][:certfile] = "/etc/keystone/ssl/certs/signing_cert.pem"
+default[:keystone][:signing][:keyfile] = "/etc/keystone/ssl/private/signing_key.pem"
+default[:keystone][:signing][:ca_certs] = "/etc/keystone/ssl/certs/ca.pem"

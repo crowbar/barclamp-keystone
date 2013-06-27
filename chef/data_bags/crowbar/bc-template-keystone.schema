@@ -20,7 +20,6 @@
                     "pfs_deps": { "type": "seq", "required": true, "sequence": [ { "type": "str" } ] },
                     "use_syslog": { "type": "bool", "required": true },
                     "database_instance": { "type": "str", "required": true },
-                    "token_format": { "type": "str", "required": true },
                     "db": { "type": "map", "required": true, "mapping": {
                       "database": { "type" : "str", "required" : true },
                       "user": { "type" : "str", "required" : true },
@@ -49,6 +48,12 @@
                       "tenant": { "type" : "str", "required" : true },
                       "username": { "type" : "str", "required" : true },
                       "password": { "type" : "str", "required" : true }
+                    }},
+                    "signing" : { "type" : "map", "required" : true, "mapping": {
+                      "token_format": { "type": "str", "required": true },
+                      "certfile": { "type": "str" },
+                      "keyfile": { "type": "str" },
+                      "ca_certs": { "type": "str" }
                     }}
               }}
      }},

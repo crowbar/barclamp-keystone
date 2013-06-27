@@ -195,7 +195,10 @@ template "/etc/keystone/keystone.conf" do
       :api_host => node[:keystone][:api][:api_host], # public host
       :api_port => node[:keystone][:api][:api_port], # public port
       :use_syslog => node[:keystone][:use_syslog],
-      :token_format => node[:keystone][:token_format],
+      :signing_token_format => node[:keystone][:signing][:token_format],
+      :signing_certfile => node[:keystone][:signing][:certfile],
+      :signing_keyfile => node[:keystone][:signing][:keyfile],
+      :signing_ca_certs => node[:keystone][:signing][:ca_certs],
       :frontend => node[:keystone][:frontend]
     )
     if node[:keystone][:frontend]=='native'
