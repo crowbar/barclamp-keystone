@@ -37,14 +37,10 @@
         "user": "keystone"
       },
       "sql": {
-        "idle_timeout": 30,
-        "min_pool_size": 5,
-        "max_pool_size": 10,
-        "pool_timeout": 200
+        "idle_timeout": 30
       },
       "api": {
         "service_port": 5000,
-        "service_host": "0.0.0.0",
         "api_port": 5000,
         "api_host": "0.0.0.0",
         "admin_port": 35357,

@@ -187,18 +187,13 @@ template "/etc/keystone/keystone.conf" do
     variables(
       :sql_connection => sql_connection,
       :sql_idle_timeout => node[:keystone][:sql][:idle_timeout],
-      :sql_min_pool_size => node[:keystone][:sql][:min_pool_size],
-      :sql_max_pool_size => node[:keystone][:sql][:max_pool_size],
-      :sql_pool_timeout => node[:keystone][:sql][:pool_timeout],
       :debug => node[:keystone][:debug],
       :verbose => node[:keystone][:verbose],
       :admin_token => node[:keystone][:service][:token],
-      :service_api_port => node[:keystone][:api][:service_port], # Compute port
-      :service_api_host => node[:keystone][:api][:service_host],
       :admin_api_port => node[:keystone][:api][:admin_port], # Auth port
       :admin_api_host => node[:keystone][:api][:admin_host],
+      :api_host => node[:keystone][:api][:api_host], # public host
       :api_port => node[:keystone][:api][:api_port], # public port
-      :api_host => node[:keystone][:api][:api_host],
       :use_syslog => node[:keystone][:use_syslog],
       :token_format => node[:keystone][:token_format],
       :frontend => node[:keystone][:frontend]
