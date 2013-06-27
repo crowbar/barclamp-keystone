@@ -6,7 +6,6 @@
       "debug": false,
       "frontend": "apache",
       "verbose": false,
-      "token_format": "PKI",
       "gitrepo": "http://github.com/openstack/keystone.git",
       "git_instance": "",
       "git_refspec": "stable/grizzly",
@@ -59,6 +58,12 @@
         "tenant": "openstack",
         "username": "crowbar",
         "password": "crowbar"
+      },
+      "signing": {
+        "token_format": "PKI",
+        "certfile": "/etc/keystone/ssl/certs/signing_cert.pem",
+        "keyfile": "/etc/keystone/ssl/private/signing_key.pem",
+        "ca_certs": "/etc/keystone/ssl/certs/ca.pem"
       }
     }
   },
