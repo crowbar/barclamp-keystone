@@ -19,16 +19,14 @@ class KeystoneService < ServiceObject
     @bc_name = "keystone"
     @logger = thelogger
   end
-
+# Turn off multi proposal support till it really works and people ask for it.
   def self.allow_multiple_proposals?
-    true
+    false
   end
 
   def proposal_dependencies(role)
     answer = []
-    if role.default_attributes[@bc_name]["database_engine"] == "database"
-      answer << { "barclamp" => "database", "inst" => role.default_attributes["keystone"]["database_instance"] }
-    end
+    answer << { "barclamp" => "database", "inst" => role.default_attributes["keystone"]["database_instance"] }
     if role.default_attributes[@bc_name]["use_gitrepo"]
       answer << { "barclamp" => "git", "inst" => role.default_attributes[@bc_name]["git_instance"] }
     end
@@ -52,20 +50,15 @@ class KeystoneService < ServiceObject
       end
       if dbs.empty?
         @logger.info("Keystone create_proposal: no database proposal found")
-        base["attributes"]["keystone"]["database_engine"] = ""
       else
         base["attributes"]["keystone"]["database_instance"] = dbs[0]
-        base["attributes"]["keystone"]["database_engine"] = "database"
         @logger.info("Keystone create_proposal: using database proposal: '#{dbs[0]}'")
       end
     rescue
       @logger.info("Keystone create_proposal: no database proposal found")
-      base["attributes"]["keystone"]["database_engine"] = ""
     end
 
-    # SQLite is not a fallback solution
-    # base["attributes"]["keystone"]["database_engine"] = "sqlite" if base["attributes"]["keystone"]["database_engine"] == ""
-    if base["attributes"]["keystone"]["database_engine"] == ""
+    if base["attributes"]["keystone"]["database_instance"] == ""
       raise(I18n.t('model.service.dependency_missing', :name => @bc_name, :dependson => "database"))
     end
     

@@ -6,7 +6,7 @@
       "debug": false,
       "frontend": "apache",
       "verbose": false,
-      "signing": "PKI",
+      "token_format": "PKI",
       "gitrepo": "http://github.com/openstack/keystone.git",
       "git_instance": "",
       "git_refspec": "stable/grizzly",
@@ -31,7 +31,6 @@
         "pip://python-keystoneclient>=0.2,<0.3"
       ],
       "use_syslog": false,
-      "database_engine": "database",
       "database_instance": "none",
       "db": {
         "database": "keystone",

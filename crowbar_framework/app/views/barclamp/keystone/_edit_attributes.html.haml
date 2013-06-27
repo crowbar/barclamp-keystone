@@ -1,31 +1,29 @@
 %input#proposal_attributes{:type => "hidden", :name => "proposal_attributes", :value => @proposal.raw_data['attributes'][@proposal.barclamp].to_json}
 %p
-  %label{:for => "proposal_attributes"}= t('.attributes')
+  %label{:class => "h3", :for => "proposal_attributes"}= t('.attributes')
   = link_to "Raw", proposal_barclamp_path(:id => @proposal.name, :controller => @proposal.barclamp, :dep_raw => @dep_raw, :attr_raw => true), :style => "float: right;"
   %div.container
     = render 'barclamp/git/pfsdeps.html.haml'
-    %p
-      %label{ :for => :database_instance }= t('.database_instance')
-      = instance_selector(@proposal.raw_data['attributes'][@proposal.barclamp]["database_engine"], :database_instance, "database_instance", @proposal)
+    = render_instance_selector("database", :database_instance, t('.database_instance'), "database_instance", @proposal)
     %p
       %label{ :for => :frontend }= t('.frontend')
       = select_tag :frontend, options_for_select([['native', 'native'], ['apache','apache']], @proposal.raw_data['attributes'][@proposal.barclamp]["frontend"]), :onchange => "update_value('frontend', 'frontend', 'string')"
 
     %p
+      %label{ :for => :token_format }= t('.token_format')
+      = select_tag :token_format, options_for_select([['PKI','PKI'], ['UUID', 'UUID']], @proposal.raw_data['attributes'][@proposal.barclamp]["token_format"].to_s), :onchange => "update_value('token_format', 'token_format', 'string')"
+    %p
       %label{ :for => :default_tenant }= t('.default-tenant')
       %input#default_tenant{:type => "text", :name => "default_tenant", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["default"]["tenant"], :onchange => "update_value('default/tenant','default_tenant','string')"}
-    %p
-      %label{ :for => :default_username }= t('.default-username')
-      %input#default_username{:type => "text", :name => "default_username", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["default"]["username"], :onchange => "update_value('default/username','default_username', 'string')"}
-    %p
-      %label{ :for => :default_password }= t('.default-password')
-      %input#default_password{:type => "text", :name => "default_password", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["default"]["password"], :onchange => "update_value('default/password','default_password', 'string')"}
     %p
       %label{ :for => :admin_username  }= t('.admin-username')
       %input#admin_username{:type => "text", :name => "admin_username", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["admin"]["username"], :onchange => "update_value('admin/username','admin_username', 'string')"}
     %p
       %label{ :for => :admin_password  }= t('.admin-password')
-      %input#admin_password{:type => "text", :name => "admin_password", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["admin"]["password"], :onchange => "update_value('admin/password','admin_password', 'string')"}
+      %input#admin_password{:type => "password", :name => "admin_password", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["admin"]["password"], :onchange => "update_value('admin/password','admin_password', 'string')"}
     %p
-      %label{ :for => :signing }= t('.signing')
-      = select_tag :use_syslog, options_for_select([['pki','pki'], ['uuid', 'uuid']], @proposal.raw_data['attributes'][@proposal.barclamp]["signing"].to_s), :onchange => "update_value('signing', 'signing', 'string')"
+      %label{ :for => :default_username }= t('.default-username')
+      %input#default_username{:type => "text", :name => "default_username", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["default"]["username"], :onchange => "update_value('default/username','default_username', 'string')"}
+    %p
+      %label{ :for => :default_password }= t('.default-password')
+      %input#default_password{:type => "password", :name => "default_password", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["default"]["password"], :onchange => "update_value('default/password','default_password', 'string')"}

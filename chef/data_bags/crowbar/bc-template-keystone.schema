@@ -19,9 +19,8 @@
                     "use_virtualenv": { "type": "bool", "required": true },
                     "pfs_deps": { "type": "seq", "required": true, "sequence": [ { "type": "str" } ] },
                     "use_syslog": { "type": "bool", "required": true },
-                    "database_engine": { "type": "str", "required": true },
                     "database_instance": { "type": "str", "required": true },
-                    "signing": { "type": "str", "required": true },
+                    "token_format": { "type": "str", "required": true },
                     "db": { "type": "map", "required": true, "mapping": {
                       "database": { "type" : "str", "required" : true },
                       "user": { "type" : "str", "required" : true },

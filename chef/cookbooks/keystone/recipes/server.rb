@@ -121,78 +121,63 @@ elsif node[:keystone][:frontend]=='apache'
   end
 end
 
-database_engine = node[:keystone][:database_engine]
-
-Chef::Log.info("Configuring Keystone to use #{database_engine} backend")
-
-if database_engine == "database"
-
-    env_filter = " AND database_config_environment:database-config-#{node[:keystone][:database_instance]}"
-    sqls = search(:node, "roles:database-server#{env_filter}") || []
-    if sqls.length > 0
-        sql = sqls[0]
-        sql = node if sql.name == node.name
-    else
-        sql = node
-    end
-    include_recipe "database::client"
-    backend_name = Chef::Recipe::Database::Util.get_backend_name(sql)
-    include_recipe "#{backend_name}::client"
-    include_recipe "#{backend_name}::python-client"
-
-    db_provider = Chef::Recipe::Database::Util.get_database_provider(sql)
-    db_user_provider = Chef::Recipe::Database::Util.get_user_provider(sql)
-    privs = Chef::Recipe::Database::Util.get_default_priviledges(sql)
-    url_scheme = backend_name
-
-    ::Chef::Recipe.send(:include, Opscode::OpenSSL::Password)
-    node.set_unless['keystone']['db']['password'] = secure_password
-
-
-    sql_address = Chef::Recipe::Barclamp::Inventory.get_network_by_type(sql, "admin").address if sql_address.nil?
-    Chef::Log.info("Database server found at #{sql_address}")
-
-    db_conn = { :host => sql_address,
-                :username => "db_maker",
-                :password => sql[database_engine][:db_maker_password] }
-
-    # Create the Keystone Database
-    database "create #{node[:keystone][:db][:database]} database" do
-        connection db_conn
-        database_name node[:keystone][:db][:database]
-        provider db_provider
-        action :create
-    end
-
-    database_user "create keystone database user" do
-        connection db_conn
-        username node[:keystone][:db][:user]
-        password node[:keystone][:db][:password]
-        host '%'
-        provider db_user_provider
-        action :create
-    end
-
-    database_user "grant database access for keystone database user" do
-        connection db_conn
-        username node[:keystone][:db][:user]
-        password node[:keystone][:db][:password]
-        database_name node[:keystone][:db][:database]
-        host '%'
-        privileges privs
-        provider db_user_provider
-        action :grant
-    end
-    sql_connection = "#{url_scheme}://#{node[:keystone][:db][:user]}:#{node[:keystone][:db][:password]}@#{sql_address}/#{node[:keystone][:db][:database]}"
-elsif database_engine == "sqlite"
-    sql_connection = "sqlite:////var/lib/keystone/keystone.db"
-    file "/var/lib/keystone/keystone.db" do
-        owner node[:keystone][:user]
-        action :create_if_missing
-    end
+env_filter = " AND database_config_environment:database-config-#{node[:keystone][:database_instance]}"
+sqls = search(:node, "roles:database-server#{env_filter}") || []
+if sqls.length > 0
+    sql = sqls[0]
+    sql = node if sql.name == node.name
 else
-    Chef::Log.error("Unknown database engine #{database_engine}")
+    sql = node
 end
+include_recipe "database::client"
+backend_name = Chef::Recipe::Database::Util.get_backend_name(sql)
+include_recipe "#{backend_name}::client"
+include_recipe "#{backend_name}::python-client"
+
+db_provider = Chef::Recipe::Database::Util.get_database_provider(sql)
+db_user_provider = Chef::Recipe::Database::Util.get_user_provider(sql)
+privs = Chef::Recipe::Database::Util.get_default_priviledges(sql)
+url_scheme = backend_name
+
+::Chef::Recipe.send(:include, Opscode::OpenSSL::Password)
+node.set_unless['keystone']['db']['password'] = secure_password
+
+
+sql_address = Chef::Recipe::Barclamp::Inventory.get_network_by_type(sql, "admin").address if sql_address.nil?
+Chef::Log.info("Database server found at #{sql_address}")
+
+db_conn = { :host => sql_address,
+            :username => "db_maker",
+            :password => sql["database"][:db_maker_password] }
+
+# Create the Keystone Database
+database "create #{node[:keystone][:db][:database]} database" do
+    connection db_conn
+    database_name node[:keystone][:db][:database]
+    provider db_provider
+    action :create
+end
+
+database_user "create keystone database user" do
+    connection db_conn
+    username node[:keystone][:db][:user]
+    password node[:keystone][:db][:password]
+    host '%'
+    provider db_user_provider
+    action :create
+end
+
+database_user "grant database access for keystone database user" do
+    connection db_conn
+    username node[:keystone][:db][:user]
+    password node[:keystone][:db][:password]
+    database_name node[:keystone][:db][:database]
+    host '%'
+    privileges privs
+    provider db_user_provider
+    action :grant
+end
+sql_connection = "#{url_scheme}://#{node[:keystone][:db][:user]}:#{node[:keystone][:db][:password]}@#{sql_address}/#{node[:keystone][:db][:database]}"
 
 
 template "/etc/keystone/keystone.conf" do
@@ -215,7 +200,7 @@ template "/etc/keystone/keystone.conf" do
       :api_port => node[:keystone][:api][:api_port], # public port
       :api_host => node[:keystone][:api][:api_host],
       :use_syslog => node[:keystone][:use_syslog],
-      :signing => node[:keystone][:signing],
+      :token_format => node[:keystone][:token_format],
       :frontend => node[:keystone][:frontend]
     )
     if node[:keystone][:frontend]=='native'
@@ -230,7 +215,7 @@ execute "keystone-manage db_sync" do
   action :run
 end
 
-if node[:keystone][:signing]=="PKI"
+if node[:keystone][:token_format] == "PKI"
   execute "keystone-manage pki_setup" do
     command "keystone-manage pki_setup ; chown #{node[:keystone][:user]} -R /etc/keystone/ssl/"
     action :run
@@ -242,6 +227,7 @@ pub_ipaddress = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "pub
 
 # Silly wake-up call - this is a hack
 keystone_register "wakeup keystone" do
+  protocol node[:keystone][:api][:protocol]
   host my_ipaddress
   port node[:keystone][:api][:admin_port]
   token node[:keystone][:service][:token]
@@ -254,6 +240,7 @@ end
   node[:keystone][:default][:tenant] 
 ].each do |tenant|
   keystone_register "add default #{tenant} tenant" do
+    protocol node[:keystone][:api][:protocol]
     host my_ipaddress
     port node[:keystone][:api][:admin_port]
     token node[:keystone][:service][:token]
@@ -267,6 +254,7 @@ end
   [ node[:keystone][:default][:username], node[:keystone][:default][:password], node[:keystone][:default][:tenant] ]
 ].each do |user_data|
   keystone_register "add default #{user_data[0]} user" do
+    protocol node[:keystone][:api][:protocol]
     host my_ipaddress
     port node[:keystone][:api][:admin_port]
     token node[:keystone][:service][:token]
@@ -282,6 +270,7 @@ end
 roles = %w[admin Member KeystoneAdmin KeystoneServiceAdmin sysadmin netadmin]
 roles.each do |role|
   keystone_register "add default #{role} role" do
+    protocol node[:keystone][:api][:protocol]
     host my_ipaddress
     port node[:keystone][:api][:admin_port]
     token node[:keystone][:service][:token]
@@ -302,6 +291,7 @@ user_roles = [
 ]
 user_roles.each do |args|
   keystone_register "add default #{args[2]}:#{args[0]} -> #{args[1]} role" do
+    protocol node[:keystone][:api][:protocol]
     host my_ipaddress
     port node[:keystone][:api][:admin_port]
     token node[:keystone][:service][:token]
@@ -321,6 +311,7 @@ ec2_creds = [
 ]
 ec2_creds.each do |args|
   keystone_register "add default ec2 creds for #{args[1]}:#{args[0]}" do
+    protocol node[:keystone][:api][:protocol]
     host my_ipaddress
     port node[:keystone][:api][:admin_port]
     token node[:keystone][:service][:token]
@@ -332,6 +323,7 @@ end
 
 # Create keystone service
 keystone_register "register keystone service" do
+  protocol node[:keystone][:api][:protocol]
   host my_ipaddress
   port node[:keystone][:api][:admin_port]
   token node[:keystone][:service][:token]
@@ -342,15 +334,16 @@ keystone_register "register keystone service" do
 end
 
 # Create keystone endpoint
-keystone_register "register keystone service" do
+keystone_register "register keystone endpoint" do
+  protocol node[:keystone][:api][:protocol]
   host my_ipaddress
   port node[:keystone][:api][:admin_port]
   token node[:keystone][:service][:token]
   endpoint_service "keystone"
   endpoint_region "RegionOne"
-  endpoint_publicURL "http://#{pub_ipaddress}:#{node[:keystone][:api][:service_port]}/v2.0"
-  endpoint_adminURL "http://#{my_ipaddress}:#{node[:keystone][:api][:admin_port]}/v2.0"
-  endpoint_internalURL "http://#{my_ipaddress}:#{node[:keystone][:api][:service_port]}/v2.0"
+  endpoint_publicURL "#{node[:keystone][:api][:protocol]}://#{pub_ipaddress}:#{node[:keystone][:api][:service_port]}/v2.0"
+  endpoint_adminURL "#{node[:keystone][:api][:protocol]}://#{my_ipaddress}:#{node[:keystone][:api][:admin_port]}/v2.0"
+  endpoint_internalURL "#{node[:keystone][:api][:protocol]}://#{my_ipaddress}:#{node[:keystone][:api][:service_port]}/v2.0"
 #  endpoint_global true
 #  endpoint_enabled true
   action :add_endpoint_template
