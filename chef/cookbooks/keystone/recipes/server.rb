@@ -265,7 +265,8 @@ end
 
 
 # Create roles
-roles = %w[admin Member KeystoneAdmin KeystoneServiceAdmin sysadmin netadmin]
+## Member is used by horizon (see OPENSTACK_KEYSTONE_DEFAULT_ROLE option)
+roles = %w[admin Member]
 roles.each do |role|
   keystone_register "add default #{role} role" do
     protocol node[:keystone][:api][:protocol]
@@ -280,12 +281,8 @@ end
 # Create Access info
 user_roles = [ 
   [node[:keystone][:admin][:username], "admin", node[:keystone][:admin][:tenant]],
-  [node[:keystone][:admin][:username], "KeystoneAdmin", node[:keystone][:admin][:tenant]],
-  [node[:keystone][:admin][:username], "KeystoneServiceAdmin", node[:keystone][:admin][:tenant]],
   [node[:keystone][:admin][:username], "admin", node[:keystone][:default][:tenant]],
-  [node[:keystone][:default][:username], "Member", node[:keystone][:default][:tenant]],
-  [node[:keystone][:default][:username], "sysadmin", node[:keystone][:default][:tenant]],
-  [node[:keystone][:default][:username], "netadmin", node[:keystone][:default][:tenant]]
+  [node[:keystone][:default][:username], "Member", node[:keystone][:default][:tenant]]
 ]
 user_roles.each do |args|
   keystone_register "add default #{args[2]}:#{args[0]} -> #{args[1]} role" do
