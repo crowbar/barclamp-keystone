@@ -213,7 +213,7 @@ execute "keystone-manage db_sync" do
   action :run
 end
 
-if node[:keystone][:token_format] == "PKI"
+if node[:keystone][:signing][:token_format] == "PKI"
   execute "keystone-manage pki_setup" do
     command "keystone-manage pki_setup ; chown #{node[:keystone][:user]} -R /etc/keystone/ssl/"
     action :run
