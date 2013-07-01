@@ -44,3 +44,8 @@ default[:keystone][:signing][:token_format] = "PKI"
 default[:keystone][:signing][:certfile] = "/etc/keystone/ssl/certs/signing_cert.pem"
 default[:keystone][:signing][:keyfile] = "/etc/keystone/ssl/private/signing_key.pem"
 default[:keystone][:signing][:ca_certs] = "/etc/keystone/ssl/certs/ca.pem"
+
+default[:keystone][:ssl][:certfile] = "/etc/keystone/ssl/certs/signing_cert.pem"
+default[:keystone][:ssl][:keyfile] = "/etc/keystone/ssl/private/signing_key.pem"
+default[:keystone][:ssl][:ca_certs] = "/etc/keystone/ssl/certs/ca.pem"
+default[:keystone][:ssl][:cert_required] = true

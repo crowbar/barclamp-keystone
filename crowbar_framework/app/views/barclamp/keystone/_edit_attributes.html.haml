@@ -27,3 +27,47 @@
     %p
       %label{ :for => :default_password }= t('.default-password')
       %input#default_password{:type => "password", :name => "default_password", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["default"]["password"], :onchange => "update_value('default/password','default_password', 'string')"}
+
+    %div{ :id => :protocol_div }
+      %p
+        %label{ :for => :protocol }= t('.protocol')
+        = select_tag :protocol, options_for_select([['HTTP','http'], ['HTTPS', 'https']], @proposal.raw_data['attributes'][@proposal.barclamp]["api"]["protocol"].to_s), :onchange => "update_value('api/protocol', 'protocol', 'string')"
+
+    %div{ :id => :ssl_div }
+      %p
+        %label{ :for => :ssl_certfile }= t('.ssl_certfile')
+        = text_field_tag :ssl_certfile, @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["certfile"], :size => 80, :onchange => "update_value('ssl/certfile', 'ssl_certfile', 'string')"
+      %p
+        %label{ :for => :ssl_keyfile }= t('.ssl_keyfile')
+        = text_field_tag :ssl_keyfile, @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["keyfile"], :size => 80, :onchange => "update_value('ssl/keyfile', 'ssl_keyfile', 'string')"
+      %p
+        %label{ :for => :ssl_ca_certs }= t('.ssl_ca_certs')
+        = text_field_tag :ssl_ca_certs, @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["ca_certs"], :size => 80, :onchange => "update_value('ssl/ca_certs', 'ssl_ca_certs', 'string')"
+      %p
+        %label{ :for => :ssl_cert_required }= t('.ssl_cert_required')
+        = select_tag :ssl_cert_required, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["cert_required"].to_s), :onchange => "update_value('ssl/cert_required', 'protocol', 'string')"
+
+
+:javascript
+  function toggle_protocol() {
+    if ($('#frontend option:selected').attr('value') == 'native') {
+      $('#protocol_div').show();
+    } else {
+      $('#protocol_div').hide();
+      // HTTPS protocol currently only implemented for native frontend
+      $('#protocol option[value=http]').attr('selected', true);
+    }
+
+    if ($('#protocol option:selected').attr('value') == 'https') {
+      $('#ssl_div').show();
+    } else {
+      $('#ssl_div').hide();
+    }
+  };
+
+  $(document).ready(function () {
+    toggle_protocol();
+  });
+
+  $('#frontend').change(toggle_protocol);
+  $('#protocol').change(toggle_protocol);
