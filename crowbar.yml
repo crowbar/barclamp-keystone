@@ -48,6 +48,7 @@ locale_additions:
           default-password: Regular User Password
           protocol: Protocol
           ssl: SSL Attributes
+          ssl_insecure: SSL Certificate is insecure (for instance, auto-signed)
           ssl_certfile: SSL Certificate File
           ssl_keyfile: SSL (Private) Key File
           ssl_ca_certs: SSL CA Certificates File

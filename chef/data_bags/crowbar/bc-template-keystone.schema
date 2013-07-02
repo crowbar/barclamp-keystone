@@ -29,6 +29,7 @@
                       "idle_timeout": { "type" : "int", "required" : true }
                     }},
                     "ssl": { "type": "map", "required": true, "mapping": {
+                      "insecure": { "type" : "bool", "required" : true },
                       "certfile": { "type" : "str", "required" : true },
                       "keyfile": { "type" : "str", "required" : true },
                       "ca_certs": { "type" : "str", "required" : true },
