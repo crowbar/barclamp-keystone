@@ -3,14 +3,12 @@
   %label{:class => "h3", :for => "proposal_attributes"}= t('.attributes')
   = link_to "Raw", proposal_barclamp_path(:id => @proposal.name, :controller => @proposal.barclamp, :dep_raw => @dep_raw, :attr_raw => true), :style => "float: right;"
   %div.container
-    = render 'barclamp/git/pfsdeps.html.haml'
     %p
       %label{ :for => :database_instance }= t('.database_instance')
       = instance_selector(@proposal.raw_data['attributes'][@proposal.barclamp]["database_engine"], :database_instance, "database_instance", @proposal)
     %p
       %label{ :for => :frontend }= t('.frontend')
       = select_tag :frontend, options_for_select([['native', 'native'], ['apache','apache']], @proposal.raw_data['attributes'][@proposal.barclamp]["frontend"]), :onchange => "update_value('frontend', 'frontend', 'string')"
-
     %p
       %label{ :for => :token_format }= t('.token_format')
       = select_tag :token_format, options_for_select([['PKI','PKI'], ['UUID', 'UUID']], @proposal.raw_data['attributes'][@proposal.barclamp]["token_format"].to_s), :onchange => "update_value('token_format', 'token_format', 'string')"
@@ -29,3 +27,4 @@
     %p
       %label{ :for => :default_password }= t('.default-password')
       %input#default_password{:type => "password", :name => "default_password", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["default"]["password"], :onchange => "update_value('default/password','default_password', 'string')"}
+    = render 'barclamp/git/pfsdeps.html.haml'
