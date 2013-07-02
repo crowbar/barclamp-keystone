@@ -203,8 +203,8 @@ template "/etc/keystone/keystone.conf" do
       :ssl_enable => (node[:keystone][:frontend] == 'native' && node[:keystone][:api][:protocol] == "https"),
       :ssl_certfile => node[:keystone][:ssl][:certfile],
       :ssl_keyfile => node[:keystone][:ssl][:keyfile],
-      :ssl_ca_certs => node[:keystone][:ssl][:ca_certs],
-      :ssl_cert_required => node[:keystone][:ssl][:cert_required]
+      :ssl_cert_required => node[:keystone][:ssl][:cert_required],
+      :ssl_ca_certs => node[:keystone][:ssl][:ca_certs]
     )
     if node[:keystone][:frontend]=='native'
       notifies :restart, resources(:service => "keystone"), :immediately
