@@ -179,6 +179,20 @@ database_user "grant database access for keystone database user" do
 end
 sql_connection = "#{url_scheme}://#{node[:keystone][:db][:user]}:#{node[:keystone][:db][:password]}@#{sql_address}/#{node[:keystone][:db][:database]}"
 
+if node[:keystone][:api][:protocol] == 'https'
+  unless ::File.exists? node[:keystone][:ssl][:certfile]
+    message = "Certificate \"#{node[:keystone][:ssl][:certfile]}\" is not present."
+    Chef::Log.fatal(message)
+    raise message
+  end
+  # we do not check for existence of keyfile, as the private key is allowed to
+  # be in the certfile
+  if node[:keystone][:ssl][:cert_required] and !::File.exists? node[:keystone][:ssl][:ca_certs]
+    message = "Certificate CA \"#{node[:keystone][:ssl][:ca_certs]}\" is not present."
+    Chef::Log.fatal(message)
+    raise message
+  end
+end
 
 template "/etc/keystone/keystone.conf" do
     source "keystone.conf.erb"
