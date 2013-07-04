@@ -42,7 +42,6 @@
         "insecure": false,
         "certfile": "/etc/keystone/ssl/certs/signing_cert.pem",
         "keyfile": "/etc/keystone/ssl/private/signing_key.pem",
-        "cert_required": false,
         "ca_certs": "/etc/keystone/ssl/certs/ca.pem"
       },
       "api": {

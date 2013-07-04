@@ -51,7 +51,6 @@ locale_additions:
           ssl_insecure: SSL Certificate is insecure (for instance, auto-signed)
           ssl_certfile: SSL Certificate File
           ssl_keyfile: SSL (Private) Key File
-          ssl_cert_required: Require Client Certificate
           ssl_ca_certs: SSL CA Certificates File
 
 debs:
