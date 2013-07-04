@@ -32,7 +32,6 @@
                       "insecure": { "type" : "bool", "required" : true },
                       "certfile": { "type" : "str", "required" : true },
                       "keyfile": { "type" : "str", "required" : true },
-                      "cert_required": { "type" : "bool", "required" : true },
                       "ca_certs": { "type" : "str", "required" : true }
                     }},
                     "api": { "type": "map", "required": true, "mapping": {

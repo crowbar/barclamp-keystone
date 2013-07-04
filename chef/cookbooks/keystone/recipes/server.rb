@@ -187,7 +187,7 @@ if node[:keystone][:api][:protocol] == 'https'
   end
   # we do not check for existence of keyfile, as the private key is allowed to
   # be in the certfile
-  if node[:keystone][:ssl][:cert_required] and !::File.exists? node[:keystone][:ssl][:ca_certs]
+  if !::File.exists? node[:keystone][:ssl][:ca_certs]
     message = "Certificate CA \"#{node[:keystone][:ssl][:ca_certs]}\" is not present."
     Chef::Log.fatal(message)
     raise message
@@ -218,7 +218,6 @@ template "/etc/keystone/keystone.conf" do
       :ssl_enable => (node[:keystone][:frontend] == 'native' && node[:keystone][:api][:protocol] == "https"),
       :ssl_certfile => node[:keystone][:ssl][:certfile],
       :ssl_keyfile => node[:keystone][:ssl][:keyfile],
-      :ssl_cert_required => node[:keystone][:ssl][:cert_required],
       :ssl_ca_certs => node[:keystone][:ssl][:ca_certs]
     )
     if node[:keystone][:frontend]=='native'
