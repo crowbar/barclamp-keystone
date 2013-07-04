@@ -194,6 +194,19 @@ if node[:keystone][:api][:protocol] == 'https'
   end
 end
 
+my_admin_host = node[:fqdn]
+# For the public endpoint, we prefer the public name. If not set, then we
+# use the IP address except for SSL, where we always prefer a hostname
+# (for certificate validation).
+my_public_host = node[:crowbar][:public_name]
+if my_public_host.nil? or my_public_host.empty?
+  unless node[:keystone][:api][:protocol] == "https"
+    my_public_host = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "public").address
+  else
+    my_public_host = 'public.'+node[:fqdn]
+  end
+end
+
 template "/etc/keystone/keystone.conf" do
     source "keystone.conf.erb"
     owner node[:keystone][:user]
@@ -204,9 +217,10 @@ template "/etc/keystone/keystone.conf" do
       :debug => node[:keystone][:debug],
       :verbose => node[:keystone][:verbose],
       :admin_token => node[:keystone][:service][:token],
+      :bind_admin_api_host => node[:keystone][:api][:admin_host],
+      :admin_api_host => my_admin_host,
       :admin_api_port => node[:keystone][:api][:admin_port], # Auth port
-      :admin_api_host => node[:keystone][:api][:admin_host],
-      :api_host => node[:keystone][:api][:api_host], # public host
+      :api_host => my_public_host,
       :api_port => node[:keystone][:api][:api_port], # public port
       :use_syslog => node[:keystone][:use_syslog],
       :signing_token_format => node[:keystone][:signing][:token_format],
@@ -238,19 +252,6 @@ if node[:keystone][:signing][:token_format] == "PKI"
     action :run
   end
 end unless node.platform == "suse"
-
-my_admin_host = node[:fqdn]
-# For the public endpoint, we prefer the public name. If not set, then we
-# use the IP address except for SSL, where we always prefer a hostname
-# (for certificate validation).
-my_public_host = node[:crowbar][:public_name]
-if my_public_host.nil? or my_public_host.empty?
-  unless node[:keystone][:api][:protocol] == "https"
-    my_public_host = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "public").address
-  else
-    my_public_host = 'public.'+node[:fqdn]
-  end
-end
 
 # Silly wake-up call - this is a hack
 keystone_register "wakeup keystone" do
