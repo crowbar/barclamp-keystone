@@ -213,6 +213,7 @@ template "/etc/keystone/keystone.conf" do
       :signing_certfile => node[:keystone][:signing][:certfile],
       :signing_keyfile => node[:keystone][:signing][:keyfile],
       :signing_ca_certs => node[:keystone][:signing][:ca_certs],
+      :protocol => node[:keystone][:api][:protocol],
       :frontend => node[:keystone][:frontend],
       :ssl_enable => (node[:keystone][:frontend] == 'native' && node[:keystone][:api][:protocol] == "https"),
       :ssl_certfile => node[:keystone][:ssl][:certfile],
