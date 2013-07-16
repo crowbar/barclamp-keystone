@@ -1,75 +1,110 @@
 [DEFAULT]
-# Show more verbose log output (sets INFO log level output)
-verbose = <%= @verbose ? "True" : "False" %>
-
-# Show debugging output in logs (sets DEBUG log level output)
-debug = <%= @debug ? "True" : "False" %>
-
-# Log to this file. Make sure you do not set the same log
-# file for both the API and registry servers!
-log_dir = /var/log/keystone
-log_file = keystone.log
-
-# Host properties
-bind_host = <%= @admin_api_host %>
-# Address to bind the API server
-public_host = <%= @api_host %>
-# Address to bind the Admin API server
-admin_host = <%= @admin_api_host %>
-# Address to bind the API server
-compute_host = <%= @service_api_host %>
-
-# Port the bind the API server to
-public_port = <%= @api_port %>
-# Port the bind the Admin API server to
-admin_port = <%= @admin_api_port %>
-# Port the bind the Compute
-compute_port = 3000
-
-# Admin access token
+# A "shared secret" between keystone and other openstack services
 admin_token = <%= @admin_token %>
 
+# The IP address of the network interface to listen on
+bind_host = <%= @bind_admin_api_host %>
 
-# ================= Syslog Options ============================
-# Send logs to syslog (/dev/log) instead of to file specified
-# by `log-file`
+# The port number which the public service listens on
+public_port = <%= @api_port %>
+
+# The port number which the public admin listens on
+admin_port = <%= @admin_api_port %>
+
+# The base endpoint URLs for keystone that are advertised to clients
+# (NOTE: this does NOT affect how keystone listens for connections)
+public_endpoint = <%= @protocol %>://<%= @api_host %>:<%= @api_port %>/
+admin_endpoint = <%= @protocol %>://<%= @admin_api_host %>:<%= @admin_api_port %>/
+
+# The port number which the OpenStack Compute service listens on
+# compute_port = 8774
+
+# Path to your policy definition containing identity actions
+# policy_file = policy.json
+
+# Rule to check if no matching policy definition is found
+# FIXME(dolph): This should really be defined as [policy] default_rule
+# policy_default_rule = admin_required
+
+# Role for migrating membership relationships
+# During a SQL upgrade, the following values will be used to create a new role
+# that will replace records in the user_tenant_membership table with explicit
+# role grants.  After migration, the member_role_id will be used in the API
+# add_user_to_project, and member_role_name will be ignored.
+# member_role_id = 9fe2ff9ee4384b1894a90878d3e92bab
+# member_role_name = _member_
+
+# === Logging Options ===
+# Print debugging output
+# (includes plaintext request logging, potentially including passwords)
+debug = <%= @debug ? "True" : "False" %>
+
+# Print more verbose output
+verbose = <%= @verbose ? "True" : "False" %>
+
+# Name of log file to output to. If not set, logging will go to stdout.
+log_file = keystone.log
+
+# The directory to keep log files in (will be prepended to --logfile)
+log_dir = /var/log/keystone
+
+# Use syslog for logging.
 use_syslog = <%= @use_syslog ? "True" : "False" %>
 
-# Facility to use. If unset defaults to LOG_USER.
-# syslog_log_facility = LOG_LOCAL0
+# syslog facility to receive log lines
+# syslog_log_facility = LOG_USER
 
+# If this option is specified, the logging configuration file specified is
+# used and overrides any other logging options specified. Please see the
+# Python logging module documentation for details on logging configuration
+# files.
+# log_config = logging.conf
+
+# A logging.Formatter log message format string which may use any of the
+# available logging.LogRecord attributes.
+# log_format = %(asctime)s %(levelname)8s [%(name)s] %(message)s
+
+# Format string for %(asctime)s in log records.
+# log_date_format = %Y-%m-%d %H:%M:%S
+
+# onready allows you to send a notification when the process is ready to serve
+# For example, to have it notify using systemd, one could set shell command:
+# onready = systemd-notify --ready
+# or a module with notify() method:
+# onready = keystone.common.systemd
 
 [sql]
-# SQLAlchemy connection string for the reference implementation registry
-# server. Any valid SQLAlchemy connection string is fine.
-# See: http://bit.ly/ideIpI
+# The SQLAlchemy connection string used to connect to the database
 connection = <%= @sql_connection %>
 
-# Period in seconds after which SQLAlchemy should reestablish its connection
-# to the database.
-#idle_timeout = <%= @sql_idle_timeout %>
-min_pool_size = <%= @sql_min_pool_size %>
-max_pool_size = <%= @sql_max_pool_size %>
-pool_timeout = <%= @sql_pool_timeout %>
-
-[ssl]
-enable = False
-
-[signing]
-token_format = <%= @token_format %>
-#token_format = PKI #[PKI|UUID]
-#certfile = /etc/keystone/ssl/certs/signing_cert.pem
-#keyfile = /etc/keystone/ssl/private/signing_key.pem
-#ca_certs = /etc/keystone/ssl/certs/ca.pem
-#key_size = 1024
-#valid_days = 3650
-#ca_password = None
+# the timeout before idle sql connections are reaped
+idle_timeout = <%= @sql_idle_timeout %>
 
 [identity]
-driver = keystone.identity.backends.sql.Identity
+driver = <%= node[:keystone][:identity][:driver] %>
+
+# This references the domain to use for all Identity API v2 requests (which are
+# not aware of domains). A domain with this ID will be created for you by
+# keystone-manage db_sync in migration 008.  The domain referenced by this ID
+# cannot be deleted on the v3 API, to prevent accidentally breaking the v2 API.
+# There is nothing special about this domain, other than the fact that it must
+# exist to order to maintain support for your v2 clients.
+# default_domain_id = default
+
+[trust]
+# driver = keystone.trust.backends.sql.Trust
+
+# delegation and impersonation features can be optionally disabled
+# enabled = True
 
 [catalog]
+# dynamic, sql-based backend (supports API/CLI-based management commands)
 driver = keystone.catalog.backends.sql.Catalog
+
+# static, file-based backend (does *NOT* support any management commands)
+# driver = keystone.catalog.backends.templated.TemplatedCatalog
+
+# template_file = default_catalog.templates
 
 [token]
 <% if @frontend=='apache' -%>
@@ -78,11 +113,116 @@ driver = keystone.token.backends.sql.Token
 driver = keystone.token.backends.kvs.Token
 <% end -%>
 
+# Amount of time a token should remain valid (in seconds)
+# expiration = 86400
+
 [policy]
 driver = keystone.policy.backends.sql.Policy
 
 [ec2]
 driver = keystone.contrib.ec2.backends.sql.Ec2
+
+[ssl]
+enable = <%= @ssl_enable %>
+certfile = <%= @ssl_certfile %>
+keyfile = <%= @ssl_keyfile %>
+ca_certs = <%= @ssl_ca_certs %>
+cert_required = <%= @ssl_cert_required %>
+
+[signing]
+token_format = <%= @signing_token_format %>
+certfile = <%= @signing_certfile %>
+keyfile = <%= @signing_keyfile %>
+ca_certs = <%= @signing_ca_certs %>
+#key_size = 1024
+#valid_days = 3650
+#ca_password = None
+
+[ldap]
+url = <%= node[:keystone][:ldap][:url] %>
+user = <%= node[:keystone][:ldap][:user] %>
+password =<%= node[:keystone][:ldap][:password] %>
+suffix = <%= node[:keystone][:ldap][:suffix] %>
+use_dumb_member = <%= node[:keystone][:ldap][:use_dumb_member] %>
+allow_subtree_delete = <%= node[:keystone][:ldap][:allow_subtree_delete] %>
+dumb_member = <%= node[:keystone][:ldap][:dumb_member] %>
+
+# Maximum results per page; a value of zero ('0') disables paging (default)
+page_size = <%= node[:keystone][:ldap][:page_size] %>
+
+# The LDAP dereferencing option for queries. This can be either 'never',
+# 'searching', 'always', 'finding' or 'default'. The 'default' option falls
+# back to using default dereferencing configured by your ldap.conf.
+alias_dereferencing = <%= node[:keystone][:ldap][:alias_dereferencing] %>
+
+# The LDAP scope for queries, this can be either 'one'
+# (onelevel/singleLevel) or 'sub' (subtree/wholeSubtree)
+query_scope = <%= node[:keystone][:ldap][:query_scope] %>
+
+# user_tree_dn = ou=Users,dc=example,dc=com
+user_tree_dn = <%= node[:keystone][:ldap][:user_tree_dn] %>
+user_filter = <%= node[:keystone][:ldap][:user_filter] %>
+user_objectclass = <%= node[:keystone][:ldap][:user_objectclass] %>
+user_domain_id_attribute = <%= node[:keystone][:ldap][:user_domain_id_attribute] %>
+user_id_attribute = <%= node[:keystone][:ldap][:user_id_attribute] %>
+user_name_attribute = <%= node[:keystone][:ldap][:user_name_attribute] %>
+user_mail_attribute = <%= node[:keystone][:ldap][:user_mail_attribute] %>
+user_pass_attribute = <%= node[:keystone][:ldap][:user_pass_attribute] %>
+user_enabled_attribute = <%= node[:keystone][:ldap][:user_enabled_attribute] %>
+user_enabled_mask = <%= node[:keystone][:ldap][:user_enabled_mask] %>
+user_enabled_default = <%= node[:keystone][:ldap][:user_enabled_default] %>
+user_attribute_ignore = <%= node[:keystone][:ldap][:user_attribute_ignore] %>
+user_allow_create = <%= node[:keystone][:ldap][:user_allow_create] %>
+user_allow_update = <%= node[:keystone][:ldap][:user_allow_update] %>
+user_allow_delete = <%= node[:keystone][:ldap][:user_allow_delete] %>
+user_enabled_emulation = <%= node[:keystone][:ldap][:user_enabled_emulation] %>
+user_enabled_emulation_dn = <%= node[:keystone][:ldap][:user_enabled_emulation_dn] %>
+
+# tenant_tree_dn = "ou=Groups,dc=example,dc=com"
+tenant_tree_dn = <%= node[:keystone][:ldap][:tenant_tree_dn] %>
+tenant_filter = <%= node[:keystone][:ldap][:tenant_filter] %>
+tenant_objectclass = <%= node[:keystone][:ldap][:tenant_objectclass] %>
+tenant_domain_id_attribute = <%= node[:keystone][:ldap][:tenant_domain_id_attribute] %>
+tenant_id_attribute = <%= node[:keystone][:ldap][:tenant_id_attribute] %>
+tenant_member_attribute = <%= node[:keystone][:ldap][:tenant_member_attribute] %>
+tenant_name_attribute = <%= node[:keystone][:ldap][:tenant_name_attribute] %>
+tenant_desc_attribute = <%= node[:keystone][:ldap][:tenant_desc_attribute] %>
+tenant_enabled_attribute = <%= node[:keystone][:ldap][:tenant_enabled_attribute] %>
+tenant_attribute_ignore = <%= node[:keystone][:ldap][:tenant_attribute_ignore] %>
+tenant_allow_create = <%= node[:keystone][:ldap][:tenant_allow_create] %>
+tenant_allow_update = <%= node[:keystone][:ldap][:tenant_allow_update] %>
+tenant_allow_delete = <%= node[:keystone][:ldap][:tenant_allow_delete] %>
+tenant_enabled_emulation = <%= node[:keystone][:ldap][:tenant_enabled_emulation] %>
+tenant_enabled_emulation_dn = <%= node[:keystone][:ldap][:tenant_enabled_emulation_dn] %>
+
+# role_tree_dn = ou=Roles,dc=example,dc=com
+role_tree_dn = <%= node[:keystone][:ldap][:role_tree_dn] %>
+role_filter = <%= node[:keystone][:ldap][:role_filter] %>
+role_objectclass = <%= node[:keystone][:ldap][:role_objectclass] %>
+role_id_attribute = <%= node[:keystone][:ldap][:role_id_attribute] %>
+role_name_attribute = <%= node[:keystone][:ldap][:role_name_attribute] %>
+role_member_attribute = <%= node[:keystone][:ldap][:role_allow_create] %>
+role_attribute_ignore = <%= node[:keystone][:ldap][:role_member_attribute] %>
+role_allow_create = <%= node[:keystone][:ldap][:role_attribute_ignore] %>
+role_allow_update = <%= node[:keystone][:ldap][:role_allow_update] %>
+role_allow_delete = <%= node[:keystone][:ldap][:role_allow_delete] %>
+
+group_tree_dn = <%= node[:keystone][:ldap][:group_tree_dn] %>
+group_filter = <%= node[:keystone][:ldap][:group_filter] %>
+group_objectclass = <%= node[:keystone][:ldap][:group_objectclass] %>
+group_id_attribute = <%= node[:keystone][:ldap][:group_id_attribute] %>
+group_name_attribute = <%= node[:keystone][:ldap][:group_name_attribute] %>
+group_member_attribute = <%= node[:keystone][:ldap][:group_member_attribute] %>
+group_desc_attribute = <%= node[:keystone][:ldap][:group_desc_attribute] %>
+group_attribute_ignore = <%= node[:keystone][:ldap][:group_attribute_ignore] %>
+group_allow_create = <%= node[:keystone][:ldap][:group_allow_create] %>
+group_allow_update = <%= node[:keystone][:ldap][:group_allow_update] %>
+group_allow_delete = <%= node[:keystone][:ldap][:group_allow_delete] %>
+
+[auth]
+methods = password,token
+password = keystone.auth.plugins.password.Password
+token = keystone.auth.plugins.token.Token
 
 [filter:debug]
 paste.filter_factory = keystone.common.wsgi:Debug.factory
@@ -114,11 +254,17 @@ paste.filter_factory = keystone.contrib.s3:S3Extension.factory
 [filter:url_normalize]
 paste.filter_factory = keystone.middleware:NormalizingFilter.factory
 
+[filter:sizelimit]
+paste.filter_factory = keystone.middleware:RequestBodySizeLimiter.factory
+
 [filter:stats_monitoring]
 paste.filter_factory = keystone.contrib.stats:StatsMiddleware.factory
 
 [filter:stats_reporting]
 paste.filter_factory = keystone.contrib.stats:StatsExtension.factory
+
+[filter:access_log]
+paste.filter_factory = keystone.contrib.access:AccessLogMiddleware.factory
 
 [app:public_service]
 paste.app_factory = keystone.service:public_app_factory
@@ -130,13 +276,13 @@ paste.app_factory = keystone.service:v3_app_factory
 paste.app_factory = keystone.service:admin_app_factory
 
 [pipeline:public_api]
-pipeline = stats_monitoring url_normalize token_auth admin_token_auth xml_body json_body debug ec2_extension user_crud_extension public_service
+pipeline = access_log sizelimit stats_monitoring url_normalize token_auth admin_token_auth xml_body json_body debug ec2_extension user_crud_extension public_service
 
 [pipeline:admin_api]
-pipeline = stats_monitoring url_normalize token_auth admin_token_auth xml_body json_body debug stats_reporting ec2_extension s3_extension crud_extension admin_service
+pipeline = access_log sizelimit stats_monitoring url_normalize token_auth admin_token_auth xml_body json_body debug stats_reporting ec2_extension s3_extension crud_extension admin_service
 
 [pipeline:api_v3]
-pipeline = stats_monitoring url_normalize token_auth admin_token_auth xml_body json_body debug stats_reporting ec2_extension s3_extension service_v3
+pipeline = access_log sizelimit stats_monitoring url_normalize token_auth admin_token_auth xml_body json_body debug stats_reporting ec2_extension s3_extension service_v3
 
 [app:public_version_service]
 paste.app_factory = keystone.service:public_version_app_factory
@@ -145,10 +291,10 @@ paste.app_factory = keystone.service:public_version_app_factory
 paste.app_factory = keystone.service:admin_version_app_factory
 
 [pipeline:public_version_api]
-pipeline = stats_monitoring url_normalize xml_body public_version_service
+pipeline = access_log sizelimit stats_monitoring url_normalize xml_body public_version_service
 
 [pipeline:admin_version_api]
-pipeline = stats_monitoring url_normalize xml_body admin_version_service
+pipeline = access_log sizelimit stats_monitoring url_normalize xml_body admin_version_service
 
 [composite:main]
 use = egg:Paste#urlmap
@@ -161,4 +307,3 @@ use = egg:Paste#urlmap
 /v2.0 = admin_api
 /v3 = api_v3
 / = admin_version_api
-

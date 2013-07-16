@@ -179,6 +179,33 @@ database_user "grant database access for keystone database user" do
 end
 sql_connection = "#{url_scheme}://#{node[:keystone][:db][:user]}:#{node[:keystone][:db][:password]}@#{sql_address}/#{node[:keystone][:db][:database]}"
 
+if node[:keystone][:api][:protocol] == 'https'
+  unless ::File.exists? node[:keystone][:ssl][:certfile]
+    message = "Certificate \"#{node[:keystone][:ssl][:certfile]}\" is not present."
+    Chef::Log.fatal(message)
+    raise message
+  end
+  # we do not check for existence of keyfile, as the private key is allowed to
+  # be in the certfile
+  if node[:keystone][:ssl][:cert_required] and !::File.exists? node[:keystone][:ssl][:ca_certs]
+    message = "Certificate CA \"#{node[:keystone][:ssl][:ca_certs]}\" is not present."
+    Chef::Log.fatal(message)
+    raise message
+  end
+end
+
+my_admin_host = node[:fqdn]
+# For the public endpoint, we prefer the public name. If not set, then we
+# use the IP address except for SSL, where we always prefer a hostname
+# (for certificate validation).
+my_public_host = node[:crowbar][:public_name]
+if my_public_host.nil? or my_public_host.empty?
+  unless node[:keystone][:api][:protocol] == "https"
+    my_public_host = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "public").address
+  else
+    my_public_host = 'public.'+node[:fqdn]
+  end
+end
 
 template "/etc/keystone/keystone.conf" do
     source "keystone.conf.erb"
@@ -187,21 +214,26 @@ template "/etc/keystone/keystone.conf" do
     variables(
       :sql_connection => sql_connection,
       :sql_idle_timeout => node[:keystone][:sql][:idle_timeout],
-      :sql_min_pool_size => node[:keystone][:sql][:min_pool_size],
-      :sql_max_pool_size => node[:keystone][:sql][:max_pool_size],
-      :sql_pool_timeout => node[:keystone][:sql][:pool_timeout],
       :debug => node[:keystone][:debug],
       :verbose => node[:keystone][:verbose],
       :admin_token => node[:keystone][:service][:token],
-      :service_api_port => node[:keystone][:api][:service_port], # Compute port
-      :service_api_host => node[:keystone][:api][:service_host],
+      :bind_admin_api_host => node[:keystone][:api][:admin_host],
+      :admin_api_host => my_admin_host,
       :admin_api_port => node[:keystone][:api][:admin_port], # Auth port
-      :admin_api_host => node[:keystone][:api][:admin_host],
+      :api_host => my_public_host,
       :api_port => node[:keystone][:api][:api_port], # public port
-      :api_host => node[:keystone][:api][:api_host],
       :use_syslog => node[:keystone][:use_syslog],
-      :token_format => node[:keystone][:token_format],
-      :frontend => node[:keystone][:frontend]
+      :signing_token_format => node[:keystone][:signing][:token_format],
+      :signing_certfile => node[:keystone][:signing][:certfile],
+      :signing_keyfile => node[:keystone][:signing][:keyfile],
+      :signing_ca_certs => node[:keystone][:signing][:ca_certs],
+      :protocol => node[:keystone][:api][:protocol],
+      :frontend => node[:keystone][:frontend],
+      :ssl_enable => (node[:keystone][:frontend] == 'native' && node[:keystone][:api][:protocol] == "https"),
+      :ssl_certfile => node[:keystone][:ssl][:certfile],
+      :ssl_keyfile => node[:keystone][:ssl][:keyfile],
+      :ssl_cert_required => node[:keystone][:ssl][:cert_required],
+      :ssl_ca_certs => node[:keystone][:ssl][:ca_certs]
     )
     if node[:keystone][:frontend]=='native'
       notifies :restart, resources(:service => "keystone"), :immediately
@@ -215,20 +247,17 @@ execute "keystone-manage db_sync" do
   action :run
 end
 
-if node[:keystone][:token_format] == "PKI"
+if node[:keystone][:signing][:token_format] == "PKI"
   execute "keystone-manage pki_setup" do
     command "keystone-manage pki_setup ; chown #{node[:keystone][:user]} -R /etc/keystone/ssl/"
     action :run
   end
 end unless node.platform == "suse"
 
-my_ipaddress = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
-pub_ipaddress = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "public").address rescue my_ipaddress
-
 # Silly wake-up call - this is a hack
 keystone_register "wakeup keystone" do
   protocol node[:keystone][:api][:protocol]
-  host my_ipaddress
+  host my_admin_host
   port node[:keystone][:api][:admin_port]
   token node[:keystone][:service][:token]
   action :wakeup
@@ -241,7 +270,7 @@ end
 ].each do |tenant|
   keystone_register "add default #{tenant} tenant" do
     protocol node[:keystone][:api][:protocol]
-    host my_ipaddress
+    host my_admin_host
     port node[:keystone][:api][:admin_port]
     token node[:keystone][:service][:token]
     tenant_name tenant
@@ -255,7 +284,7 @@ end
 ].each do |user_data|
   keystone_register "add default #{user_data[0]} user" do
     protocol node[:keystone][:api][:protocol]
-    host my_ipaddress
+    host my_admin_host
     port node[:keystone][:api][:admin_port]
     token node[:keystone][:service][:token]
     user_name user_data[0]
@@ -267,11 +296,12 @@ end
 
 
 # Create roles
-roles = %w[admin Member KeystoneAdmin KeystoneServiceAdmin sysadmin netadmin]
+## Member is used by horizon (see OPENSTACK_KEYSTONE_DEFAULT_ROLE option)
+roles = %w[admin Member]
 roles.each do |role|
   keystone_register "add default #{role} role" do
     protocol node[:keystone][:api][:protocol]
-    host my_ipaddress
+    host my_admin_host
     port node[:keystone][:api][:admin_port]
     token node[:keystone][:service][:token]
     role_name role
@@ -282,17 +312,13 @@ end
 # Create Access info
 user_roles = [ 
   [node[:keystone][:admin][:username], "admin", node[:keystone][:admin][:tenant]],
-  [node[:keystone][:admin][:username], "KeystoneAdmin", node[:keystone][:admin][:tenant]],
-  [node[:keystone][:admin][:username], "KeystoneServiceAdmin", node[:keystone][:admin][:tenant]],
   [node[:keystone][:admin][:username], "admin", node[:keystone][:default][:tenant]],
-  [node[:keystone][:default][:username], "Member", node[:keystone][:default][:tenant]],
-  [node[:keystone][:default][:username], "sysadmin", node[:keystone][:default][:tenant]],
-  [node[:keystone][:default][:username], "netadmin", node[:keystone][:default][:tenant]]
+  [node[:keystone][:default][:username], "Member", node[:keystone][:default][:tenant]]
 ]
 user_roles.each do |args|
   keystone_register "add default #{args[2]}:#{args[0]} -> #{args[1]} role" do
     protocol node[:keystone][:api][:protocol]
-    host my_ipaddress
+    host my_admin_host
     port node[:keystone][:api][:admin_port]
     token node[:keystone][:service][:token]
     user_name args[0]
@@ -312,7 +338,7 @@ ec2_creds = [
 ec2_creds.each do |args|
   keystone_register "add default ec2 creds for #{args[1]}:#{args[0]}" do
     protocol node[:keystone][:api][:protocol]
-    host my_ipaddress
+    host my_admin_host
     port node[:keystone][:api][:admin_port]
     token node[:keystone][:service][:token]
     user_name args[0]
@@ -324,7 +350,7 @@ end
 # Create keystone service
 keystone_register "register keystone service" do
   protocol node[:keystone][:api][:protocol]
-  host my_ipaddress
+  host my_admin_host
   port node[:keystone][:api][:admin_port]
   token node[:keystone][:service][:token]
   service_name "keystone"
@@ -336,14 +362,14 @@ end
 # Create keystone endpoint
 keystone_register "register keystone endpoint" do
   protocol node[:keystone][:api][:protocol]
-  host my_ipaddress
+  host my_admin_host
   port node[:keystone][:api][:admin_port]
   token node[:keystone][:service][:token]
   endpoint_service "keystone"
   endpoint_region "RegionOne"
-  endpoint_publicURL "#{node[:keystone][:api][:protocol]}://#{pub_ipaddress}:#{node[:keystone][:api][:service_port]}/v2.0"
-  endpoint_adminURL "#{node[:keystone][:api][:protocol]}://#{my_ipaddress}:#{node[:keystone][:api][:admin_port]}/v2.0"
-  endpoint_internalURL "#{node[:keystone][:api][:protocol]}://#{my_ipaddress}:#{node[:keystone][:api][:service_port]}/v2.0"
+  endpoint_publicURL "#{node[:keystone][:api][:protocol]}://#{my_public_host}:#{node[:keystone][:api][:service_port]}/v2.0"
+  endpoint_adminURL "#{node[:keystone][:api][:protocol]}://#{my_admin_host}:#{node[:keystone][:api][:admin_port]}/v2.0"
+  endpoint_internalURL "#{node[:keystone][:api][:protocol]}://#{my_admin_host}:#{node[:keystone][:api][:service_port]}/v2.0"
 #  endpoint_global true
 #  endpoint_enabled true
   action :add_endpoint_template

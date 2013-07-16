@@ -85,5 +85,19 @@ class KeystoneService < ServiceObject
 
     base
   end
+
+  def apply_role_pre_chef_call(old_role, role, all_nodes)
+    @logger.debug("Keystone apply_role_pre_chef_call: entering #{all_nodes.inspect}")
+    return if all_nodes.empty?
+
+    net_svc = NetworkService.new @logger
+    tnodes = role.override_attributes["keystone"]["elements"]["keystone-server"]
+    tnodes.each do |n|
+      net_svc.allocate_ip "default", "public", "host", n
+    end unless tnodes.nil?
+
+    @logger.debug("Keystone apply_role_pre_chef_call: leaving")
+  end
+
 end
 
