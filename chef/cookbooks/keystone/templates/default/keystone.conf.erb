@@ -201,9 +201,9 @@ role_filter = <%= node[:keystone][:ldap][:role_filter] %>
 role_objectclass = <%= node[:keystone][:ldap][:role_objectclass] %>
 role_id_attribute = <%= node[:keystone][:ldap][:role_id_attribute] %>
 role_name_attribute = <%= node[:keystone][:ldap][:role_name_attribute] %>
-role_member_attribute = <%= node[:keystone][:ldap][:role_allow_create] %>
-role_attribute_ignore = <%= node[:keystone][:ldap][:role_member_attribute] %>
-role_allow_create = <%= node[:keystone][:ldap][:role_attribute_ignore] %>
+role_member_attribute = <%= node[:keystone][:ldap][:role_member_attribute] %>
+role_attribute_ignore = <%= node[:keystone][:ldap][:role_attribute_ignore] %>
+role_allow_create = <%= node[:keystone][:ldap][:role_allow_create] %>
 role_allow_update = <%= node[:keystone][:ldap][:role_allow_update] %>
 role_allow_delete = <%= node[:keystone][:ldap][:role_allow_delete] %>
 
