@@ -179,6 +179,66 @@ database_user "grant database access for keystone database user" do
 end
 sql_connection = "#{url_scheme}://#{node[:keystone][:db][:user]}:#{node[:keystone][:db][:password]}@#{sql_address}/#{node[:keystone][:db][:database]}"
 
+my_admin_host = node[:fqdn]
+# For the public endpoint, we prefer the public name. If not set, then we
+# use the IP address except for SSL, where we always prefer a hostname
+# (for certificate validation).
+my_public_host = node[:crowbar][:public_name]
+if my_public_host.nil? or my_public_host.empty?
+  unless node[:keystone][:api][:protocol] == "https"
+    my_public_host = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "public").address
+  else
+    my_public_host = 'public.'+node[:fqdn]
+  end
+end
+
+template "/etc/keystone/keystone.conf" do
+    source "keystone.conf.erb"
+    owner node[:keystone][:user]
+    mode 0640
+    variables(
+      :sql_connection => sql_connection,
+      :sql_idle_timeout => node[:keystone][:sql][:idle_timeout],
+      :debug => node[:keystone][:debug],
+      :verbose => node[:keystone][:verbose],
+      :admin_token => node[:keystone][:service][:token],
+      :bind_admin_api_host => node[:keystone][:api][:admin_host],
+      :admin_api_host => my_admin_host,
+      :admin_api_port => node[:keystone][:api][:admin_port], # Auth port
+      :api_host => my_public_host,
+      :api_port => node[:keystone][:api][:api_port], # public port
+      :use_syslog => node[:keystone][:use_syslog],
+      :signing_token_format => node[:keystone][:signing][:token_format],
+      :signing_certfile => node[:keystone][:signing][:certfile],
+      :signing_keyfile => node[:keystone][:signing][:keyfile],
+      :signing_ca_certs => node[:keystone][:signing][:ca_certs],
+      :protocol => node[:keystone][:api][:protocol],
+      :frontend => node[:keystone][:frontend],
+      :ssl_enable => (node[:keystone][:frontend] == 'native' && node[:keystone][:api][:protocol] == "https"),
+      :ssl_certfile => node[:keystone][:ssl][:certfile],
+      :ssl_keyfile => node[:keystone][:ssl][:keyfile],
+      :ssl_cert_required => node[:keystone][:ssl][:cert_required],
+      :ssl_ca_certs => node[:keystone][:ssl][:ca_certs]
+    )
+    if node[:keystone][:frontend]=='native'
+      notifies :restart, resources(:service => "keystone"), :immediately
+    elsif node[:keystone][:frontend]=='apache'
+      notifies :restart, resources(:service => "apache2"), :immediately
+    end
+end
+
+execute "keystone-manage db_sync" do
+  command "#{venv_prefix}keystone-manage db_sync"
+  action :run
+end
+
+if node[:keystone][:signing][:token_format] == "PKI"
+  execute "keystone-manage pki_setup" do
+    command "keystone-manage pki_setup ; chown #{node[:keystone][:user]} -R /etc/keystone/ssl/"
+    action :run
+  end
+end unless node.platform == "suse"
+
 if node[:keystone][:api][:protocol] == 'https'
   if node[:keystone][:ssl][:generate_certs]
     package "openssl"
@@ -241,66 +301,6 @@ if node[:keystone][:api][:protocol] == 'https'
     raise message
   end
 end
-
-my_admin_host = node[:fqdn]
-# For the public endpoint, we prefer the public name. If not set, then we
-# use the IP address except for SSL, where we always prefer a hostname
-# (for certificate validation).
-my_public_host = node[:crowbar][:public_name]
-if my_public_host.nil? or my_public_host.empty?
-  unless node[:keystone][:api][:protocol] == "https"
-    my_public_host = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "public").address
-  else
-    my_public_host = 'public.'+node[:fqdn]
-  end
-end
-
-template "/etc/keystone/keystone.conf" do
-    source "keystone.conf.erb"
-    owner node[:keystone][:user]
-    mode 0640
-    variables(
-      :sql_connection => sql_connection,
-      :sql_idle_timeout => node[:keystone][:sql][:idle_timeout],
-      :debug => node[:keystone][:debug],
-      :verbose => node[:keystone][:verbose],
-      :admin_token => node[:keystone][:service][:token],
-      :bind_admin_api_host => node[:keystone][:api][:admin_host],
-      :admin_api_host => my_admin_host,
-      :admin_api_port => node[:keystone][:api][:admin_port], # Auth port
-      :api_host => my_public_host,
-      :api_port => node[:keystone][:api][:api_port], # public port
-      :use_syslog => node[:keystone][:use_syslog],
-      :signing_token_format => node[:keystone][:signing][:token_format],
-      :signing_certfile => node[:keystone][:signing][:certfile],
-      :signing_keyfile => node[:keystone][:signing][:keyfile],
-      :signing_ca_certs => node[:keystone][:signing][:ca_certs],
-      :protocol => node[:keystone][:api][:protocol],
-      :frontend => node[:keystone][:frontend],
-      :ssl_enable => (node[:keystone][:frontend] == 'native' && node[:keystone][:api][:protocol] == "https"),
-      :ssl_certfile => node[:keystone][:ssl][:certfile],
-      :ssl_keyfile => node[:keystone][:ssl][:keyfile],
-      :ssl_cert_required => node[:keystone][:ssl][:cert_required],
-      :ssl_ca_certs => node[:keystone][:ssl][:ca_certs]
-    )
-    if node[:keystone][:frontend]=='native'
-      notifies :restart, resources(:service => "keystone"), :immediately
-    elsif node[:keystone][:frontend]=='apache'
-      notifies :restart, resources(:service => "apache2"), :immediately
-    end
-end
-
-execute "keystone-manage db_sync" do
-  command "#{venv_prefix}keystone-manage db_sync"
-  action :run
-end
-
-if node[:keystone][:signing][:token_format] == "PKI"
-  execute "keystone-manage pki_setup" do
-    command "keystone-manage pki_setup ; chown #{node[:keystone][:user]} -R /etc/keystone/ssl/"
-    action :run
-  end
-end unless node.platform == "suse"
 
 # Silly wake-up call - this is a hack
 keystone_register "wakeup keystone" do
