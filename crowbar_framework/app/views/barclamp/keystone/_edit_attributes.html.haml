@@ -36,10 +36,15 @@
     %div{ :id => :ssl_div }
       %p
         %label{ :for => :ssl_certfile }= t('.ssl_certfile')
-        = text_field_tag :ssl_certfile, @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["certfile"], :size => 80, :onchange => "update_value('ssl/certfile', 'ssl_certfile', 'string')"
+        %input#pki_certfile{:type => "hidden", :name => "pki_certfile", :value => @proposal.raw_data['attributes'][@proposal.barclamp]["signing"]["certfile"]}
+        = text_field_tag :ssl_certfile, @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["certfile"], :class=> "ssl_file", :size => 80, :onchange => "update_value('ssl/certfile', 'ssl_certfile', 'string')"
       %p
+        %input#pki_keyfile{:type => "hidden", :name => "pki_keyfile", :value => @proposal.raw_data['attributes'][@proposal.barclamp]["signing"]["keyfile"]}
         %label{ :for => :ssl_keyfile }= t('.ssl_keyfile')
-        = text_field_tag :ssl_keyfile, @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["keyfile"], :size => 80, :onchange => "update_value('ssl/keyfile', 'ssl_keyfile', 'string')"
+        = text_field_tag :ssl_keyfile, @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["keyfile"], :class=> "ssl_file", :size => 80, :onchange => "update_value('ssl/keyfile', 'ssl_keyfile', 'string')"
+      %p
+        %label{ :for => :ssl_generate_certs }= t('.ssl_generate_certs')
+        = select_tag :ssl_generate_certs, options_for_select([['false', 'false'], ['true','true']], @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["generate_certs"].to_s), :onchange => "update_value('ssl/generate_certs', 'ssl_generate_certs', 'boolean')"
       %p
         %label{ :for => :ssl_insecure }= t('.ssl_insecure')
         = select_tag :ssl_insecure, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["insecure"].to_s), :onchange => "update_value('ssl/insecure', 'ssl_insecure', 'boolean')"
@@ -48,7 +53,8 @@
         = select_tag :ssl_cert_required, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["cert_required"].to_s), :onchange => "update_value('ssl/cert_required', 'ssl_cert_required', 'boolean')"
       %p
         %label{ :for => :ssl_ca_certs }= t('.ssl_ca_certs')
-        = text_field_tag :ssl_ca_certs, @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["ca_certs"], :size => 80, :onchange => "update_value('ssl/ca_certs', 'ssl_ca_certs', 'string')"
+        %input#pki_ca_certs{:type => "hidden", :name => "pki_ca_certs", :value => @proposal.raw_data['attributes'][@proposal.barclamp]["signing"]["ca_certs"]}
+        = text_field_tag :ssl_ca_certs, @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["ca_certs"], :class=> "ssl_file", :size => 80, :onchange => "update_value('ssl/ca_certs', 'ssl_ca_certs', 'string')"
 
 
 :javascript
@@ -76,11 +82,51 @@
     }
   };
 
+  function toggle_ssl_generate_certs() {
+    if ($('#ssl_generate_certs option:selected').attr('value') == 'true') {
+      $('#ssl_insecure').attr('value', 'true');
+      $('#ssl_cert_required').attr('value', 'false');
+    }
+  };
+
+  function toggle_ssl_files() {
+    /* Only allow to generate self-signed SSL certificates if configured to not reuse PKI certs.
+       Check SSL / PKI cert paths to decide:
+        1) All pairs (ssl/pki) different - ok
+        2) All pairs are the same - ok
+        3) Only some differ - error!
+       But only check ca_certs if enabled :-)
+    */
+    var ssl_certfile = $('#ssl_certfile').attr('value'),
+        ssl_keyfile = $('#ssl_keyfile').attr('value'),
+        ssl_ca_certs = $('#ssl_ca_certs').attr('value'),
+        pki_certfile = $('#pki_certfile').attr('value'),
+        pki_keyfile = $('#pki_keyfile').attr('value'),
+        pki_ca_certs = $('#pki_ca_certs').attr('value');
+    var certfile_equal = ssl_certfile == pki_certfile,
+        keyfile_equal = ssl_keyfile == pki_keyfile,
+        ca_certs_equal = ssl_ca_certs == pki_ca_certs;
+
+    if (certfile_equal && !keyfile_equal || !certfile_equal && keyfile_equal) {
+      $('#ssl_generate_certs').attr('disabled', 'disabled');
+      $('#ssl_generate_certs').attr('value', 'false');
+    } else if ($('#ssl_cert_required option:selected').attr('value') == 'true' && ca_certs_equal) {
+      $('#ssl_generate_certs').attr('disabled', 'disabled');
+      $('#ssl_generate_certs').attr('value', 'false');
+    } else if (!keyfile_equal && !certfile_equal) {
+      $('#ssl_generate_certs').removeAttr('disabled');
+    }
+  }
+
   $(document).ready(function () {
     toggle_protocol();
     toggle_ssl_cert_required();
+    toggle_ssl_generate_certs();
+    toggle_ssl_files();
   });
 
   $('#frontend').change(toggle_protocol);
   $('#protocol').change(toggle_protocol);
-  $('#ssl_cert_required').change(toggle_ssl_cert_required);
+  $('#ssl_cert_required').change(toggle_ssl_cert_required).change(toggle_ssl_files);
+  $('#ssl_generate_certs').change(toggle_ssl_generate_certs);
+  $('.ssl_file').change(toggle_ssl_files);
