@@ -180,6 +180,54 @@ end
 sql_connection = "#{url_scheme}://#{node[:keystone][:db][:user]}:#{node[:keystone][:db][:password]}@#{sql_address}/#{node[:keystone][:db][:database]}"
 
 if node[:keystone][:api][:protocol] == 'https'
+  if node[:keystone][:ssl][:generate_certs]
+    package "openssl"
+
+    require "fileutils"
+    [:certfile, :keyfile, :ca_certs].each do |k|
+      dir = File.dirname(node[:keystone][:ssl][k])
+      if File.exists?(dir)
+        FileUtils.chown_R node[:keystone][:user], node[:keystone][:group], dir
+      else
+        FileUtils.mkdir_p(dir) {|d| File.chown node[:keystone][:user], node[:keystone][:group], d}
+      end
+    end
+
+    # Some more ownership fixes:
+    conf_dir = File.dirname node[:keystone][:ssl][:ca_certs]
+    FileUtils.chown "root", node[:keystone][:group], conf_dir
+    FileUtils.chown "root", node[:keystone][:group], File.expand_path("#{conf_dir}/..")  # /etc/keystone/ssl
+
+    # Generate private key
+    %x(openssl genrsa -out #{node[:keystone][:ssl][:keyfile]} 4096)
+    if $?.exitstatus != 0
+      message = "SSL private key generation failed"
+      Chef::Log.fatal(message)
+      raise message
+    end
+    FileUtils.chown node[:keystone][:user], node[:keystone][:group], node[:keystone][:ssl][:keyfile]
+
+    # Generate certificate signing requests (CSR)
+    ssl_csr_file = "#{conf_dir}/signing_key.csr"
+    ssl_subject = "\"/C=US/ST=Unset/L=Unset/O=Unset/CN=#{node[:fqdn]}\""
+    %x(openssl req -new -key #{node[:keystone][:ssl][:keyfile]} -out #{ssl_csr_file} -subj #{ssl_subject})
+    if $?.exitstatus != 0
+      message = "SSL certificate signed requests generation failed"
+      Chef::Log.fatal(message)
+      raise message
+    end
+
+    # Generate self-signed certificate with above CSR
+    %x(openssl x509 -req -days 3650 -in #{ssl_csr_file} -signkey #{node[:keystone][:ssl][:keyfile]} -out #{node[:keystone][:ssl][:certfile]})
+    if $?.exitstatus != 0
+      message = "SSL self-signed certificate generation failed"
+      Chef::Log.fatal(message)
+      raise message
+    end
+
+    File.delete ssl_csr_file  # Nobody should even try to use this
+  end
+
   unless ::File.exists? node[:keystone][:ssl][:certfile]
     message = "Certificate \"#{node[:keystone][:ssl][:certfile]}\" is not present."
     Chef::Log.fatal(message)
