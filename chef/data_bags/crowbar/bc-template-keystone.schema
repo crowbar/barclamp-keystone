@@ -20,23 +20,26 @@
                     "pfs_deps": { "type": "seq", "required": true, "sequence": [ { "type": "str" } ] },
                     "use_syslog": { "type": "bool", "required": true },
                     "database_instance": { "type": "str", "required": true },
-                    "token_format": { "type": "str", "required": true },
                     "db": { "type": "map", "required": true, "mapping": {
                       "database": { "type" : "str", "required" : true },
                       "user": { "type" : "str", "required" : true },
                       "password": { "type" : "str" }
                     }},
                     "sql": { "type": "map", "required": true, "mapping": {
-                      "idle_timeout": { "type" : "int", "required" : true },
-                      "min_pool_size": { "type" : "int", "required" : true },
-                      "max_pool_size": { "type" : "int", "required" : true },
-                      "pool_timeout": { "type" : "int", "required" : true }
+                      "idle_timeout": { "type" : "int", "required" : true }
+                    }},
+                    "ssl": { "type": "map", "required": true, "mapping": {
+                      "insecure": { "type" : "bool", "required" : true },
+                      "certfile": { "type" : "str", "required" : true },
+                      "keyfile": { "type" : "str", "required" : true },
+                      "cert_required": { "type" : "bool", "required" : true },
+                      "ca_certs": { "type" : "str", "required" : true }
                     }},
                     "api": { "type": "map", "required": true, "mapping": {
+                      "protocol": { "type" : "str", "required" : true },
                       "service_port": { "type" : "int", "required" : true },
                       "api_port": { "type" : "int", "required" : true },
                       "admin_port": { "type" : "int", "required" : true },
-                      "service_host": { "type" : "str", "required" : true },
                       "api_host": { "type" : "str", "required" : true },
                       "admin_host": { "type" : "str", "required" : true }
                     }},
@@ -53,6 +56,12 @@
                       "tenant": { "type" : "str", "required" : true },
                       "username": { "type" : "str", "required" : true },
                       "password": { "type" : "str", "required" : true }
+                    }},
+                    "signing" : { "type" : "map", "required" : true, "mapping": {
+                      "token_format": { "type": "str", "required": true },
+                      "certfile": { "type": "str" },
+                      "keyfile": { "type": "str" },
+                      "ca_certs": { "type": "str" }
                     }}
               }}
      }},

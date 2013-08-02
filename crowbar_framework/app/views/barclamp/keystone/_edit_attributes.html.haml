@@ -11,7 +11,7 @@
 
     %p
       %label{ :for => :token_format }= t('.token_format')
-      = select_tag :token_format, options_for_select([['PKI','PKI'], ['UUID', 'UUID']], @proposal.raw_data['attributes'][@proposal.barclamp]["token_format"].to_s), :onchange => "update_value('token_format', 'token_format', 'string')"
+      = select_tag :token_format, options_for_select([['PKI','PKI'], ['UUID', 'UUID']], @proposal.raw_data['attributes'][@proposal.barclamp]["signing"]["token_format"].to_s), :onchange => "update_value('signing/token_format', 'token_format', 'string')"
     %p
       %label{ :for => :default_tenant }= t('.default-tenant')
       %input#default_tenant{:type => "text", :name => "default_tenant", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["default"]["tenant"], :onchange => "update_value('default/tenant','default_tenant','string')"}
@@ -27,3 +27,60 @@
     %p
       %label{ :for => :default_password }= t('.default-password')
       %input#default_password{:type => "password", :name => "default_password", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["default"]["password"], :onchange => "update_value('default/password','default_password', 'string')"}
+
+    %div{ :id => :protocol_div }
+      %p
+        %label{ :for => :protocol }= t('.protocol')
+        = select_tag :protocol, options_for_select([['HTTP','http'], ['HTTPS', 'https']], @proposal.raw_data['attributes'][@proposal.barclamp]["api"]["protocol"].to_s), :onchange => "update_value('api/protocol', 'protocol', 'string')"
+
+    %div{ :id => :ssl_div }
+      %p
+        %label{ :for => :ssl_certfile }= t('.ssl_certfile')
+        = text_field_tag :ssl_certfile, @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["certfile"], :size => 80, :onchange => "update_value('ssl/certfile', 'ssl_certfile', 'string')"
+      %p
+        %label{ :for => :ssl_keyfile }= t('.ssl_keyfile')
+        = text_field_tag :ssl_keyfile, @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["keyfile"], :size => 80, :onchange => "update_value('ssl/keyfile', 'ssl_keyfile', 'string')"
+      %p
+        %label{ :for => :ssl_insecure }= t('.ssl_insecure')
+        = select_tag :ssl_insecure, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["insecure"].to_s), :onchange => "update_value('ssl/insecure', 'ssl_insecure', 'boolean')"
+      %p
+        %label{ :for => :ssl_cert_required }= t('.ssl_cert_required')
+        = select_tag :ssl_cert_required, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["cert_required"].to_s), :onchange => "update_value('ssl/cert_required', 'ssl_cert_required', 'boolean')"
+      %p
+        %label{ :for => :ssl_ca_certs }= t('.ssl_ca_certs')
+        = text_field_tag :ssl_ca_certs, @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["ca_certs"], :size => 80, :onchange => "update_value('ssl/ca_certs', 'ssl_ca_certs', 'string')"
+
+
+:javascript
+  function toggle_protocol() {
+    if ($('#frontend option:selected').attr('value') == 'native') {
+      $('#protocol_div').show();
+    } else {
+      $('#protocol_div').hide();
+      // HTTPS protocol currently only implemented for native frontend
+      $('#protocol option[value=http]').attr('selected', true);
+    }
+
+    if ($('#protocol option:selected').attr('value') == 'https') {
+      $('#ssl_div').show();
+    } else {
+      $('#ssl_div').hide();
+    }
+  };
+
+  function toggle_ssl_cert_required() {
+    if ($('#ssl_cert_required option:selected').attr('value') == 'true') {
+      $('#ssl_ca_certs').removeAttr('disabled');
+    } else {
+      $('#ssl_ca_certs').attr('disabled', 'disabled');
+    }
+  };
+
+  $(document).ready(function () {
+    toggle_protocol();
+    toggle_ssl_cert_required();
+  });
+
+  $('#frontend').change(toggle_protocol);
+  $('#protocol').change(toggle_protocol);
+  $('#ssl_cert_required').change(toggle_ssl_cert_required);

@@ -6,7 +6,6 @@
       "debug": false,
       "frontend": "apache",
       "verbose": false,
-      "token_format": "PKI",
       "gitrepo": "http://github.com/openstack/keystone.git",
       "git_instance": "",
       "git_refspec": "stable/grizzly",
@@ -37,14 +36,18 @@
         "user": "keystone"
       },
       "sql": {
-        "idle_timeout": 30,
-        "min_pool_size": 5,
-        "max_pool_size": 10,
-        "pool_timeout": 200
+        "idle_timeout": 30
+      },
+      "ssl": {
+        "insecure": false,
+        "certfile": "/etc/keystone/ssl/certs/signing_cert.pem",
+        "keyfile": "/etc/keystone/ssl/private/signing_key.pem",
+        "cert_required": false,
+        "ca_certs": "/etc/keystone/ssl/certs/ca.pem"
       },
       "api": {
+        "protocol": "http",
         "service_port": 5000,
-        "service_host": "0.0.0.0",
         "api_port": 5000,
         "api_host": "0.0.0.0",
         "admin_port": 35357,
@@ -63,6 +66,12 @@
         "tenant": "openstack",
         "username": "crowbar",
         "password": "crowbar"
+      },
+      "signing": {
+        "token_format": "PKI",
+        "certfile": "/etc/keystone/ssl/certs/signing_cert.pem",
+        "keyfile": "/etc/keystone/ssl/private/signing_key.pem",
+        "ca_certs": "/etc/keystone/ssl/certs/ca.pem"
       }
     }
   },
