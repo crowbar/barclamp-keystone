@@ -24,7 +24,7 @@ venv_prefix = node[:keystone][:use_virtualenv] ? ". #{venv_path}/bin/activate &&
 unless node[:keystone][:use_gitrepo]
 
   package "keystone" do
-    package_name "openstack-keystone" if node.platform == "suse"
+    package_name "openstack-keystone" if %w(redhat centos suse).include?(node.platform)
     action :install
   end
 
@@ -55,14 +55,14 @@ end
 
 if node[:keystone][:frontend]=='native'
   service "keystone" do
-    service_name node[:keystone][:service_name]
+    service_name value_for_platform([ "centos", "redhat", "fedora" ] => {"default" => "openstack-keystone"}, "default" => node[:keystone][:service_name])
     supports :status => true, :restart => true
     action :enable
   end
 elsif node[:keystone][:frontend]=='apache'
 
   service "keystone" do
-    service_name node[:keystone][:service_name]
+    service_name value_for_platform([ "centos", "redhat", "fedora" ] => {"default" => "openstack-keystone"}, "default" => node[:keystone][:service_name])
     supports :status => true, :restart => true
     action [ :disable, :stop ]
   end
