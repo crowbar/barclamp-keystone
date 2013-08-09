@@ -18,6 +18,7 @@
 barclamp:
   name: keystone
   display: Keystone
+  description: 'OpenStack Identity Service: Identity, Token, Catalog and Policy services for OpenStack'
   version: 0
   requires:
     - database
