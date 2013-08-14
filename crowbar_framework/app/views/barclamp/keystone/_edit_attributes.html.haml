@@ -37,11 +37,11 @@
       %p
         %label{ :for => :ssl_certfile }= t('.ssl_certfile')
         %input#pki_certfile{:type => "hidden", :name => "pki_certfile", :value => @proposal.raw_data['attributes'][@proposal.barclamp]["signing"]["certfile"]}
-        = text_field_tag :ssl_certfile, @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["certfile"], :class=> "ssl_file", :size => 80, :onchange => "update_value('ssl/certfile', 'ssl_certfile', 'string')"
+        = text_field_tag :ssl_certfile, @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["certfile"], :class=> "input-xxlarge ssl_file", :size => 80, :onchange => "update_value('ssl/certfile', 'ssl_certfile', 'string')"
       %p
         %input#pki_keyfile{:type => "hidden", :name => "pki_keyfile", :value => @proposal.raw_data['attributes'][@proposal.barclamp]["signing"]["keyfile"]}
         %label{ :for => :ssl_keyfile }= t('.ssl_keyfile')
-        = text_field_tag :ssl_keyfile, @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["keyfile"], :class=> "ssl_file", :size => 80, :onchange => "update_value('ssl/keyfile', 'ssl_keyfile', 'string')"
+        = text_field_tag :ssl_keyfile, @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["keyfile"], :class=> "input-xxlarge ssl_file", :size => 80, :onchange => "update_value('ssl/keyfile', 'ssl_keyfile', 'string')"
       %p
         %label{ :for => :ssl_generate_certs }= t('.ssl_generate_certs')
         = select_tag :ssl_generate_certs, options_for_select([['false', 'false'], ['true','true']], @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["generate_certs"].to_s), :onchange => "update_value('ssl/generate_certs', 'ssl_generate_certs', 'boolean')"
@@ -54,7 +54,7 @@
       %p
         %label{ :for => :ssl_ca_certs }= t('.ssl_ca_certs')
         %input#pki_ca_certs{:type => "hidden", :name => "pki_ca_certs", :value => @proposal.raw_data['attributes'][@proposal.barclamp]["signing"]["ca_certs"]}
-        = text_field_tag :ssl_ca_certs, @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["ca_certs"], :class=> "ssl_file", :size => 80, :onchange => "update_value('ssl/ca_certs', 'ssl_ca_certs', 'string')"
+        = text_field_tag :ssl_ca_certs, @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["ca_certs"], :class=> "input-xxlarge ssl_file", :size => 80, :onchange => "update_value('ssl/ca_certs', 'ssl_ca_certs', 'string')"
 
 
 :javascript
