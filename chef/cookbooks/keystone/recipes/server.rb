@@ -68,7 +68,7 @@ elsif node[:keystone][:frontend]=='apache'
   end
 
   include_recipe "apache2"
-  include_recipe "apache2::mod_wsgi"
+  include_recipe "apache2::mod_wsgi" unless %w(redhat centos).include?(node.platform)
   include_recipe "apache2::mod_rewrite"
 
 
@@ -102,7 +102,7 @@ elsif node[:keystone][:frontend]=='apache'
   end
 
   template "/etc/apache2/sites-available/keystone.conf" do
-    template_name "/etc/httpd/sites-available/keystone.conf" if platform?(%w{centos redhat})
+    path "/etc/httpd/sites-available/keystone.conf" if platform?(%w{centos redhat})
     source "apache_keystone.conf.erb"
     variables(
       :admin_api_port => node[:keystone][:api][:admin_port], # Auth port
