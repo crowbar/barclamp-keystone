@@ -102,7 +102,7 @@ elsif node[:keystone][:frontend]=='apache'
   end
 
   template "/etc/apache2/sites-available/keystone.conf" do
-    path "/etc/httpd/sites-available/keystone.conf" if platform?(%w{centos redhat})
+    path "/etc/httpd/sites-available/keystone.conf" if %w(redhat centos).include?(node.platform)
     source "apache_keystone.conf.erb"
     variables(
       :admin_api_port => node[:keystone][:api][:admin_port], # Auth port
