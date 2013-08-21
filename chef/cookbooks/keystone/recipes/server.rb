@@ -28,6 +28,17 @@ unless node[:keystone][:use_gitrepo]
     action :install
   end
 
+  if %w(redhat centos).include?(node.platform)
+    #pastedeploy is not installed properly by yum, here is workaround
+    bash "fix_broken_pastedeploy" do
+      not_if "echo 'from paste import deploy' | python -"
+      code <<-EOH
+        paste_dir=`echo 'import paste; print paste.__path__[0]' | python -`
+        ln -s ${paste_dir}/../PasteDeploy*/paste/deploy ${paste_dir}/
+      EOH
+    end
+  end
+
 else
 
 
@@ -68,7 +79,11 @@ elsif node[:keystone][:frontend]=='apache'
   end
 
   include_recipe "apache2"
-  include_recipe "apache2::mod_wsgi" unless %w(redhat centos).include?(node.platform)
+  unless %w(redhat centos).include?(node.platform)
+    include_recipe "apache2::mod_wsgi"
+  else
+    package "mod_wsgi"
+  end
   include_recipe "apache2::mod_rewrite"
 
 

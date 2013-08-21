@@ -65,5 +65,22 @@ debs:
     - apache2
     - libapache2-mod-wsgi
 
+rpms:
+  centos-6.4:
+    repos:
+      - rpm http://rdo.fedorapeople.org/openstack/openstack-grizzly/rdo-release-grizzly.rpm
+      # http://repos.fedorapeople.org/repos/openstack/openstack-grizzly/epel-6
+      # http://mirror.us.leaseweb.net/epel/6/x86_64
+      # http://rbel.frameos.org/stable/el6/x86_64
+  redhat-6.4:
+    repos:
+      - rpm http://rdo.fedorapeople.org/openstack/openstack-grizzly/rdo-release-grizzly.rpm
+  pkgs:
+    - openstack-keystone
+    - python-keystone
+    - python-keystoneclient
+    - httpd
+    - mod_wsgi
+
 git_repo:
   - keystone https://github.com/openstack/keystone.git stable/grizzly
