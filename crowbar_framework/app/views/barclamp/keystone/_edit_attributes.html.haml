@@ -12,49 +12,53 @@
     %p
       %label{ :for => :token_format }= t('.token_format')
       = select_tag :token_format, options_for_select([['PKI','PKI'], ['UUID', 'UUID']], @proposal.raw_data['attributes'][@proposal.barclamp]["signing"]["token_format"].to_s), :onchange => "update_value('signing/token_format', 'token_format', 'string')"
-    %p
-      %label{ :for => :default_tenant }= t('.default-tenant')
-      %input#default_tenant{:type => "text", :name => "default_tenant", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["default"]["tenant"], :onchange => "update_value('default/tenant','default_tenant','string')"}
-    %p
-      %label{ :for => :admin_username  }= t('.admin-username')
-      %input#admin_username{:type => "text", :name => "admin_username", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["admin"]["username"], :onchange => "update_value('admin/username','admin_username', 'string')"}
-    %p
-      %label{ :for => :admin_password  }= t('.admin-password')
-      %input#admin_password{:type => "password", :name => "admin_password", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["admin"]["password"], :onchange => "update_value('admin/password','admin_password', 'string')"}
-    %p
-      %label{ :for => :default_username }= t('.default-username')
-      %input#default_username{:type => "text", :name => "default_username", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["default"]["username"], :onchange => "update_value('default/username','default_username', 'string')"}
-    %p
-      %label{ :for => :default_password }= t('.default-password')
-      %input#default_password{:type => "password", :name => "default_password", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["default"]["password"], :onchange => "update_value('default/password','default_password', 'string')"}
 
-    %div{ :id => :protocol_div }
+    %label.section-header{ :for => :credentials_div }= t('.default_credentials')
+    %div.section{ :id => :credentials_div }
+      %p
+        %label{ :for => :default_tenant }= t('.default-tenant')
+        %input#default_tenant{:type => "text", :name => "default_tenant", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["default"]["tenant"], :onchange => "update_value('default/tenant','default_tenant','string')"}
+      %p
+        %label{ :for => :admin_username  }= t('.admin-username')
+        %input#admin_username{:type => "text", :name => "admin_username", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["admin"]["username"], :onchange => "update_value('admin/username','admin_username', 'string')"}
+      %p
+        %label{ :for => :admin_password  }= t('.admin-password')
+        %input#admin_password{:type => "password", :name => "admin_password", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["admin"]["password"], :onchange => "update_value('admin/password','admin_password', 'string')"}
+      %p
+        %label{ :for => :default_username }= t('.default-username')
+        %input#default_username{:type => "text", :name => "default_username", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["default"]["username"], :onchange => "update_value('default/username','default_username', 'string')"}
+      %p
+        %label{ :for => :default_password }= t('.default-password')
+        %input#default_password{:type => "password", :name => "default_password", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["default"]["password"], :onchange => "update_value('default/password','default_password', 'string')"}
+
+    %label.section-header{ :for => :protocol_div }= t('.ssl_header')
+    %div.section{ :id => :protocol_div }
       %p
         %label{ :for => :protocol }= t('.protocol')
         = select_tag :protocol, options_for_select([['HTTP','http'], ['HTTPS', 'https']], @proposal.raw_data['attributes'][@proposal.barclamp]["api"]["protocol"].to_s), :onchange => "update_value('api/protocol', 'protocol', 'string')"
 
-    %div{ :id => :ssl_div }
-      %p
-        %label{ :for => :ssl_certfile }= t('.ssl_certfile')
-        %input#pki_certfile{:type => "hidden", :name => "pki_certfile", :value => @proposal.raw_data['attributes'][@proposal.barclamp]["signing"]["certfile"]}
-        = text_field_tag :ssl_certfile, @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["certfile"], :class=> "input-xxlarge ssl_file", :size => 80, :onchange => "update_value('ssl/certfile', 'ssl_certfile', 'string')"
-      %p
-        %input#pki_keyfile{:type => "hidden", :name => "pki_keyfile", :value => @proposal.raw_data['attributes'][@proposal.barclamp]["signing"]["keyfile"]}
-        %label{ :for => :ssl_keyfile }= t('.ssl_keyfile')
-        = text_field_tag :ssl_keyfile, @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["keyfile"], :class=> "input-xxlarge ssl_file", :size => 80, :onchange => "update_value('ssl/keyfile', 'ssl_keyfile', 'string')"
-      %p
-        %label{ :for => :ssl_generate_certs }= t('.ssl_generate_certs')
-        = select_tag :ssl_generate_certs, options_for_select([['true', 'true'], ['false','false']], @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["generate_certs"].to_s), :onchange => "update_value('ssl/generate_certs', 'ssl_generate_certs', 'boolean')"
-      %p
-        %label{ :for => :ssl_insecure }= t('.ssl_insecure')
-        = select_tag :ssl_insecure, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["insecure"].to_s), :onchange => "update_value('ssl/insecure', 'ssl_insecure', 'boolean')"
-      %p
-        %label{ :for => :ssl_cert_required }= t('.ssl_cert_required')
-        = select_tag :ssl_cert_required, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["cert_required"].to_s), :onchange => "update_value('ssl/cert_required', 'ssl_cert_required', 'boolean')"
-      %p
-        %label{ :for => :ssl_ca_certs }= t('.ssl_ca_certs')
-        %input#pki_ca_certs{:type => "hidden", :name => "pki_ca_certs", :value => @proposal.raw_data['attributes'][@proposal.barclamp]["signing"]["ca_certs"]}
-        = text_field_tag :ssl_ca_certs, @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["ca_certs"], :class=> "input-xxlarge ssl_file", :size => 80, :onchange => "update_value('ssl/ca_certs', 'ssl_ca_certs', 'string')"
+      %div{ :id => :ssl_div }
+        %p
+          %label{ :for => :ssl_certfile }= t('.ssl_certfile')
+          %input#pki_certfile{:type => "hidden", :name => "pki_certfile", :value => @proposal.raw_data['attributes'][@proposal.barclamp]["signing"]["certfile"]}
+          = text_field_tag :ssl_certfile, @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["certfile"], :class=> "input-xxlarge ssl_file", :size => 80, :onchange => "update_value('ssl/certfile', 'ssl_certfile', 'string')"
+        %p
+          %input#pki_keyfile{:type => "hidden", :name => "pki_keyfile", :value => @proposal.raw_data['attributes'][@proposal.barclamp]["signing"]["keyfile"]}
+          %label{ :for => :ssl_keyfile }= t('.ssl_keyfile')
+          = text_field_tag :ssl_keyfile, @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["keyfile"], :class=> "input-xxlarge ssl_file", :size => 80, :onchange => "update_value('ssl/keyfile', 'ssl_keyfile', 'string')"
+        %p
+          %label{ :for => :ssl_generate_certs }= t('.ssl_generate_certs')
+          = select_tag :ssl_generate_certs, options_for_select([['true', 'true'], ['false','false']], @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["generate_certs"].to_s), :onchange => "update_value('ssl/generate_certs', 'ssl_generate_certs', 'boolean')"
+        %p
+          %label{ :for => :ssl_insecure }= t('.ssl_insecure')
+          = select_tag :ssl_insecure, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["insecure"].to_s), :onchange => "update_value('ssl/insecure', 'ssl_insecure', 'boolean')"
+        %p
+          %label{ :for => :ssl_cert_required }= t('.ssl_cert_required')
+          = select_tag :ssl_cert_required, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["cert_required"].to_s), :onchange => "update_value('ssl/cert_required', 'ssl_cert_required', 'boolean')"
+        %p
+          %label{ :for => :ssl_ca_certs }= t('.ssl_ca_certs')
+          %input#pki_ca_certs{:type => "hidden", :name => "pki_ca_certs", :value => @proposal.raw_data['attributes'][@proposal.barclamp]["signing"]["ca_certs"]}
+          = text_field_tag :ssl_ca_certs, @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["ca_certs"], :class=> "input-xxlarge ssl_file", :size => 80, :onchange => "update_value('ssl/ca_certs', 'ssl_ca_certs', 'string')"
 
 
 :javascript

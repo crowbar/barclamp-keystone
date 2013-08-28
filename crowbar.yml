@@ -43,13 +43,14 @@ locale_additions:
           frontend: Frontend
           database_instance: Database Instance
           token_format: Algorithm for Token Generation
+          default_credentials: Default Credentials
           default-tenant: Default Tenant
           admin-username: Administrator Username
           admin-password: Administrator Password
           default-username: Regular User Username
           default-password: Regular User Password
+          ssl_header: SSL Support
           protocol: Protocol
-          ssl: SSL Attributes
           ssl_insecure: SSL Certificate is insecure (e.g. self-signed)
           ssl_certfile: SSL Certificate File
           ssl_keyfile: SSL (Private) Key File
