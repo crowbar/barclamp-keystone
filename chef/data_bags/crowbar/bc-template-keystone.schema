@@ -58,6 +58,9 @@
                       "username": { "type" : "str", "required" : true },
                       "password": { "type" : "str", "required" : true }
                     }},
+                    "identity" : { "type" : "map", "required" : true, "mapping": {
+                      "driver": { "type": "str", "required": true }
+                    }},
                     "signing" : { "type" : "map", "required" : true, "mapping": {
                       "token_format": { "type": "str", "required": true },
                       "certfile": { "type": "str" },
