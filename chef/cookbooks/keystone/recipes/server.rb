@@ -256,23 +256,16 @@ if node[:keystone][:signing][:token_format] == "PKI"
 end unless node.platform == "suse"
 
 if node[:keystone][:api][:protocol] == 'https'
-  if node[:keystone][:ssl][:generate_certs]
+  if !(::File.exists? node[:keystone][:ssl][:certfile] and ::File.exists? node[:keystone][:ssl][:keyfile]) and node[:keystone][:ssl][:generate_certs]
     package "openssl"
-
     require "fileutils"
-    [:certfile, :keyfile, :ca_certs].each do |k|
-      dir = File.dirname(node[:keystone][:ssl][k])
-      if File.exists?(dir)
-        FileUtils.chown_R node[:keystone][:user], node[:keystone][:group], dir
-      else
-        FileUtils.mkdir_p(dir) {|d| File.chown node[:keystone][:user], node[:keystone][:group], d}
-      end
-    end
 
-    # Some more ownership fixes:
-    conf_dir = File.dirname node[:keystone][:ssl][:ca_certs]
-    FileUtils.chown "root", node[:keystone][:group], conf_dir
-    FileUtils.chown "root", node[:keystone][:group], File.expand_path("#{conf_dir}/..")  # /etc/keystone/ssl
+    Chef::Log.info("Generating SSL certificate for keystone...")
+
+    [:certfile, :keyfile].each do |k|
+      dir = File.dirname(node[:keystone][:ssl][k])
+      FileUtils.mkdir_p(dir) unless File.exists?(dir)
+    end
 
     # Generate private key
     %x(openssl genrsa -out #{node[:keystone][:ssl][:keyfile]} 4096)
@@ -281,9 +274,11 @@ if node[:keystone][:api][:protocol] == 'https'
       Chef::Log.fatal(message)
       raise message
     end
-    FileUtils.chown node[:keystone][:user], node[:keystone][:group], node[:keystone][:ssl][:keyfile]
+    FileUtils.chown "root", node[:keystone][:group], node[:keystone][:ssl][:keyfile]
+    FileUtils.chmod 0640, node[:keystone][:ssl][:keyfile]
 
     # Generate certificate signing requests (CSR)
+    conf_dir = File.dirname node[:keystone][:ssl][:certfile]
     ssl_csr_file = "#{conf_dir}/signing_key.csr"
     ssl_subject = "\"/C=US/ST=Unset/L=Unset/O=Unset/CN=#{node[:fqdn]}\""
     %x(openssl req -new -key #{node[:keystone][:ssl][:keyfile]} -out #{ssl_csr_file} -subj #{ssl_subject})
