@@ -68,6 +68,9 @@
         "username": "crowbar",
         "password": "crowbar"
       },
+      "identity": {
+        "driver": "keystone.identity.backends.sql.Identity"
+      },
       "signing": {
         "token_format": "PKI",
         "certfile": "/etc/keystone/ssl/certs/signing_cert.pem",
