@@ -66,14 +66,14 @@ end
 
 if node[:keystone][:frontend]=='native'
   service "keystone" do
-    service_name value_for_platform([ "centos", "redhat", "fedora" ] => {"default" => "openstack-keystone"}, "default" => node[:keystone][:service_name])
+    service_name node[:keystone][:service_name]
     supports :status => true, :restart => true
     action :enable
   end
 elsif node[:keystone][:frontend]=='apache'
 
   service "keystone" do
-    service_name value_for_platform([ "centos", "redhat", "fedora" ] => {"default" => "openstack-keystone"}, "default" => node[:keystone][:service_name])
+    service_name node[:keystone][:service_name]
     supports :status => true, :restart => true
     action [ :disable, :stop ]
   end
