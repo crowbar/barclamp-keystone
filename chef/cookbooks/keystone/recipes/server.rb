@@ -24,8 +24,19 @@ venv_prefix = node[:keystone][:use_virtualenv] ? ". #{venv_path}/bin/activate &&
 unless node[:keystone][:use_gitrepo]
 
   package "keystone" do
-    package_name "openstack-keystone" if node.platform == "suse"
+    package_name "openstack-keystone" if %w(redhat centos suse).include?(node.platform)
     action :install
+  end
+
+  if %w(redhat centos).include?(node.platform)
+    #pastedeploy is not installed properly by yum, here is workaround
+    bash "fix_broken_pastedeploy" do
+      not_if "echo 'from paste import deploy' | python -"
+      code <<-EOH
+        paste_dir=`echo 'import paste; print paste.__path__[0]' | python -`
+        ln -s ${paste_dir}/../PasteDeploy*/paste/deploy ${paste_dir}/
+      EOH
+    end
   end
 
 else
@@ -68,7 +79,11 @@ elsif node[:keystone][:frontend]=='apache'
   end
 
   include_recipe "apache2"
-  include_recipe "apache2::mod_wsgi"
+  unless %w(redhat centos).include?(node.platform)
+    include_recipe "apache2::mod_wsgi"
+  else
+    package "mod_wsgi"
+  end
   include_recipe "apache2::mod_rewrite"
 
 
@@ -102,6 +117,7 @@ elsif node[:keystone][:frontend]=='apache'
   end
 
   template "/etc/apache2/sites-available/keystone.conf" do
+    path "/etc/httpd/sites-available/keystone.conf" if %w(redhat centos).include?(node.platform)
     source "apache_keystone.conf.erb"
     variables(
       :admin_api_port => node[:keystone][:api][:admin_port], # Auth port
