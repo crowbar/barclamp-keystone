@@ -15,8 +15,11 @@
 #
 
 case node["platform"]
-  when "suse", "redhat", "centos"
+  when "suse"
     default[:keystone][:user] = "openstack-keystone"
+    default[:keystone][:service_name] = "openstack-keystone"
+  when "redhat", "centos"
+    default[:keystone][:user] = "keystone"
     default[:keystone][:service_name] = "openstack-keystone"
   else
     default[:keystone][:user] = "keystone"
