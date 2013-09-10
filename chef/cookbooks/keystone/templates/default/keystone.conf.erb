@@ -107,11 +107,7 @@ driver = keystone.catalog.backends.sql.Catalog
 # template_file = default_catalog.templates
 
 [token]
-<% if @frontend=='apache' -%>
 driver = keystone.token.backends.sql.Token
-<% elsif @frontend=='native' -%>
-driver = keystone.token.backends.kvs.Token
-<% end -%>
 
 # Amount of time a token should remain valid (in seconds)
 # expiration = 86400
