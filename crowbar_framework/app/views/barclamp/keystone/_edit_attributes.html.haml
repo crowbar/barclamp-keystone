@@ -3,7 +3,6 @@
   %label{:class => "h3", :for => "proposal_attributes"}= t('.attributes')
   = link_to "Raw", proposal_barclamp_path(:id => @proposal.name, :controller => @proposal.barclamp, :dep_raw => @dep_raw, :attr_raw => true), :style => "float: right;"
   %div.container
-    = render 'barclamp/git/pfsdeps.html.haml'
     = render_instance_selector("database", :database_instance, t('.database_instance'), "database_instance", @proposal)
     %p
       %label{ :for => :frontend }= t('.frontend')
@@ -57,6 +56,7 @@
           %p
             %label{ :for => :ssl_ca_certs }= t('.ssl_ca_certs')
             = text_field_tag :ssl_ca_certs, @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["ca_certs"], :class=> "input-xxlarge", :size => 80, :onchange => "update_value('ssl/ca_certs', 'ssl_ca_certs', 'string')"
+    = render 'barclamp/git/pfsdeps.html.haml'
 
 
 :javascript
