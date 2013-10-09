@@ -11,7 +11,6 @@
     %p
       %label{ :for => :token_format }= t('.token_format')
       = select_tag :token_format, options_for_select([['PKI','PKI'], ['UUID', 'UUID']], @proposal.raw_data['attributes'][@proposal.barclamp]["signing"]["token_format"].to_s), :onchange => "update_value('signing/token_format', 'token_format', 'string')"
-    = render 'barclamp/git/pfsdeps.html.haml'
     
     %label.section-header{ :for => :credentials_div }= t('.default_credentials')
     %div.section{ :id => :credentials_div }
@@ -57,7 +56,7 @@
           %p
             %label{ :for => :ssl_ca_certs }= t('.ssl_ca_certs')
             = text_field_tag :ssl_ca_certs, @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["ca_certs"], :class=> "input-xxlarge", :size => 80, :onchange => "update_value('ssl/ca_certs', 'ssl_ca_certs', 'string')"
-
+    = render 'barclamp/git/pfsdeps.html.haml'
 
 :javascript
   function toggle_protocol() {
