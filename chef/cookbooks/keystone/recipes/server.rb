@@ -17,9 +17,6 @@
 # Creating virtualenv for @cookbook_name and install pfs_deps with pp
 #
 
-keystone_path = "/opt/keystone"
-venv_path = node[:keystone][:use_virtualenv] ? "#{keystone_path}/.venv" : nil
-venv_prefix = node[:keystone][:use_virtualenv] ? ". #{venv_path}/bin/activate &&" : nil
 
 unless node[:keystone][:use_gitrepo]
 
@@ -40,6 +37,9 @@ unless node[:keystone][:use_gitrepo]
   end
 
 else
+  keystone_path = "/opt/keystone"
+  venv_path = node[:keystone][:use_virtualenv] ? "#{keystone_path}/.venv" : nil
+  venv_prefix = node[:keystone][:use_virtualenv] ? ". #{venv_path}/bin/activate &&" : nil
 
 
   pfs_and_install_deps @cookbook_name do
