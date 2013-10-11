@@ -98,7 +98,7 @@ elsif node[:keystone][:frontend]=='apache'
     source "keystone_wsgi_bin.py.erb"
     mode 0755
     variables(
-      :venv => node[:keystone][:use_virtualenv],
+      :venv => node[:keystone][:use_virtualenv] && node[:keystone][:use_gitrepo],
       :venv_path => venv_path
     )
   end
@@ -107,7 +107,7 @@ elsif node[:keystone][:frontend]=='apache'
     source "keystone_wsgi_bin.py.erb"
     mode 0755
     variables(
-      :venv => node[:keystone][:use_virtualenv],
+      :venv => node[:keystone][:use_virtualenv] && node[:keystone][:use_gitrepo],
       :venv_path => venv_path
     )
   end
