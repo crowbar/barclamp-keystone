@@ -17,9 +17,6 @@
 # Creating virtualenv for @cookbook_name and install pfs_deps with pp
 #
 
-keystone_path = "/opt/keystone"
-venv_path = node[:keystone][:use_virtualenv] ? "#{keystone_path}/.venv" : nil
-venv_prefix = node[:keystone][:use_virtualenv] ? ". #{venv_path}/bin/activate &&" : nil
 
 unless node[:keystone][:use_gitrepo]
 
@@ -40,6 +37,9 @@ unless node[:keystone][:use_gitrepo]
   end
 
 else
+  keystone_path = "/opt/keystone"
+  venv_path = node[:keystone][:use_virtualenv] ? "#{keystone_path}/.venv" : nil
+  venv_prefix = node[:keystone][:use_virtualenv] ? ". #{venv_path}/bin/activate &&" : nil
 
 
   pfs_and_install_deps @cookbook_name do
@@ -98,7 +98,7 @@ elsif node[:keystone][:frontend]=='apache'
     source "keystone_wsgi_bin.py.erb"
     mode 0755
     variables(
-      :venv => node[:keystone][:use_virtualenv],
+      :venv => node[:keystone][:use_virtualenv] && node[:keystone][:use_gitrepo],
       :venv_path => venv_path
     )
   end
@@ -107,7 +107,7 @@ elsif node[:keystone][:frontend]=='apache'
     source "keystone_wsgi_bin.py.erb"
     mode 0755
     variables(
-      :venv => node[:keystone][:use_virtualenv],
+      :venv => node[:keystone][:use_virtualenv] && node[:keystone][:use_gitrepo],
       :venv_path => venv_path
     )
   end
