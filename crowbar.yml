@@ -89,5 +89,4 @@ rpms:
     - mod_wsgi
 
 git_repo:
-  - keystone https://github.com/openstack/keystone.git milestone-proposed
-  # - keystone https://github.com/openstack/keystone.git stable/havana
+   - keystone https://github.com/openstack/keystone.git stable/havana
