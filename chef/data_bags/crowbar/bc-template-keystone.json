@@ -8,7 +8,7 @@
       "verbose": false,
       "gitrepo": "http://github.com/openstack/keystone.git",
       "git_instance": "",
-      "git_refspec": "stable/grizzly",
+      "git_refspec": "stable/havana",
       "use_gitbarclamp": true,
       "use_pip_cache": true,
       "use_gitrepo": false,
