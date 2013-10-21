@@ -34,6 +34,15 @@ admin_endpoint = <%= @protocol %>://<%= @admin_api_host %>:<%= @admin_api_port %
 # member_role_id = 9fe2ff9ee4384b1894a90878d3e92bab
 # member_role_name = _member_
 
+# enforced by optional sizelimit middleware (keystone.middleware:RequestBodySizeLimiter)
+# max_request_body_size = 114688
+
+# limit the sizes of user & tenant ID/names
+# max_param_size = 64
+
+# similar to max_param_size, but provides an exception for token values
+# max_token_size = 8192
+
 # === Logging Options ===
 # Print debugging output
 # (includes plaintext request logging, potentially including passwords)
@@ -73,6 +82,62 @@ use_syslog = <%= @use_syslog ? "True" : "False" %>
 # or a module with notify() method:
 # onready = keystone.common.systemd
 
+# === Notification Options ===
+
+# Notifications can be sent when users or projects are created, updated or
+# deleted. There are three methods of sending notifications: logging (via the
+# log_file directive), rpc (via a message queue) and no_op (no notifications
+# sent, the default)
+
+# notification_driver can be defined multiple times
+# Do nothing driver (the default)
+# notification_driver = keystone.openstack.common.notifier.no_op_notifier
+# Logging driver example (not enabled by default)
+# notification_driver = keystone.openstack.common.notifier.log_notifier
+# RPC driver example (not enabled by default)
+# notification_driver = keystone.openstack.common.notifier.rpc_notifier
+
+# Default notification level for outgoing notifications
+# default_notification_level = INFO
+
+# Default publisher_id for outgoing notifications; included in the payload.
+# default_publisher_id =
+
+# AMQP topics to publish to when using the RPC notification driver.
+# Multiple values can be specified by separating with commas.
+# The actual topic names will be %s.%(default_notification_level)s
+# notification_topics = notifications
+
+# === RPC Options ===
+
+# For Keystone, these options apply only when the RPC notification driver is
+# used.
+
+# The messaging module to use, defaults to kombu.
+# rpc_backend = keystone.openstack.common.rpc.impl_kombu
+
+# Size of RPC thread pool
+# rpc_thread_pool_size = 64
+
+# Size of RPC connection pool
+# rpc_conn_pool_size = 30
+
+# Seconds to wait for a response from call or multicall
+# rpc_response_timeout = 60
+
+# Seconds to wait before a cast expires (TTL). Only supported by impl_zmq.
+# rpc_cast_timeout = 30
+
+# Modules of exceptions that are permitted to be recreated upon receiving
+# exception data from an rpc call.
+# allowed_rpc_exception_modules = keystone.openstack.common.exception,nova.exception,cinder.exception,exceptions
+
+# If True, use a fake RabbitMQ provider
+# fake_rabbit = False
+
+# AMQP exchange to connect to if using RabbitMQ or Qpid
+# control_exchange = openstack
+
 [sql]
 # The SQLAlchemy connection string used to connect to the database
 connection = <%= @sql_connection %>
@@ -90,12 +155,31 @@ driver = <%= node[:keystone][:identity][:driver] %>
 # There is nothing special about this domain, other than the fact that it must
 # exist to order to maintain support for your v2 clients.
 # default_domain_id = default
+#
+# A subset (or all) of domains can have their own identity driver, each with
+# their own partial configuration file in a domain configuration directory.
+# Only values specific to the domain need to be placed in the domain specific
+# configuration file. This feature is disabled by default; set
+# domain_specific_drivers_enabled to True to enable.
+# domain_specific_drivers_enabled = False
+# domain_config_dir = /etc/keystone/domains
+
+# Maximum supported length for user passwords; decrease to improve performance.
+# max_password_length = 4096
+
+[credential]
+# driver = keystone.credential.backends.sql.Credential
 
 [trust]
 # driver = keystone.trust.backends.sql.Trust
 
 # delegation and impersonation features can be optionally disabled
 # enabled = True
+
+[os_inherit]
+# role-assignment inheritance to projects from owning domain can be
+# optionally enabled
+# enabled = False
 
 [catalog]
 # dynamic, sql-based backend (supports API/CLI-based management commands)
@@ -106,11 +190,82 @@ driver = keystone.catalog.backends.sql.Catalog
 
 # template_file = default_catalog.templates
 
+[endpoint_filter]
+# extension for creating associations between project and endpoints in order to
+# provide a tailored catalog for project-scoped token requests.
+# driver = keystone.contrib.endpoint_filter.backends.sql.EndpointFilter
+# return_all_endpoints_if_no_filter = True
+
 [token]
+# Provides token persistence.
 driver = keystone.token.backends.sql.Token
+
+# Controls the token construction, validation, and revocation operations.
+# Core providers are keystone.token.providers.[pki|uuid].Provider
+# provider =
 
 # Amount of time a token should remain valid (in seconds)
 # expiration = 86400
+
+# External auth mechanisms that should add bind information to token.
+# eg kerberos, x509
+# bind =
+
+# Enforcement policy on tokens presented to keystone with bind information.
+# One of disabled, permissive, strict, required or a specifically required bind
+# mode e.g. kerberos or x509 to require binding to that authentication.
+# enforce_token_bind = permissive
+
+# Token specific caching toggle. This has no effect unless the global caching
+# option is set to True
+# caching = True
+
+# Token specific cache time-to-live (TTL) in seconds.
+# cache_time =
+
+# Revocation-List specific cache time-to-live (TTL) in seconds.
+# revocation_cache_time = 3600
+
+[cache]
+# Global cache functionality toggle.
+# enabled = False
+
+# Prefix for building the configuration dictionary for the cache region. This
+# should not need to be changed unless there is another dogpile.cache region
+# with the same configuration name
+# config_prefix = cache.keystone
+
+# Default TTL, in seconds, for any cached item in the dogpile.cache region.
+# This applies to any cached method that doesn't have an explicit cache
+# expiration time defined for it.
+# expiration_time = 600
+
+# Dogpile.cache backend module. It is recommended that Memcache
+# (dogpile.cache.memcache) or Redis (dogpile.cache.redis) be used in production
+# deployments.  Small workloads (single process) like devstack can use the
+# dogpile.cache.memory backend.
+# backend = keystone.common.cache.noop
+
+# Arguments supplied to the backend module. Specify this option once per
+# argument to be passed to the dogpile.cache backend.
+# Example format: <argname>:<value>
+# backend_argument =
+
+# Proxy Classes to import that will affect the way the dogpile.cache backend
+# functions.  See the dogpile.cache documentation on changing-backend-behavior.
+# Comma delimited list e.g. my.dogpile.proxy.Class, my.dogpile.proxyClass2
+# proxies =
+
+# Use a key-mangling function (sha1) to ensure fixed length cache-keys. This
+# is toggle-able for debugging purposes, it is highly recommended to always
+# leave this set to True.
+# use_key_mangler = True
+
+# Extra debugging from the cache backend (cache keys, get/set/delete/etc calls)
+# This is only really useful if you need to see the specific cache-backend
+# get/set/delete calls with the keys/values.  Typically this should be left
+# set to False.
+# debug_cache_backend = False
 
 [policy]
 driver = keystone.policy.backends.sql.Policy
@@ -118,21 +273,49 @@ driver = keystone.policy.backends.sql.Policy
 [ec2]
 driver = keystone.contrib.ec2.backends.sql.Ec2
 
+[assignment]
+# driver =
+
+# Assignment specific caching toggle. This has no effect unless the global
+# caching option is set to True
+# caching = True
+
+# Assignment specific cache time-to-live (TTL) in seconds.
+# cache_time =
+
+[oauth1]
+# driver = keystone.contrib.oauth1.backends.sql.OAuth1
+
+# The Identity service may include expire attributes.
+# If no such attribute is included, then the token lasts indefinitely.
+# Specify how quickly the request token will expire (in seconds)
+# request_token_duration = 28800
+# Specify how quickly the access token will expire (in seconds)
+# access_token_duration = 86400
+
 [ssl]
 enable = <%= @ssl_enable %>
 certfile = <%= @ssl_certfile %>
 keyfile = <%= @ssl_keyfile %>
 ca_certs = <%= @ssl_ca_certs %>
 cert_required = <%= @ssl_cert_required %>
+#key_size = 1024
+#valid_days = 3650
+#cert_required = False
+#cert_subject = /C=US/ST=Unset/L=Unset/O=Unset/CN=localhost
 
 [signing]
+# Deprecated in favor of provider in the [token] section
+# Allowed values are PKI or UUID
 token_format = <%= @signing_token_format %>
+
 certfile = <%= @signing_certfile %>
 keyfile = <%= @signing_keyfile %>
 ca_certs = <%= @signing_ca_certs %>
-#key_size = 1024
+#ca_key = /etc/keystone/pki/private/cakey.pem
+#key_size = 2048
 #valid_days = 3650
-#ca_password = None
+#cert_subject = /C=US/ST=Unset/L=Unset/O=Unset/CN=www.example.com
 
 [ldap]
 url = <%= node[:keystone][:ldap][:url] %>
@@ -155,11 +338,9 @@ alias_dereferencing = <%= node[:keystone][:ldap][:alias_dereferencing] %>
 # (onelevel/singleLevel) or 'sub' (subtree/wholeSubtree)
 query_scope = <%= node[:keystone][:ldap][:query_scope] %>
 
-# user_tree_dn = ou=Users,dc=example,dc=com
 user_tree_dn = <%= node[:keystone][:ldap][:user_tree_dn] %>
 user_filter = <%= node[:keystone][:ldap][:user_filter] %>
 user_objectclass = <%= node[:keystone][:ldap][:user_objectclass] %>
-user_domain_id_attribute = <%= node[:keystone][:ldap][:user_domain_id_attribute] %>
 user_id_attribute = <%= node[:keystone][:ldap][:user_id_attribute] %>
 user_name_attribute = <%= node[:keystone][:ldap][:user_name_attribute] %>
 user_mail_attribute = <%= node[:keystone][:ldap][:user_mail_attribute] %>
@@ -168,13 +349,13 @@ user_enabled_attribute = <%= node[:keystone][:ldap][:user_enabled_attribute] %>
 user_enabled_mask = <%= node[:keystone][:ldap][:user_enabled_mask] %>
 user_enabled_default = <%= node[:keystone][:ldap][:user_enabled_default] %>
 user_attribute_ignore = <%= node[:keystone][:ldap][:user_attribute_ignore] %>
+user_default_project_id_attribute = <%= node[:keystone][:ldap][:user_default_project_id_attribute] %>
 user_allow_create = <%= node[:keystone][:ldap][:user_allow_create] %>
 user_allow_update = <%= node[:keystone][:ldap][:user_allow_update] %>
 user_allow_delete = <%= node[:keystone][:ldap][:user_allow_delete] %>
 user_enabled_emulation = <%= node[:keystone][:ldap][:user_enabled_emulation] %>
 user_enabled_emulation_dn = <%= node[:keystone][:ldap][:user_enabled_emulation_dn] %>
 
-# tenant_tree_dn = "ou=Groups,dc=example,dc=com"
 tenant_tree_dn = <%= node[:keystone][:ldap][:tenant_tree_dn] %>
 tenant_filter = <%= node[:keystone][:ldap][:tenant_filter] %>
 tenant_objectclass = <%= node[:keystone][:ldap][:tenant_objectclass] %>
@@ -191,7 +372,6 @@ tenant_allow_delete = <%= node[:keystone][:ldap][:tenant_allow_delete] %>
 tenant_enabled_emulation = <%= node[:keystone][:ldap][:tenant_enabled_emulation] %>
 tenant_enabled_emulation_dn = <%= node[:keystone][:ldap][:tenant_enabled_emulation_dn] %>
 
-# role_tree_dn = ou=Roles,dc=example,dc=com
 role_tree_dn = <%= node[:keystone][:ldap][:role_tree_dn] %>
 role_filter = <%= node[:keystone][:ldap][:role_filter] %>
 role_objectclass = <%= node[:keystone][:ldap][:role_objectclass] %>
@@ -210,11 +390,31 @@ group_id_attribute = <%= node[:keystone][:ldap][:group_id_attribute] %>
 group_name_attribute = <%= node[:keystone][:ldap][:group_name_attribute] %>
 group_member_attribute = <%= node[:keystone][:ldap][:group_member_attribute] %>
 group_desc_attribute = <%= node[:keystone][:ldap][:group_desc_attribute] %>
-group_domain_id_attribute = <%= node[:keystone][:ldap][:group_domain_id_attribute] %>
 group_attribute_ignore = <%= node[:keystone][:ldap][:group_attribute_ignore] %>
 group_allow_create = <%= node[:keystone][:ldap][:group_allow_create] %>
 group_allow_update = <%= node[:keystone][:ldap][:group_allow_update] %>
 group_allow_delete = <%= node[:keystone][:ldap][:group_allow_delete] %>
+
+# ldap TLS options
+# if both tls_cacertfile and tls_cacertdir are set then
+# tls_cacertfile will be used and tls_cacertdir is ignored
+# valid options for tls_req_cert are demand, never, and allow
+# use_tls = False
+# tls_cacertfile =
+# tls_cacertdir =
+# tls_req_cert = demand
+
+# Additional attribute mappings can be used to map ldap attributes to internal
+# keystone attributes. This allows keystone to fulfill ldap objectclass
+# requirements. An example to map the description and gecos attributes to a
+# user's name would be:
+# user_additional_attribute_mapping = description:name, gecos:name
+#
+# domain_additional_attribute_mapping =
+# group_additional_attribute_mapping =
+# role_additional_attribute_mapping =
+# project_additional_attribute_mapping =
+# user_additional_attribute_mapping =
 
 [auth]
 methods = external,password,token,oauth1
