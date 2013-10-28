@@ -254,7 +254,7 @@ if node[:keystone][:signing][:token_format] == "PKI"
   if %w(redhat centos).include?(node.platform)
     directory "/etc/keystone/" do
       action :create
-      user node[:keystone][:user]
+      owner node[:keystone][:user]
       group node[:keystone][:user]
     end
   end
