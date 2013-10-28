@@ -292,6 +292,15 @@ template "/etc/keystone/keystone.conf" do
     end
 end
 
+if %w(redhat centos).include?(node.platform)
+  # Permissions for /etc/keystone are wrong in the RDO repo
+  directory "/etc/keystone" do
+    action :create
+    owner node[:keystone][:user]
+    group node[:keystone][:group]
+  end
+end
+
 unless node.platform == "suse"
   execute "keystone-manage db_sync" do
     command "keystone-manage db_sync"
