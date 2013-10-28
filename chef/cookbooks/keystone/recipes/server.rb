@@ -251,6 +251,13 @@ execute "keystone-manage db_sync" do
 end
 
 if node[:keystone][:signing][:token_format] == "PKI"
+  if %w(redhat centos).include?(node.platform)
+    directory "/etc/keystone/" do
+      action :create
+      user node[:keystone][:user]
+      group node[:keystone][:user]
+    end
+  end
   execute "keystone-manage ssl_setup" do
     user node[:keystone][:user]
     group node[:keystone][:user]
