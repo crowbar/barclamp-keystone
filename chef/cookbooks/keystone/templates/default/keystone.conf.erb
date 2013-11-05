@@ -104,7 +104,7 @@ driver = keystone.catalog.backends.sql.Catalog
 # static, file-based backend (does *NOT* support any management commands)
 # driver = keystone.catalog.backends.templated.TemplatedCatalog
 
-# template_file = default_catalog.templates
+# template_file = default_catalog.templatess
 
 [token]
 driver = keystone.token.backends.sql.Token
@@ -126,7 +126,6 @@ ca_certs = <%= @ssl_ca_certs %>
 cert_required = <%= @ssl_cert_required %>
 
 [signing]
-token_format = <%= @signing_token_format %>
 certfile = <%= @signing_certfile %>
 keyfile = <%= @signing_keyfile %>
 ca_certs = <%= @signing_ca_certs %>
