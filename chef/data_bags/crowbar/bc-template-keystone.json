@@ -4,7 +4,7 @@
   "attributes": {
     "keystone": {
       "debug": false,
-      "frontend": "apache",
+      "frontend": "uwsgi",
       "verbose": false,
       "gitrepo": "http://github.com/openstack/keystone.git",
       "git_instance": "",
