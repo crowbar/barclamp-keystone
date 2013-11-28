@@ -99,6 +99,7 @@ class KeystoneService < ServiceObject
       end
     end
 
+    validate_has_active_database_proposal
     validate_one_role proposal, "keystone-server"
 
     super
