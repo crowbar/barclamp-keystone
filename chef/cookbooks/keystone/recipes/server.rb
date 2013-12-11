@@ -288,6 +288,8 @@ template "/etc/keystone/keystone.conf" do
       notifies :restart, resources(:service => "keystone"), :immediately
     elsif node[:keystone][:frontend]=='apache'
       notifies :restart, resources(:service => "apache2"), :immediately
+    elsif node[:keystone][:frontend]=='uwsgi'
+      notifies :restart, resources(:service => "keystone-uwsgi"), :immediately
     end
 end
 
