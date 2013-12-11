@@ -89,7 +89,7 @@ elsif node[:keystone][:frontend]=='uwsgi'
   service "keystone-uwsgi" do
     service_name node[:keystone][:service_name]
     supports :status => true, :restart => true, :stop => true, :start => true
-    action [ :nothing, :start ]
+    action :nothing
   end
 
   template "/usr/lib/cgi-bin/keystone/application.py" do
