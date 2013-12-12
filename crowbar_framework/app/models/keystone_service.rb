@@ -16,8 +16,8 @@
 class KeystoneService < ServiceObject
 
   def initialize(thelogger)
+    super(thelogger)
     @bc_name = "keystone"
-    @logger = thelogger
   end
 # Turn off multi proposal support till it really works and people ask for it.
   def self.allow_multiple_proposals?
@@ -86,9 +86,7 @@ class KeystoneService < ServiceObject
     base
   end
 
-
   def validate_proposal_after_save proposal
-    super
     if proposal["attributes"][@bc_name]["use_gitrepo"]
       gitService = GitService.new(@logger)
       gits = gitService.list_active[1].to_a
@@ -96,9 +94,11 @@ class KeystoneService < ServiceObject
         raise(I18n.t('model.service.dependency_missing', :name => @bc_name, :dependson => "git"))
       end
     end
+
+    validate_one_role proposal, "keystone-server"
+
+    super
   end
-
-
 
   def apply_role_pre_chef_call(old_role, role, all_nodes)
     @logger.debug("Keystone apply_role_pre_chef_call: entering #{all_nodes.inspect}")
