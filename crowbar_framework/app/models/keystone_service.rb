@@ -78,9 +78,9 @@ class KeystoneService < ServiceObject
     end
 
     if nodes.size >= 1
-      controller = nodes.find { |n| n if n.intended_role == "controller" } || nodes.first[:fqdn]
+      controller = nodes.find { |n| n.intended_role == "controller" } || nodes.first
       base["deployment"]["keystone"]["elements"] = {
-        "keystone-server" => [ controller ]
+        "keystone-server" => [ controller[:fqdn] ]
       }
     end
 
