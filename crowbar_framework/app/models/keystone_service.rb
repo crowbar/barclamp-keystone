@@ -77,9 +77,13 @@ class KeystoneService < ServiceObject
       @logger.info("#{@bc_name} create_proposal: no git found")
     end
 
-    base["deployment"]["keystone"]["elements"] = {
-        "keystone-server" => [ nodes.first[:fqdn] ]
-    } unless nodes.nil? or nodes.length ==0
+    if nodes.size >= 1
+      controller = nodes.find { |n| n.intended_role == "controller" } || nodes.first
+      base["deployment"]["keystone"]["elements"] = {
+        "keystone-server" => [ controller[:fqdn] ]
+      }
+    end
+
 
     base[:attributes][:keystone][:service][:token] = '%012d' % rand(1e12)
 
