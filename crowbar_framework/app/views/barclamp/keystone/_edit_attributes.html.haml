@@ -1,128 +1,36 @@
-%input#proposal_attributes{:type => "hidden", :name => "proposal_attributes", :value => @proposal.raw_data['attributes'][@proposal.barclamp].to_json}
-%p
-  %label{:class => "h3", :for => "proposal_attributes"}= t('.attributes')
-  = link_to "Raw", proposal_barclamp_path(:id => @proposal.name, :controller => @proposal.barclamp, :dep_raw => @dep_raw, :attr_raw => true), :style => "float: right;"
-  %div.container
-    = render_instance_selector("database", :database_instance, t('.database_instance'), "database_instance", @proposal)
-    %p
-      %label{ :for => :frontend }= t('.frontend')
-      = select_tag :frontend, options_for_select([['native', 'native'], ['apache','apache'], ['uwsgi','uwsgi']], @proposal.raw_data['attributes'][@proposal.barclamp]["frontend"]), :onchange => "update_value('frontend', 'frontend', 'string')"
+- register_javascripts "barclamps/keystone/form"
 
-    %p
-      %label{ :for => :token_format }= t('.token_format')
-      = select_tag :token_format, options_for_select([['PKI','PKI'], ['UUID', 'UUID']], @proposal.raw_data['attributes'][@proposal.barclamp]["signing"]["token_format"].to_s), :onchange => "update_value('signing/token_format', 'token_format', 'string')"
-    
-    %label.section-header{ :for => :credentials_div }= t('.default_credentials')
-    %div.section{ :id => :credentials_div }
-      %p
-        %label{ :for => :default_tenant }= t('.default-tenant')
-        %input#default_tenant{:type => "text", :name => "default_tenant", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["default"]["tenant"], :onchange => "update_value('default/tenant','default_tenant','string')"}
-      %p
-        %label{ :for => :admin_username  }= t('.admin-username')
-        %input#admin_username{:type => "text", :name => "admin_username", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["admin"]["username"], :onchange => "update_value('admin/username','admin_username', 'string')"}
-      %p
-        %label{ :for => :admin_password  }= t('.admin-password')
-        %input#admin_password{:type => "password", :name => "admin_password", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["admin"]["password"], :onchange => "update_value('admin/password','admin_password', 'string')"}
-      %p
-        %label{ :for => :default_username }= t('.default-username')
-        %input#default_username{:type => "text", :name => "default_username", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["default"]["username"], :onchange => "update_value('default/username','default_username', 'string')"}
-      %p
-        %label{ :for => :default_password }= t('.default-password')
-        %input#default_password{:type => "password", :name => "default_password", :'data-default' => @proposal.raw_data['attributes'][@proposal.barclamp]["default"]["password"], :onchange => "update_value('default/password','default_password', 'string')"}
+= attributes_for @proposal do
+  .panel-sub
+    = header @dep_raw, true
 
-    %div#full_ssl_div
-      %label.section-header{ :for => :protocol_div }= t('.ssl_header')
-      %div.section{ :id => :protocol_div }
-        %p
-          %label{ :for => :protocol }= t('.protocol')
-          = select_tag :protocol, options_for_select([['HTTP','http'], ['HTTPS', 'https']], @proposal.raw_data['attributes'][@proposal.barclamp]["api"]["protocol"].to_s), :onchange => "update_value('api/protocol', 'protocol', 'string')"
+  .panel-body
+    = instance_field :database
+    = select_field %w(frontend), :collection => :server_frontends_for_keystone
+    = select_field %w(signing token_format), :collection => :token_formats_for_keystone
 
-        %div{ :id => :ssl_div }
-          %p
-            %label{ :for => :ssl_generate_certs }= t('.ssl_generate_certs')
-            = select_tag :ssl_generate_certs, options_for_select([['true', 'true'], ['false','false']], @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["generate_certs"].to_s), :onchange => "update_value('ssl/generate_certs', 'ssl_generate_certs', 'boolean')"
-          %p
-            %label{ :for => :ssl_certfile }= t('.ssl_certfile')
-            = text_field_tag :ssl_certfile, @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["certfile"], :class=> "input-xxlarge", :size => 80, :onchange => "update_value('ssl/certfile', 'ssl_certfile', 'string')"
-          %p
-            %label{ :for => :ssl_keyfile }= t('.ssl_keyfile')
-            = text_field_tag :ssl_keyfile, @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["keyfile"], :class=> "input-xxlarge", :size => 80, :onchange => "update_value('ssl/keyfile', 'ssl_keyfile', 'string')"
-          %p
-            %label{ :for => :ssl_insecure }= t('.ssl_insecure')
-            = select_tag :ssl_insecure, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["insecure"].to_s), :onchange => "update_value('ssl/insecure', 'ssl_insecure', 'boolean')"
-          %p
-            %label{ :for => :ssl_cert_required }= t('.ssl_cert_required')
-            = select_tag :ssl_cert_required, options_for_select([['true','true'], ['false', 'false']], @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["cert_required"].to_s), :onchange => "update_value('ssl/cert_required', 'ssl_cert_required', 'boolean')"
-          %p
-            %label{ :for => :ssl_ca_certs }= t('.ssl_ca_certs')
-            = text_field_tag :ssl_ca_certs, @proposal.raw_data['attributes'][@proposal.barclamp]["ssl"]["ca_certs"], :class=> "input-xxlarge", :size => 80, :onchange => "update_value('ssl/ca_certs', 'ssl_ca_certs', 'string')"
-    = render 'barclamp/git/pfsdeps.html.haml'
+    %fieldset
+      %legend
+        = t(".default_credentials")
 
-:javascript
-  function toggle_protocol() {
-    if ($('#frontend option:selected').attr('value') == 'native') {
-      $('#full_ssl_div').show();
-    } else {
-      $('#full_ssl_div').hide();
-      // HTTPS protocol currently only implemented for native frontend
-      $('#protocol option[value=http]').attr('selected', true);
-    }
+      = string_field %w(default tenant)
+      = string_field %w(admin username)
+      = string_field %w(admin password)
+      = string_field %w(default username)
+      = string_field %w(default password)
 
-    if ($('#protocol option:selected').attr('value') == 'https') {
-      $('#ssl_div').show();
-    } else {
-      $('#ssl_div').hide();
-    }
-  };
+    %fieldset
+      %legend
+        = t(".ssl_header")
 
-  function toggle_ssl_cert_required() {
-    if ($('#ssl_cert_required option:selected').attr('value') == 'true') {
-      $('#ssl_ca_certs').removeAttr('disabled');
-    } else {
-      $('#ssl_ca_certs').attr('disabled', 'disabled');
-    }
-  };
+      = select_field %w(api protocol), :collection => :api_protocols_for_keystone, "data-showit" => "https", "data-showit-direct" => "true", "data-showit-target" => "#ssl_container"
 
-  function toggle_ssl_generate_certs_full(init) {
-    if ($('#ssl_generate_certs option:selected').attr('value') == 'true') {
-      $('#ssl_certfile').attr('disabled', 'disabled');
-      $('#ssl_keyfile').attr('disabled', 'disabled');
-      $('#ssl_insecure').attr('disabled', 'disabled');
+      #ssl_container
+        = boolean_field %w(ssl generate_certs)
+        = string_field %w(ssl certfile)
+        = string_field %w(ssl keyfile)
+        = boolean_field %w(ssl insecure)
+        = boolean_field %w(ssl cert_required), "data-enabler" => "true", "data-enabler-target" => "#ssl_ca_certs"
+        = string_field %w(ssl ca_certs)
 
-      var value = '/etc/keystone/ssl/certs/signing_cert.pem'
-      $('#ssl_certfile').attr('value', value);
-      update_value_direct('ssl/certfile', value, 'string');
-      value = '/etc/keystone/ssl/private/signing_key.pem'
-      $('#ssl_keyfile').attr('value', value);
-      update_value_direct('ssl/keyfile', value, 'string');
-      $('#ssl_insecure').attr('value', 'true');
-      update_value_direct('ssl/insecure', 'true', 'boolean');
-    } else {
-      $('#ssl_certfile').removeAttr('disabled');
-      $('#ssl_keyfile').removeAttr('disabled');
-      $('#ssl_insecure').removeAttr('disabled');
-
-      // No need to change the certfile/keyfile values
-      if (!init) {
-        // Reset insecure to false, to not leave it as true by accident.
-        // We do not change insecure on page loading, though!
-        $('#ssl_insecure').attr('value', 'false');
-        update_value_direct('ssl/insecure', 'false', 'boolean');
-      }
-    }
-  };
-
-  function toggle_ssl_generate_certs() {
-    toggle_ssl_generate_certs_full(false);
-  };
-
-  $(document).ready(function () {
-    toggle_protocol();
-    toggle_ssl_cert_required();
-    toggle_ssl_generate_certs_full(true);
-  });
-
-  $('#frontend').change(toggle_protocol);
-  $('#protocol').change(toggle_protocol);
-  $('#ssl_cert_required').change(toggle_ssl_cert_required);
-  $('#ssl_generate_certs').change(toggle_ssl_generate_certs);
+    = render "barclamp/git/pfsdeps"
