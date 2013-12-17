@@ -32,32 +32,6 @@ crowbar:
   chef_order: 75
   proposal_schema_version: 2
 
-locale_additions:
-  en:
-    barclamp:
-      keystone:
-        edit_deployment: 
-          deployment: Deployment
-        edit_attributes: 
-          attributes: Attributes
-          frontend: Frontend
-          database_instance: Database Instance
-          token_format: Algorithm for Token Generation
-          default_credentials: Default Credentials
-          default-tenant: Default Tenant
-          admin-username: Administrator Username
-          admin-password: Administrator Password
-          default-username: Regular User Username
-          default-password: Regular User Password
-          ssl_header: SSL Support
-          protocol: Protocol
-          ssl_insecure: SSL Certificate is insecure (for instance, self-signed)
-          ssl_certfile: SSL Certificate File
-          ssl_keyfile: SSL (Private) Key File
-          ssl_generate_certs: Generate (self-signed) certificates (implies insecure)
-          ssl_cert_required: Require Client Certificate
-          ssl_ca_certs: SSL CA Certificates File
-
 debs:
   ubuntu-12.04:
     repos:
