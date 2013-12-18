@@ -15,15 +15,15 @@
 
       = string_field %w(default tenant)
       = string_field %w(admin username)
-      = string_field %w(admin password)
+      = password_field %w(admin password)
       = string_field %w(default username)
-      = string_field %w(default password)
+      = password_field %w(default password)
 
     %fieldset
       %legend
         = t(".ssl_header")
 
-      = select_field %w(api protocol), :collection => :api_protocols_for_keystone, "data-showit" => "https", "data-showit-direct" => "true", "data-showit-target" => "#ssl_container"
+      = select_field %w(api protocol), :collection => :api_protocols_for_keystone, "data-sslprefix" => "ssl", "data-sslcert" => "/etc/keystone/ssl/certs/signing_cert.pem", "data-sslkey" => "/etc/keystone/ssl/private/signing_key.pem"
 
       #ssl_container
         = boolean_field %w(ssl generate_certs)
