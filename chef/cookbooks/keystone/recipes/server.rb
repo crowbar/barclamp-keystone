@@ -292,13 +292,30 @@ template "/etc/keystone/keystone.conf" do
 end
 
 execute "keystone-manage db_sync" do
-  command "#{venv_prefix}keystone-manage db_sync"
+  command "keystone-manage db_sync"
+  user node[:keystone][:user]
+  group node[:keystone][:user]
   action :run
 end
 
 if node[:keystone][:signing][:token_format] == "PKI"
+  if %w(redhat centos).include?(node.platform)
+    directory "/etc/keystone/" do
+      action :create
+      owner node[:keystone][:user]
+      group node[:keystone][:user]
+    end
+  end
+  execute "keystone-manage ssl_setup" do
+    user node[:keystone][:user]
+    group node[:keystone][:user]
+    command "keystone-manage ssl_setup --keystone-user #{node[:keystone][:user]} --keystone-group  #{node[:keystone][:user]}"
+    action :run
+  end
   execute "keystone-manage pki_setup" do
-    command "keystone-manage pki_setup ; chown #{node[:keystone][:user]} -R /etc/keystone/ssl/"
+    user node[:keystone][:user]
+    group node[:keystone][:user]
+    command "keystone-manage pki_setup --keystone-user #{node[:keystone][:user]} --keystone-group  #{node[:keystone][:user]}"
     action :run
   end
 end unless node.platform == "suse"
