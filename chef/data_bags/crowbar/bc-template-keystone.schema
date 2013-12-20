@@ -88,7 +88,7 @@
                       "user_enabled_attribute": { "type": "str" },
                       "user_domain_id_attribute": { "type": "str" },
                       "user_enabled_mask": { "type": "int" },
-                      "user_enabled_default": { "type": "str" },
+                      "user_enabled_default": { "type": "bool" },
                       "user_attribute_ignore": { "type": "str" },
                       "user_allow_create": { "type": "bool" },
                       "user_allow_update": { "type": "bool" },
@@ -140,6 +140,7 @@
         "keystone": { "type": "map", "required": true,
           "mapping": {
             "crowbar-revision": { "type": "int", "required": true },
+            "schema-revision": { "type": "int" },
             "crowbar-committing": { "type": "bool" },
             "crowbar-status": { "type": "str" },
             "crowbar-failed": { "type": "str" },
