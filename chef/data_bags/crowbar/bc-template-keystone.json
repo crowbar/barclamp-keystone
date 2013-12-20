@@ -88,7 +88,6 @@
         "user_enabled_mask": 0,
         "user_enabled_default": true,
         "user_attribute_ignore": "tenant_id,tenants",
-        "user_default_project_id_attribute": "",
         "user_allow_create": true,
         "user_allow_update": true,
         "user_allow_delete": true,
