@@ -48,7 +48,7 @@ else
     wrap_bins [ "keystone-manage", "keystone" ]
   end
 
-  if node[:keystone][:frontend]=='native'
+  if node[:keystone][:frontend] == 'native'
     link_service node[:keystone][:service_name] do
       #TODO: fix for generate templates in virtualenv
       virtualenv venv_path
@@ -64,14 +64,15 @@ else
   end
 end
 
-if node[:keystone][:frontend]=='native'
+if node[:keystone][:frontend] == 'native'
+
   service "keystone" do
     service_name node[:keystone][:service_name]
     supports :status => true, :restart => true
     action :enable
   end
 
-elsif node[:keystone][:frontend]=='uwsgi'
+elsif node[:keystone][:frontend] == 'uwsgi'
 
   service "keystone" do
     service_name node[:keystone][:service_name]
@@ -116,7 +117,7 @@ elsif node[:keystone][:frontend]=='uwsgi'
     subscribes :restart, "template[/usr/lib/cgi-bin/keystone/application.py]", :immediately
   end
 
-elsif node[:keystone][:frontend]=='apache'
+elsif node[:keystone][:frontend] == 'apache'
 
   service "keystone" do
     service_name node[:keystone][:service_name]
@@ -282,11 +283,11 @@ template "/etc/keystone/keystone.conf" do
       :ssl_cert_required => node[:keystone][:ssl][:cert_required],
       :ssl_ca_certs => node[:keystone][:ssl][:ca_certs]
     )
-    if node[:keystone][:frontend]=='native'
+    if node[:keystone][:frontend] == 'native'
       notifies :restart, resources(:service => "keystone"), :immediately
-    elsif node[:keystone][:frontend]=='apache'
+    elsif node[:keystone][:frontend] == 'apache'
       notifies :restart, resources(:service => "apache2"), :immediately
-    elsif node[:keystone][:frontend]=='uwsgi'
+    elsif node[:keystone][:frontend] == 'uwsgi'
       notifies :restart, resources(:service => "keystone-uwsgi"), :immediately
     end
 end
@@ -388,9 +389,9 @@ keystone_register "wakeup keystone" do
 end
 
 # Create tenants
-[ node[:keystone][:admin][:tenant], 
-  node[:keystone][:service][:tenant], 
-  node[:keystone][:default][:tenant] 
+[ node[:keystone][:admin][:tenant],
+  node[:keystone][:service][:tenant],
+  node[:keystone][:default][:tenant]
 ].each do |tenant|
   keystone_register "add default #{tenant} tenant" do
     protocol node[:keystone][:api][:protocol]
@@ -434,7 +435,7 @@ roles.each do |role|
 end
 
 # Create Access info
-user_roles = [ 
+user_roles = [
   [node[:keystone][:admin][:username], "admin", node[:keystone][:admin][:tenant]],
   [node[:keystone][:admin][:username], "admin", node[:keystone][:default][:tenant]],
   [node[:keystone][:default][:username], "Member", node[:keystone][:default][:tenant]]
@@ -454,7 +455,7 @@ end
 
 
 # Create EC2 creds for our users
-ec2_creds = [ 
+ec2_creds = [
   [node[:keystone][:admin][:username], node[:keystone][:admin][:tenant]],
   [node[:keystone][:admin][:username], node[:keystone][:default][:tenant]],
   [node[:keystone][:default][:username], node[:keystone][:default][:tenant]]
