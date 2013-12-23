@@ -292,27 +292,29 @@ template "/etc/keystone/keystone.conf" do
     end
 end
 
-execute "keystone-manage db_sync" do
-  command "keystone-manage db_sync"
-  user node[:keystone][:user]
-  group node[:keystone][:user]
-  action :run
-end
+unless node.platform == "suse"
+  execute "keystone-manage db_sync" do
+    command "keystone-manage db_sync"
+    user node[:keystone][:user]
+    group node[:keystone][:user]
+    action :run
+  end
 
-if node[:keystone][:signing][:token_format] == "PKI"
-  execute "keystone-manage ssl_setup" do
-    user node[:keystone][:user]
-    group node[:keystone][:user]
-    command "keystone-manage ssl_setup --keystone-user #{node[:keystone][:user]} --keystone-group  #{node[:keystone][:user]}"
-    action :run
+  if node[:keystone][:signing][:token_format] == "PKI"
+    execute "keystone-manage ssl_setup" do
+      user node[:keystone][:user]
+      group node[:keystone][:user]
+      command "keystone-manage ssl_setup --keystone-user #{node[:keystone][:user]} --keystone-group  #{node[:keystone][:user]}"
+      action :run
+    end
+    execute "keystone-manage pki_setup" do
+      user node[:keystone][:user]
+      group node[:keystone][:user]
+      command "keystone-manage pki_setup --keystone-user #{node[:keystone][:user]} --keystone-group  #{node[:keystone][:user]}"
+      action :run
+    end
   end
-  execute "keystone-manage pki_setup" do
-    user node[:keystone][:user]
-    group node[:keystone][:user]
-    command "keystone-manage pki_setup --keystone-user #{node[:keystone][:user]} --keystone-group  #{node[:keystone][:user]}"
-    action :run
-  end
-end unless node.platform == "suse"
+end
 
 if node[:keystone][:api][:protocol] == 'https'
   if node[:keystone][:ssl][:generate_certs]
