@@ -86,12 +86,6 @@ elsif node[:keystone][:frontend]=='uwsgi'
     recursive true
   end
 
-  service "keystone-uwsgi" do
-    service_name node[:keystone][:service_name]
-    supports :status => true, :restart => true, :stop => true, :start => true
-    action [ :nothing, :start ]
-  end
-
   template "/usr/lib/cgi-bin/keystone/application.py" do
     source "keystone-uwsgi.py.erb"
     mode 0755
@@ -99,7 +93,6 @@ elsif node[:keystone][:frontend]=='uwsgi'
       :venv => node[:keystone][:use_virtualenv] && node[:keystone][:use_gitrepo],
       :venv_path => venv_path
     )
-    notifies :restart, resources(:service => "keystone-uwsgi"), :immediately
   end
 
   uwsgi "keystone" do
@@ -114,8 +107,13 @@ elsif node[:keystone][:frontend]=='uwsgi'
       {:socket => "#{node[:keystone][:api][:api_host]}:#{node[:keystone][:api][:api_port]}", :env => "name=main"},
       {:socket => "#{node[:keystone][:api][:admin_host]}:#{node[:keystone][:api][:admin_port]}", :env => "name=admin"}
     ])
-	service_name "keystone-uwsgi"
-	notifies :restart, resources(:service => "keystone-uwsgi"), :immediately
+    service_name "keystone-uwsgi"
+  end
+
+  service "keystone-uwsgi" do
+    supports :status => true, :restart => true, :start => true
+    action :start
+    subscribes :restart, "template[/usr/lib/cgi-bin/keystone/application.py]", :immediately
   end
 
 elsif node[:keystone][:frontend]=='apache'
@@ -288,6 +286,8 @@ template "/etc/keystone/keystone.conf" do
       notifies :restart, resources(:service => "keystone"), :immediately
     elsif node[:keystone][:frontend]=='apache'
       notifies :restart, resources(:service => "apache2"), :immediately
+    elsif node[:keystone][:frontend]=='uwsgi'
+      notifies :restart, resources(:service => "keystone-uwsgi"), :immediately
     end
 end
 
