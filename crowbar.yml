@@ -18,7 +18,7 @@
 barclamp:
   name: keystone
   display: Keystone
-  description: 'OpenStack centralized authentication and authorization service'
+  description: 'OpenStack Identity: Authentication and authorization service'
   version: 0
   requires:
     - database
