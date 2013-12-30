@@ -411,10 +411,9 @@ user_roles.each do |args|
   end
 end
 
-
 # Create EC2 creds for our users
-if not platform?("redhat", "centos", "fedora")
-  ec2_creds = [ 
+unless platform?("redhat", "centos", "fedora")
+  ec2_creds = [
     [node[:keystone][:admin][:username], node[:keystone][:admin][:tenant]],
     [node[:keystone][:admin][:username], node[:keystone][:default][:tenant]],
     [node[:keystone][:default][:username], node[:keystone][:default][:tenant]]
@@ -423,8 +422,12 @@ if not platform?("redhat", "centos", "fedora")
     keystone_register "add default ec2 creds for #{args[1]}:#{args[0]}" do
       protocol node[:keystone][:api][:protocol]
       host my_admin_host
+      auth ({
+          :tenant => node[:keystone][:admin][:tenant],
+          :user => node[:keystone][:admin][:username],
+          :password => node[:keystone][:admin][:password]
+      })
       port node[:keystone][:api][:admin_port]
-      token node[:keystone][:service][:token]
       user_name args[0]
       tenant_name args[1]
       action :add_ec2
