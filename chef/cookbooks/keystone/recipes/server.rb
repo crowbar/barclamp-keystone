@@ -405,8 +405,12 @@ ec2_creds.each do |args|
   keystone_register "add default ec2 creds for #{args[1]}:#{args[0]}" do
     protocol node[:keystone][:api][:protocol]
     host my_admin_host
+    auth ({
+        :tenant => node[:keystone][:admin][:tenant],
+        :user => node[:keystone][:admin][:username],
+        :password => node[:keystone][:admin][:password]
+    })
     port node[:keystone][:api][:admin_port]
-    token node[:keystone][:service][:token]
     user_name args[0]
     tenant_name args[1]
     action :add_ec2
