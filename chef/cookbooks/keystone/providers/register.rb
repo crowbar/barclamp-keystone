@@ -49,9 +49,9 @@ action :add_service do
   item_id, error = _find_id(http, headers, new_resource.service_name, path, dir)
   unless item_id or error
     # Service does not exist yet
-    body = _build_service_object(new_resource.service_name, 
-                                 new_resource.service_type,  
-                                 new_resource.service_description) 
+    body = _build_service_object(new_resource.service_name,
+                                 new_resource.service_type,
+                                 new_resource.service_description)
     ret = _create_item(http, headers, path, body, new_resource.service_name)
     new_resource.updated_by_last_action(ret)
   else
@@ -74,7 +74,7 @@ action :add_tenant do
   item_id, error = _find_id(http, headers, new_resource.tenant_name, path, dir)
   unless item_id or error
     # Service does not exist yet
-    body = _build_tenant_object(new_resource.tenant_name) 
+    body = _build_tenant_object(new_resource.tenant_name)
     ret = _create_item(http, headers, path, body, new_resource.tenant_name)
     new_resource.updated_by_last_action(ret)
   else
@@ -195,6 +195,11 @@ end
 action :add_ec2 do
   http, headers = _build_connection(new_resource)
 
+  headers.delete('X-Auth-Token')
+  _, data = http.send_request('POST', '/v2.0/tokens', JSON.generate({:auth => {:tenantName => new_resource.auth[:tenant], :passwordCredentials => {:username => new_resource.auth[:user], :password => new_resource.auth[:password]}}}),headers)
+  data = JSON.parse(data)
+  headers.store('X-Auth-Token', data["access"]["token"]["id"])
+
   # Lets verify that the item does not exist yet
   tenant = new_resource.tenant_name
   user = new_resource.user_name
@@ -203,7 +208,7 @@ action :add_ec2 do
 
   path = "/v2.0/users/#{user_id}/credentials/OS-EC2"
   t_tenant_id, aerror = _find_id(http, headers, tenant_id, path, 'credentials', 'tenant_id', 'tenant_id')
-  
+
   error = (aerror or uerror or terror)
   unless tenant_id == t_tenant_id or error
     # Service does not exist yet
@@ -235,7 +240,7 @@ action :add_endpoint_template do
   path = '/v2.0/endpoints'
 
   # Lets verify that the endpoint does not exist yet
-  resp, data = http.request_get(path, headers) 
+  resp, data = http.request_get(path, headers)
   if resp.is_a?(Net::HTTPOK)
       matched_endpoint = false
       replace_old = false
@@ -270,11 +275,11 @@ action :add_endpoint_template do
           # endpointTemplate does not exist yet
           body = _build_endpoint_template_object(
                  my_service_id,
-                 new_resource.endpoint_region, 
-                 new_resource.endpoint_adminURL, 
-                 new_resource.endpoint_internalURL, 
-                 new_resource.endpoint_publicURL, 
-                 new_resource.endpoint_global, 
+                 new_resource.endpoint_region,
+                 new_resource.endpoint_adminURL,
+                 new_resource.endpoint_internalURL,
+                 new_resource.endpoint_publicURL,
+                 new_resource.endpoint_global,
                  new_resource.endpoint_enabled)
           resp, data = http.send_request('POST', path, JSON.generate(body), headers)
           if resp.is_a?(Net::HTTPCreated)
@@ -362,7 +367,7 @@ def _find_id(http, headers, svc_name, spath, dir, key = 'name', ret = 'id')
   # Construct the path
   my_service_id = nil
   error = false
-  resp, data = http.request_get(spath, headers) 
+  resp, data = http.request_get(spath, headers)
   if resp.is_a?(Net::HTTPOK)
     data = JSON.parse(data)
     data = data[dir]
@@ -370,7 +375,7 @@ def _find_id(http, headers, svc_name, spath, dir, key = 'name', ret = 'id')
     data.each do |svc|
       my_service_id = svc[ret] if svc[key] == svc_name
       break if my_service_id
-    end 
+    end
   else
     Chef::Log.error "Find #{spath}: #{svc_name}: Unknown response from Keystone Server"
     Chef::Log.error("Response Code: #{resp.code}")
@@ -486,9 +491,9 @@ def _build_endpoint_template_object(service, region, adminURL, internalURL, publ
 end
 
 private
-def _build_headers(token)
+def _build_headers(token = nil)
   ret = Hash.new
-  ret.store('X-Auth-Token', token)
+  ret.store('X-Auth-Token', token) if token
   ret.store('Content-type', 'application/json')
   return ret
 end
