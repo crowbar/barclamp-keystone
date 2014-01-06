@@ -15,11 +15,20 @@
 
 class KeystoneService < ServiceObject
 
-  def proposal_dependencies(prop_config)
+  def initialize(thelogger)
+    @bc_name = "keystone"
+    @logger = thelogger
+  end
+# Turn off multi proposal support till it really works and people ask for it.
+  def self.allow_multiple_proposals?
+    false
+  end
+
+  def proposal_dependencies(role)
     answer = []
-    hash = prop_config.config_hash
-    if hash["keystone"]["sql_engine"] == "mysql"
-      answer << { "barclamp" => "mysql", "inst" => hash["keystone"]["mysql_instance"] }
+    answer << { "barclamp" => "database", "inst" => role.default_attributes["keystone"]["database_instance"] }
+    if role.default_attributes[@bc_name]["use_gitrepo"]
+      answer << { "barclamp" => "git", "inst" => role.default_attributes[@bc_name]["git_instance"] }
     end
     answer
   end
@@ -33,24 +42,47 @@ class KeystoneService < ServiceObject
       add_role_to_instance_and_node(nodes[0].name, base.name, "keystone-server")
     end
 
-    hash = base.current_config.config_hash
-    hash["keystone"]["mysql_instance"] = ""
+    base["attributes"]["keystone"]["database_instance"] = ""
     begin
-      mysql = Barclamp.find_by_name("mysql")
+      databaseService = DatabaseService.new(@logger)
       # Look for active roles
-      mysqls = mysql.active_proposals
-      if mysqls.empty?
+      dbs = databaseService.list_active[1]
+      if dbs.empty?
         # No actives, look for proposals
-        mysqls = mysql.proposals
+        dbs = databaseService.proposals[1]
       end
-      unless mysqls.empty?
-        hash["keystone"]["mysql_instance"] = mysqls[0].name
+      if dbs.empty?
+        @logger.info("Keystone create_proposal: no database proposal found")
+      else
+        base["attributes"]["keystone"]["database_instance"] = dbs[0]
+        @logger.info("Keystone create_proposal: using database proposal: '#{dbs[0]}'")
       end
-      hash["keystone"]["sql_engine"] = "mysql"
     rescue
-      @logger.info("Keystone create_proposal: no mysql found")
-      hash["keystone"]["sql_engine"] = "mysql"
+      @logger.info("Keystone create_proposal: no database proposal found")
     end
+
+    if base["attributes"]["keystone"]["database_instance"] == ""
+      raise(I18n.t('model.service.dependency_missing', :name => @bc_name, :dependson => "database"))
+    end
+    
+    base["attributes"][@bc_name]["git_instance"] = ""
+    begin
+      gitService = GitService.new(@logger)
+      gits = gitService.list_active[1]
+      if gits.empty?
+        # No actives, look for proposals
+        gits = gitService.proposals[1]
+      end
+      unless gits.empty?
+        base["attributes"][@bc_name]["git_instance"] = gits[0]
+      end
+    rescue
+      @logger.info("#{@bc_name} create_proposal: no git found")
+    end
+
+    base["deployment"]["keystone"]["elements"] = {
+        "keystone-server" => [ nodes.first[:fqdn] ]
+    } unless nodes.nil? or nodes.length ==0
 
     hash["keystone"]["service"]["token"] = '%012d' % rand(1e12)
 
@@ -58,5 +90,33 @@ class KeystoneService < ServiceObject
 
     base
   end
+
+
+  def validate_proposal_after_save proposal
+    super
+    if proposal["attributes"][@bc_name]["use_gitrepo"]
+      gitService = GitService.new(@logger)
+      gits = gitService.list_active[1].to_a
+      if not gits.include?proposal["attributes"][@bc_name]["git_instance"]
+        raise(I18n.t('model.service.dependency_missing', :name => @bc_name, :dependson => "git"))
+      end
+    end
+  end
+
+
+
+  def apply_role_pre_chef_call(old_role, role, all_nodes)
+    @logger.debug("Keystone apply_role_pre_chef_call: entering #{all_nodes.inspect}")
+    return if all_nodes.empty?
+
+    net_svc = NetworkService.new @logger
+    tnodes = role.override_attributes["keystone"]["elements"]["keystone-server"]
+    tnodes.each do |n|
+      net_svc.allocate_ip "default", "public", "host", n
+    end unless tnodes.nil?
+
+    @logger.debug("Keystone apply_role_pre_chef_call: leaving")
+  end
+
 end
 

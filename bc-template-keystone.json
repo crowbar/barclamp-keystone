@@ -1,28 +1,54 @@
-
 {
   "id": "bc-template-keystone",
   "description": "Centralized authentication and authorization service for OpenStack",
   "attributes": {
     "keystone": {
-      "debug": true,
-      "verbose": true,
+      "debug": false,
+      "frontend": "apache",
+      "verbose": false,
+      "gitrepo": "http://github.com/openstack/keystone.git",
+      "git_instance": "",
+      "git_refspec": "stable/grizzly",
+      "use_gitbarclamp": true,
+      "use_pip_cache": true,
+      "use_gitrepo": false,
+      "use_virtualenv": true,
+      "pfs_deps": [
+        "python-eventlet",
+        "python-greenlet",
+        "python-pastedeploy",
+        "python-paste",
+        "python-routes",
+        "python-sqlalchemy",
+        "python-migrate",
+        "python-passlib",
+        "python-lxml",
+        "python-pam",
+        "python-iso8601",
+        "python-webob",
+        "python-virtualenv",
+        "pip://python-keystoneclient>=0.2,<0.3"
+      ],
       "use_syslog": false,
-      "sql_engine": "mysql",
-      "mysql_instance": "none",
-      "user": "keystone",
+      "database_instance": "none",
       "db": {
         "database": "keystone",
         "user": "keystone"
       },
       "sql": {
-        "idle_timeout": 30,
-        "min_pool_size": 5,
-        "max_pool_size": 10,
-        "pool_timeout": 200
+        "idle_timeout": 30
+      },
+      "ssl": {
+        "certfile": "/etc/keystone/ssl/certs/signing_cert.pem",
+        "keyfile": "/etc/keystone/ssl/private/signing_key.pem",
+        "generate_certs": false,
+        "insecure": false,
+        "cert_required": false,
+        "ca_certs": "/etc/keystone/ssl/certs/ca.pem"
       },
       "api": {
+        "protocol": "http",
         "service_port": 5000,
-        "service_host": "0.0.0.0",
         "api_port": 5000,
         "api_host": "0.0.0.0",
         "admin_port": 35357,
@@ -41,6 +67,27 @@
         "tenant": "openstack",
         "username": "crowbar",
         "password": "crowbar"
+      },
+      "identity": {
+        "driver": "keystone.identity.backends.sql.Identity"
+      },
+      "signing": {
+        "token_format": "PKI",
+        "certfile": "/etc/keystone/ssl/certs/signing_cert.pem",
+        "keyfile": "/etc/keystone/ssl/private/signing_key.pem",
+        "ca_certs": "/etc/keystone/ssl/certs/ca.pem"
+      },
+      "ldap" : {
+        "url": "ldap://localhost",
+        "user": "dc=Manager,dc=example,dc=com",
+        "password": "",
+        "suffix": "cn=example,cn=com",
+        "use_dumb_member": false,
+        "allow_subtree_delete": false,
+        "dumb_member": "cn=dumb,dc=example,dc=com",
+        "page_size": 0,
+        "alias_dereferencing": "default",
+        "query_scope": "one"
       }
     }
   },
@@ -55,7 +102,7 @@
       },
       "elements": {},
       "element_order": [
-         ["keystone-server" ]       		           		     
+         ["keystone-server" ]
       ],
       "config": {
         "environment": "keystone-config-base",
@@ -66,4 +113,3 @@
     }
   }
 }
-

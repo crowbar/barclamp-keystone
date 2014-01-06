@@ -1,0 +1,25 @@
+<% if @venv -%>
+WSGIDaemonProcess keystone user=keystone group=nogroup processes=<%= @processes %> threads=<%= @threads %> python-path=<%= @venv_path %>
+<% else -%>
+WSGIDaemonProcess keystone user=keystone group=nogroup processes=<%= @processes %> threads=<%= @threads %>
+<% end -%>
+
+Listen <%= @api_host %>:<%= @api_port %>
+<VirtualHost <%= @api_host %>:<%= @api_port %>>
+    AddDefaultCharset utf-8
+    LogLevel warn
+    ErrorLog ${APACHE_LOG_DIR}/keystone_error.log
+
+    WSGIScriptAlias /  /usr/lib/cgi-bin/keystone/main
+    WSGIProcessGroup keystone
+</VirtualHost>
+
+Listen <%= @admin_api_host %>:<%= @admin_api_port %>
+<VirtualHost <%= @admin_api_host %>:<%= @admin_api_port %>>
+    AddDefaultCharset utf-8
+    LogLevel warn
+    ErrorLog ${APACHE_LOG_DIR}/keystone_error.log
+
+    WSGIScriptAlias / /usr/lib/cgi-bin/keystone/admin
+    WSGIProcessGroup keystone
+</VirtualHost>
