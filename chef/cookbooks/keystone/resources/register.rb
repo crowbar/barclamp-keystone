@@ -1,6 +1,6 @@
 #
-# Cookbook Name:: mysql
-# Resource:: database
+# Cookbook Name:: keystone
+# Resource:: register
 #
 # Copyright:: 2008-2011, Opscode, Inc <legal@opscode.com>
 #
@@ -23,6 +23,9 @@ attribute :protocol, :kind_of => String
 attribute :host, :kind_of => String
 attribute :port, :kind_of => Integer
 attribute :token, :kind_of => String
+
+# use tenant name, user name and password. This used now only for ec2 creation
+attribute :auth, :kind_of => Hash
 
 # :add_service specific attributes
 attribute :service_name, :kind_of => String
@@ -56,4 +59,3 @@ attribute :tenant_name, :kind_of => String
 # :add_ec2 specific attributes
 attribute :user_name, :kind_of => String
 attribute :tenant_name, :kind_of => String
-
