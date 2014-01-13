@@ -72,7 +72,6 @@ class KeystoneService < ServiceObject
   end
 
   def validate_proposal_after_save proposal
-    validate_has_active_database_proposal
     validate_one_for_role proposal, "keystone-server"
 
     if proposal["attributes"][@bc_name]["use_gitrepo"]
