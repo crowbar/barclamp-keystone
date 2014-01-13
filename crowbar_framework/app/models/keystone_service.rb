@@ -39,24 +39,8 @@ class KeystoneService < ServiceObject
     nodes = NodeObject.all
     nodes.delete_if { |n| n.nil? or n.admin? }
 
-    if (base["attributes"][@bc_name]["database_instance"] = validate_has_database_proposal).blank?
-      raise(I18n.t('model.service.dependency_missing', :name => @bc_name, :dependson => "database"))
-    end
-
-    base["attributes"][@bc_name]["git_instance"] = ""
-    begin
-      gitService = GitService.new(@logger)
-      gits = gitService.list_active[1]
-      if gits.empty?
-        # No actives, look for proposals
-        gits = gitService.proposals[1]
-      end
-      unless gits.empty?
-        base["attributes"][@bc_name]["git_instance"] = gits[0]
-      end
-    rescue
-      @logger.info("#{@bc_name} create_proposal: no git found")
-    end
+    base["attributes"][@bc_name]["git_instance"] = find_dep_proposal("git", true)
+    base["attributes"][@bc_name]["database_instance"] = find_dep_proposal("database")
 
     if nodes.size >= 1
       controller = nodes.find { |n| n.intended_role == "controller" } || nodes.first
