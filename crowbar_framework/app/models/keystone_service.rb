@@ -39,29 +39,10 @@ class KeystoneService < ServiceObject
     nodes = NodeObject.all
     nodes.delete_if { |n| n.nil? or n.admin? }
 
-    base["attributes"]["keystone"]["database_instance"] = ""
-    begin
-      databaseService = DatabaseService.new(@logger)
-      # Look for active roles
-      dbs = databaseService.list_active[1]
-      if dbs.empty?
-        # No actives, look for proposals
-        dbs = databaseService.proposals[1]
-      end
-      if dbs.empty?
-        @logger.info("Keystone create_proposal: no database proposal found")
-      else
-        base["attributes"]["keystone"]["database_instance"] = dbs[0]
-        @logger.info("Keystone create_proposal: using database proposal: '#{dbs[0]}'")
-      end
-    rescue
-      @logger.info("Keystone create_proposal: no database proposal found")
-    end
-
-    if base["attributes"]["keystone"]["database_instance"] == ""
+    if (base["attributes"][@bc_name]["database_instance"] = validate_has_database_proposal).blank?
       raise(I18n.t('model.service.dependency_missing', :name => @bc_name, :dependson => "database"))
     end
-    
+
     base["attributes"][@bc_name]["git_instance"] = ""
     begin
       gitService = GitService.new(@logger)
