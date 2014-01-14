@@ -305,21 +305,21 @@ unless node.platform == "suse"
   execute "keystone-manage db_sync" do
     command "keystone-manage db_sync"
     user node[:keystone][:user]
-    group node[:keystone][:user]
+    group node[:keystone][:group]
     action :run
   end
 
   if node[:keystone][:signing][:token_format] == "PKI"
     execute "keystone-manage ssl_setup" do
       user node[:keystone][:user]
-      group node[:keystone][:user]
-      command "keystone-manage ssl_setup --keystone-user #{node[:keystone][:user]} --keystone-group  #{node[:keystone][:user]}"
+      group node[:keystone][:group]
+      command "keystone-manage ssl_setup --keystone-user #{node[:keystone][:user]} --keystone-group  #{node[:keystone][:group]}"
       action :run
     end
     execute "keystone-manage pki_setup" do
       user node[:keystone][:user]
-      group node[:keystone][:user]
-      command "keystone-manage pki_setup --keystone-user #{node[:keystone][:user]} --keystone-group  #{node[:keystone][:user]}"
+      group node[:keystone][:group]
+      command "keystone-manage pki_setup --keystone-user #{node[:keystone][:user]} --keystone-group  #{node[:keystone][:group]}"
       action :run
     end
   end
