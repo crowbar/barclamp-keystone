@@ -22,7 +22,7 @@ module KeystoneBarclampHelper
     {
       "keystone-server" => {
         "unique" => false,
-        "count" => -1
+        "count" => 1
       }
     }
   end
