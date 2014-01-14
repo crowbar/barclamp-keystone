@@ -244,13 +244,30 @@ template "/etc/keystone/keystone.conf" do
 end
 
 execute "keystone-manage db_sync" do
-  command "#{venv_prefix}keystone-manage db_sync"
+  command "keystone-manage db_sync"
+  user node[:keystone][:user]
+  group node[:keystone][:user]
   action :run
 end
 
 if node[:keystone][:signing][:token_format] == "PKI"
+  if %w(redhat centos).include?(node.platform)
+    directory "/etc/keystone/" do
+      action :create
+      owner node[:keystone][:user]
+      group node[:keystone][:user]
+    end
+  end
+  execute "keystone-manage ssl_setup" do
+    user node[:keystone][:user]
+    group node[:keystone][:user]
+    command "keystone-manage ssl_setup --keystone-user #{node[:keystone][:user]} --keystone-group  #{node[:keystone][:user]}"
+    action :run
+  end
   execute "keystone-manage pki_setup" do
-    command "keystone-manage pki_setup ; chown #{node[:keystone][:user]} -R /etc/keystone/ssl/"
+    user node[:keystone][:user]
+    group node[:keystone][:user]
+    command "keystone-manage pki_setup --keystone-user #{node[:keystone][:user]} --keystone-group  #{node[:keystone][:user]}"
     action :run
   end
 end unless node.platform == "suse"
@@ -396,20 +413,22 @@ end
 
 
 # Create EC2 creds for our users
-ec2_creds = [ 
-  [node[:keystone][:admin][:username], node[:keystone][:admin][:tenant]],
-  [node[:keystone][:admin][:username], node[:keystone][:default][:tenant]],
-  [node[:keystone][:default][:username], node[:keystone][:default][:tenant]]
-]
-ec2_creds.each do |args|
-  keystone_register "add default ec2 creds for #{args[1]}:#{args[0]}" do
-    protocol node[:keystone][:api][:protocol]
-    host my_admin_host
-    port node[:keystone][:api][:admin_port]
-    token node[:keystone][:service][:token]
-    user_name args[0]
-    tenant_name args[1]
-    action :add_ec2
+if not platform?("redhat", "centos", "fedora")
+  ec2_creds = [ 
+    [node[:keystone][:admin][:username], node[:keystone][:admin][:tenant]],
+    [node[:keystone][:admin][:username], node[:keystone][:default][:tenant]],
+    [node[:keystone][:default][:username], node[:keystone][:default][:tenant]]
+  ]
+  ec2_creds.each do |args|
+    keystone_register "add default ec2 creds for #{args[1]}:#{args[0]}" do
+      protocol node[:keystone][:api][:protocol]
+      host my_admin_host
+      port node[:keystone][:api][:admin_port]
+      token node[:keystone][:service][:token]
+      user_name args[0]
+      tenant_name args[1]
+      action :add_ec2
+    end
   end
 end
 
