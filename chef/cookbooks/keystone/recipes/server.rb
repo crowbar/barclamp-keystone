@@ -114,7 +114,7 @@ elsif node[:keystone][:frontend]=='uwsgi'
   service "keystone-uwsgi" do
     supports :status => true, :restart => true, :start => true
     action :start
-    subscribes :restart, "template[/usr/lib/cgi-bin/keystone/application.py]", :immediately
+    subscribes :restart, resources(:template => "/usr/lib/cgi-bin/keystone/application.py"), :immediately
   end
 
 elsif node[:keystone][:frontend]=='apache'
