@@ -64,19 +64,50 @@ else
   end
 end
 
+apache_dir = %w(redhat centos suse).include?(node.platform) ? "httpd" : "apache2"
+
 if node[:keystone][:frontend]=='native'
+
+  # disable apache frontend
+  file "/etc/#{apache_dir}/sites-enabled/keystone.conf" do
+    action :delete
+    only_if { File.exist?("/etc/#{apache_dir}/sites-enabled/keystone.conf") }
+  end
+  service "apache2" do
+    action :nothing
+    subscribes :restart, resources(:file => "/etc/#{apache_dir}/sites-enabled/keystone.conf"), :immediately
+  end
+
+  # disable keystone-uwsgi frontend
+  service "keystone-uwsgi" do
+    supports :status => true, :restart => true, :start => true
+    action [ :disable, :stop ]
+    only_if { File.exist? ("/etc/init.d/keystone-uwsgi") }
+  end
+
   service "keystone" do
     service_name node[:keystone][:service_name]
-    supports :status => true, :restart => true
-    action :enable
+    supports :restart => true, :start => true
+    action [ :enable, :start ]
   end
 
 elsif node[:keystone][:frontend]=='uwsgi'
 
+  # disable native frontend
   service "keystone" do
     service_name node[:keystone][:service_name]
     supports :status => true, :restart => true
     action [ :disable, :stop ]
+  end
+
+  # disable apache frontend
+  file "/etc/#{apache_dir}/sites-enabled/keystone.conf" do
+    action :delete
+    only_if { File.exist?("/etc/#{apache_dir}/sites-enabled/keystone.conf") }
+  end
+  service "apache2" do
+    action :nothing
+    subscribes :restart, resources(:file => "/etc/#{apache_dir}/sites-enabled/keystone.conf"), :immediately
   end
 
   directory "/usr/lib/cgi-bin/keystone/" do
@@ -112,17 +143,25 @@ elsif node[:keystone][:frontend]=='uwsgi'
   end
 
   service "keystone-uwsgi" do
-    supports :status => true, :restart => true, :start => true
+    supports :restart => true, :start => true
     action :start
     subscribes :restart, resources(:template => "/usr/lib/cgi-bin/keystone/application.py"), :immediately
   end
 
 elsif node[:keystone][:frontend]=='apache'
 
+  # disable native frontend
   service "keystone" do
     service_name node[:keystone][:service_name]
     supports :status => true, :restart => true
     action [ :disable, :stop ]
+  end
+
+  # disable keystone-uwsgi frontend
+  service "keystone-uwsgi" do
+    supports :status => true, :restart => true, :start => true
+    action [ :disable, :stop ]
+    only_if { File.exist? ("/etc/init.d/keystone-uwsgi") }
   end
 
   include_recipe "apache2"
