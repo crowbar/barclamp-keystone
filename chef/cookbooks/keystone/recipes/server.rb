@@ -86,15 +86,6 @@ elsif node[:keystone][:frontend]=='uwsgi'
     recursive true
   end
 
-  template "/usr/lib/cgi-bin/keystone/application.py" do
-    source "keystone-uwsgi.py.erb"
-    mode 0755
-    variables(
-      :venv => node[:keystone][:use_virtualenv] && node[:keystone][:use_gitrepo],
-      :venv_path => venv_path
-    )
-  end
-
   uwsgi "keystone" do
     options({
       :chdir => "/usr/lib/cgi-bin/keystone/",
@@ -109,6 +100,15 @@ elsif node[:keystone][:frontend]=='uwsgi'
       {:socket => "#{node[:keystone][:api][:admin_host]}:#{node[:keystone][:api][:admin_port]}", :env => "name=admin"}
     ])
     service_name "keystone-uwsgi"
+  end
+
+  template "/usr/lib/cgi-bin/keystone/application.py" do
+    source "keystone-uwsgi.py.erb"
+    mode 0755
+    variables(
+      :venv => node[:keystone][:use_virtualenv] && node[:keystone][:use_gitrepo],
+      :venv_path => venv_path
+    )
   end
 
   service "keystone-uwsgi" do
