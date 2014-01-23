@@ -64,18 +64,12 @@ else
   end
 end
 
-apache_dir = %w(redhat centos suse).include?(node.platform) ? "httpd" : "apache2"
+include_recipe "apache2"
 
 if node[:keystone][:frontend]=='native'
 
-  # disable apache frontend
-  file "/etc/#{apache_dir}/sites-enabled/keystone.conf" do
-    action :delete
-    only_if { File.exist?("/etc/#{apache_dir}/sites-enabled/keystone.conf") }
-  end
-  service "apache2" do
-    action :nothing
-    subscribes :restart, resources(:file => "/etc/#{apache_dir}/sites-enabled/keystone.conf"), :immediately
+  apache_site "keystone.conf" do
+    enable false
   end
 
   # disable keystone-uwsgi frontend
@@ -101,13 +95,8 @@ elsif node[:keystone][:frontend]=='uwsgi'
   end
 
   # disable apache frontend
-  file "/etc/#{apache_dir}/sites-enabled/keystone.conf" do
-    action :delete
-    only_if { File.exist?("/etc/#{apache_dir}/sites-enabled/keystone.conf") }
-  end
-  service "apache2" do
-    action :nothing
-    subscribes :restart, resources(:file => "/etc/#{apache_dir}/sites-enabled/keystone.conf"), :immediately
+  apache_site "keystone.conf" do
+    enable false
   end
 
   directory "/usr/lib/cgi-bin/keystone/" do
@@ -164,7 +153,6 @@ elsif node[:keystone][:frontend]=='apache'
     only_if { File.exist? ("/etc/init.d/keystone-uwsgi") }
   end
 
-  include_recipe "apache2"
   unless %w(redhat centos).include?(node.platform)
     include_recipe "apache2::mod_wsgi"
   else
