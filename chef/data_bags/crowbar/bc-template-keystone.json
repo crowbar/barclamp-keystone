@@ -57,11 +57,11 @@
         "username": "crowbar",
         "password": "crowbar"
       },
-      "assignment": {
-        "driver": "keystone.assignment.backends.sql.Assignment"
-      },
       "identity": {
         "driver": "keystone.identity.backends.sql.Identity"
+      },
+      "assignment": {
+        "driver": "keystone.assignment.backends.sql.Assignment"
       },
       "signing": {
         "token_format": "PKI",
@@ -138,7 +138,7 @@
   "deployment": {
     "keystone": {
       "crowbar-revision": 0,
-      "schema-revision": 2,
+      "schema-revision": 3,
       "element_states": {
         "keystone-server": [ "readying", "ready", "applying" ]
       },
