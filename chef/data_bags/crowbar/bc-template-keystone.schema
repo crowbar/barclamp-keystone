@@ -61,6 +61,9 @@
                     "identity" : { "type" : "map", "required" : true, "mapping": {
                       "driver": { "type": "str", "required": true }
                     }},
+                    "assignment" : { "type" : "map", "required" : false, "mapping": {
+                      "driver": { "type": "str", "required": false }
+                    }},
                     "signing" : { "type" : "map", "required" : true, "mapping": {
                       "token_format": { "type": "str", "required": true },
                       "certfile": { "type": "str" },
