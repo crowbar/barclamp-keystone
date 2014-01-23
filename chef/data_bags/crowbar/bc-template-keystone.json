@@ -5,7 +5,7 @@
     "keystone": {
       "debug": false,
       "frontend": "uwsgi",
-      "verbose": false,
+      "verbose": true,
       "gitrepo": "http://github.com/openstack/keystone.git",
       "git_instance": "",
       "git_refspec": "stable/havana",
