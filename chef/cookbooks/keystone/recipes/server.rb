@@ -390,12 +390,15 @@ if node[:keystone][:api][:protocol] == 'https'
   end
 end
 
-# Silly wake-up call - this is a hack
+# Silly wake-up call - this is a hack; we use retries because the server was
+# just (re)started, and might not answer on the first try
 keystone_register "wakeup keystone" do
   protocol node[:keystone][:api][:protocol]
   host my_admin_host
   port node[:keystone][:api][:admin_port]
   token node[:keystone][:service][:token]
+  retries 5
+  retry_delay 10
   action :wakeup
 end
 
