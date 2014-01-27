@@ -402,6 +402,7 @@ def _build_user_object(user_name, password, tenant_id)
   svc_obj.store("name", user_name)
   svc_obj.store("password", password)
   svc_obj.store("tenantId", tenant_id)
+  svc_obj.store("email", nil)
   svc_obj.store("enabled", true)
   ret = Hash.new
   ret.store("user", svc_obj)
