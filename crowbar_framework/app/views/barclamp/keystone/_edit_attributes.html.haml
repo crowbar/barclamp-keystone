@@ -6,7 +6,7 @@
     = render_instance_selector("database", :database_instance, t('.database_instance'), "database_instance", @proposal)
     %p
       %label{ :for => :frontend }= t('.frontend')
-      = select_tag :frontend, options_for_select([['native', 'native'], ['apache','apache']], @proposal.raw_data['attributes'][@proposal.barclamp]["frontend"]), :onchange => "update_value('frontend', 'frontend', 'string')"
+      = select_tag :frontend, options_for_select([['native', 'native'], ['apache','apache'], ['uwsgi','uwsgi']], @proposal.raw_data['attributes'][@proposal.barclamp]["frontend"]), :onchange => "update_value('frontend', 'frontend', 'string')"
 
     %p
       %label{ :for => :token_format }= t('.token_format')

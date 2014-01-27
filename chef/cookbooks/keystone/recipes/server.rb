@@ -64,21 +64,96 @@ else
   end
 end
 
+include_recipe "apache2"
+
 if node[:keystone][:frontend]=='native'
+
+  apache_site "keystone.conf" do
+    enable false
+  end
+
+  # disable keystone-uwsgi frontend
+  service "keystone-uwsgi" do
+    supports :status => true, :restart => true, :start => true
+    action [ :disable, :stop ]
+    only_if { File.exist? ("/etc/init.d/keystone-uwsgi") }
+  end
+
   service "keystone" do
     service_name node[:keystone][:service_name]
-    supports :status => true, :restart => true
-    action :enable
+    supports :restart => true, :start => true
+    action [ :enable, :start ]
   end
-elsif node[:keystone][:frontend]=='apache'
 
+elsif node[:keystone][:frontend]=='uwsgi'
+
+  # disable native frontend
   service "keystone" do
     service_name node[:keystone][:service_name]
     supports :status => true, :restart => true
     action [ :disable, :stop ]
   end
 
-  include_recipe "apache2"
+  # disable apache frontend
+  apache_site "keystone.conf" do
+    enable false
+  end
+
+  directory "/usr/lib/cgi-bin/keystone/" do
+    owner node[:keystone][:user]
+    mode 0755
+    action :create
+    recursive true
+  end
+
+  uwsgi "keystone" do
+    options({
+      :chdir => "/usr/lib/cgi-bin/keystone/",
+      :callable => :application,
+      :module => :application,
+      :protocol => :http,
+      :user => node[:keystone][:user],
+      :"buffer-size" => 65535,
+      :log => "/var/log/keystone/keystone.log"
+    })
+    instances ([
+      {:socket => "#{node[:keystone][:api][:api_host]}:#{node[:keystone][:api][:api_port]}", :env => "name=main"},
+      {:socket => "#{node[:keystone][:api][:admin_host]}:#{node[:keystone][:api][:admin_port]}", :env => "name=admin"}
+    ])
+    service_name "keystone-uwsgi"
+  end
+
+  template "/usr/lib/cgi-bin/keystone/application.py" do
+    source "keystone-uwsgi.py.erb"
+    mode 0755
+    variables(
+      :venv => node[:keystone][:use_virtualenv] && node[:keystone][:use_gitrepo],
+      :venv_path => venv_path
+    )
+  end
+
+  service "keystone-uwsgi" do
+    supports :restart => true, :start => true
+    action :start
+    subscribes :restart, resources(:template => "/usr/lib/cgi-bin/keystone/application.py"), :immediately
+  end
+
+elsif node[:keystone][:frontend]=='apache'
+
+  # disable native frontend
+  service "keystone" do
+    service_name node[:keystone][:service_name]
+    supports :status => true, :restart => true
+    action [ :disable, :stop ]
+  end
+
+  # disable keystone-uwsgi frontend
+  service "keystone-uwsgi" do
+    supports :status => true, :restart => true, :start => true
+    action [ :disable, :stop ]
+    only_if { File.exist? ("/etc/init.d/keystone-uwsgi") }
+  end
+
   unless %w(redhat centos).include?(node.platform)
     include_recipe "apache2::mod_wsgi"
   else
@@ -240,6 +315,8 @@ template "/etc/keystone/keystone.conf" do
       notifies :restart, resources(:service => "keystone"), :immediately
     elsif node[:keystone][:frontend]=='apache'
       notifies :restart, resources(:service => "apache2"), :immediately
+    elsif node[:keystone][:frontend]=='uwsgi'
+      notifies :restart, resources(:service => "keystone-uwsgi"), :immediately
     end
 end
 
