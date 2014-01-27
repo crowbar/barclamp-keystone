@@ -113,6 +113,7 @@ elsif node[:keystone][:frontend]=='uwsgi'
       :module => :application,
       :protocol => :http,
       :user => node[:keystone][:user],
+      :"buffer-size" => 65535,
       :log => "/var/log/keystone/keystone.log"
     })
     instances ([
