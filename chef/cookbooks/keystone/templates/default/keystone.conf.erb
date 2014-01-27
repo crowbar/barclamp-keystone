@@ -202,7 +202,12 @@ driver = keystone.token.backends.sql.Token
 
 # Controls the token construction, validation, and revocation operations.
 # Core providers are keystone.token.providers.[pki|uuid].Provider
-# provider =
+
+<% if @signing_token_format == "PKI" %>
+provider = keystone.token.providers.pki.Provider
+<% else %>
+provider = keystone.token.providers.uuid.Provider
+<%end %>
 
 # Amount of time a token should remain valid (in seconds)
 # expiration = 86400
@@ -307,7 +312,7 @@ cert_required = <%= @ssl_cert_required %>
 [signing]
 # Deprecated in favor of provider in the [token] section
 # Allowed values are PKI or UUID
-token_format = <%= @signing_token_format %>
+# token_format =
 
 certfile = <%= @signing_certfile %>
 keyfile = <%= @signing_keyfile %>
