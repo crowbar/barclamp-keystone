@@ -64,15 +64,7 @@ else
   end
 end
 
-if node[:keystone][:frontend] == 'native'
-
-  service "keystone" do
-    service_name node[:keystone][:service_name]
-    supports :status => true, :restart => true
-    action :enable
-  end
-
-elsif node[:keystone][:frontend] == 'uwsgi'
+if node[:keystone][:frontend] == 'uwsgi'
 
   service "keystone" do
     service_name node[:keystone][:service_name]
@@ -283,9 +275,7 @@ template "/etc/keystone/keystone.conf" do
       :ssl_cert_required => node[:keystone][:ssl][:cert_required],
       :ssl_ca_certs => node[:keystone][:ssl][:ca_certs]
     )
-    if node[:keystone][:frontend] == 'native'
-      notifies :restart, resources(:service => "keystone"), :immediately
-    elsif node[:keystone][:frontend] == 'apache'
+    if node[:keystone][:frontend] == 'apache'
       notifies :restart, resources(:service => "apache2"), :immediately
     elsif node[:keystone][:frontend] == 'uwsgi'
       notifies :restart, resources(:service => "keystone-uwsgi"), :immediately
@@ -387,6 +377,17 @@ if node[:keystone][:api][:protocol] == 'https'
     message = "Certificate CA \"#{node[:keystone][:ssl][:ca_certs]}\" is not present."
     Chef::Log.fatal(message)
     raise message
+  end
+end
+
+if node[:keystone][:frontend] == 'native'
+  # we define the service after we define all our config files, so that it's
+  # started only when all files are created
+  service "keystone" do
+    service_name node[:keystone][:service_name]
+    supports :status => true, :start => true, :restart => true
+    action [ :enable, :start ]
+    subscribes :restart, resources(:template => "/etc/keystone/keystone.conf")
   end
 end
 
