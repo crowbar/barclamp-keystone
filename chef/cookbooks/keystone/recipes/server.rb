@@ -64,6 +64,10 @@ else
   end
 end
 
+# Ideally this would be called bind_host, not admin_host; the latter
+# is ambiguous.
+bind_host = node[:keystone][:api][:admin_host]
+
 if node[:keystone][:frontend] == 'uwsgi'
 
   service "keystone" do
@@ -257,7 +261,7 @@ template "/etc/keystone/keystone.conf" do
       :debug => node[:keystone][:debug],
       :verbose => node[:keystone][:verbose],
       :admin_token => node[:keystone][:service][:token],
-      :bind_admin_api_host => node[:keystone][:api][:admin_host],
+      :bind_host => bind_host,
       :admin_api_host => my_admin_host,
       :admin_api_port => node[:keystone][:api][:admin_port], # Auth port
       :api_host => my_public_host,
