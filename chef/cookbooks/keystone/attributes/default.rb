@@ -142,3 +142,11 @@ default[:keystone][:ldap][:group_allow_delete] = true
 # default[:keystone][:ldap][:domain_allow_delete] = true
 # default[:keystone][:ldap][:domain_enabled_emulation] = false
 # default[:keystone][:ldap][:domain_enabled_emulation_dn] = ""
+
+default[:keystone][:ha][:enabled] = false
+# Ports to bind to when haproxy is used for the real ports
+default[:keystone][:ha][:ports][:service_port] = 5500
+default[:keystone][:ha][:ports][:admin_port] = 5501
+# Pacemaker bits
+default[:keystone][:ha][:agent] = "ocf:openstack:keystone"
+default[:keystone][:ha][:op][:monitor][:interval] = "10s"

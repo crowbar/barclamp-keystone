@@ -63,19 +63,46 @@ else
   end
 end
 
+ha_enabled = node[:keystone][:ha][:enabled]
+
+if ha_enabled
+  log "HA support for keystone is enabled"
+  admin_address = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
+  bind_admin_host = admin_address
+  bind_admin_port = node[:keystone][:ha][:ports][:admin_port]
+  bind_service_host = admin_address
+  bind_service_port = node[:keystone][:ha][:ports][:service_port]
+else
+  log "HA support for keystone is disabled"
+  bind_admin_host = node[:keystone][:api][:admin_host]
+  bind_admin_port = node[:keystone][:api][:admin_port]
+  bind_service_host = node[:keystone][:api][:api_host]
+  bind_service_port = node[:keystone][:api][:service_port]
+end
+
 # Ideally this would be called bind_host, not admin_host; the latter
 # is ambiguous.
-bind_host = node[:keystone][:api][:admin_host]
+bind_host = bind_admin_host
+
+cluster_vname = PacemakerHelper.cluster_vhostname(node)
+public_vhost  = "public.#{cluster_vname}.#{node[:domain]}"
+admin_vhost   = "admin.#{cluster_vname}.#{node[:domain]}"
+# If we needed the VIP addresses, this is how we'd get them:
+#
+# public_net_db = data_bag_item('crowbar', 'public_network')
+# admin_net_db  = data_bag_item('crowbar', 'admin_network')
+# public_ip     = public_net_db["allocated_by_name"][public_vhost]["address"]
+# admin_ip      = admin_net_db ["allocated_by_name"][admin_vhost]["address"]
 
 # Ideally this would be called admin_host, but that's already being
 # misleadingly used to store a value which actually represents the
 # service bind address.
-my_admin_host = node[:fqdn]
+my_admin_host = ha_enabled ? admin_vhost : node[:fqdn]
 
 # For the public endpoint, we prefer the public name. If not set, then we
 # use the IP address except for SSL, where we always prefer a hostname
 # (for certificate validation).
-my_public_host = node[:crowbar][:public_name]
+my_public_host = ha_enabled ? public_vhost : node[:crowbar][:public_name]
 if my_public_host.nil? or my_public_host.empty?
   if node[:keystone][:api][:protocol] == "https"
     my_public_host = 'public.'+node[:fqdn]
@@ -136,8 +163,8 @@ if node[:keystone][:frontend] == 'uwsgi'
       :log => "/var/log/keystone/keystone.log"
     })
     instances ([
-      {:socket => "#{node[:keystone][:api][:api_host]}:#{node[:keystone][:api][:service_port]}", :env => "name=main"},
-      {:socket => "#{node[:keystone][:api][:admin_host]}:#{node[:keystone][:api][:admin_port]}", :env => "name=admin"}
+      {:socket => "#{bind_service_host}:#{bind_service_port}", :env => "name=main"},
+      {:socket => "#{bind_admin_host}:#{bind_admin_port}", :env => "name=admin"}
     ])
     service_name "keystone-uwsgi"
   end
@@ -198,10 +225,10 @@ elsif node[:keystone][:frontend] == 'apache'
     path "/etc/httpd/sites-available/keystone.conf" if %w(redhat centos).include?(node.platform)
     source "apache_keystone.conf.erb"
     variables(
-      :admin_api_port => node[:keystone][:api][:admin_port], # Auth port
-      :admin_api_host => node[:keystone][:api][:admin_host],
-      :service_port => node[:keystone][:api][:service_port], # public port
-      :api_host => node[:keystone][:api][:api_host],
+      :bind_admin_port => bind_admin_port, # Auth port
+      :bind_admin_host => bind_admin_host,
+      :bind_service_port => bind_service_port, # public port
+      :bind_service_host => bind_service_host,
       :processes => 3,
       :venv => node[:keystone][:use_virtualenv],
       :venv_path => venv_path,
@@ -232,10 +259,6 @@ db_provider = Chef::Recipe::Database::Util.get_database_provider(sql)
 db_user_provider = Chef::Recipe::Database::Util.get_user_provider(sql)
 privs = Chef::Recipe::Database::Util.get_default_priviledges(sql)
 url_scheme = backend_name
-
-::Chef::Recipe.send(:include, Opscode::OpenSSL::Password)
-node.set_unless['keystone']['db']['password'] = secure_password
-
 
 sql_address = Chef::Recipe::Barclamp::Inventory.get_network_by_type(sql, "admin").address if sql_address.nil?
 Chef::Log.info("Database server found at #{sql_address}")
@@ -284,10 +307,8 @@ template "/etc/keystone/keystone.conf" do
       :verbose => node[:keystone][:verbose],
       :admin_token => node[:keystone][:service][:token],
       :bind_host => bind_host,
-      :admin_api_host => my_admin_host,
-      :admin_api_port => node[:keystone][:api][:admin_port],
-      :api_host => my_public_host,
-      :service_port => node[:keystone][:api][:service_port],
+      :bind_admin_port => bind_admin_port,
+      :bind_service_port => bind_service_port,
       :public_endpoint => node[:keystone][:api][:public_URL],
       :admin_endpoint => node[:keystone][:api][:admin_URL],
       :use_syslog => node[:keystone][:use_syslog],
@@ -417,6 +438,10 @@ if node[:keystone][:frontend] == 'native'
     action [ :enable, :start ]
     subscribes :restart, resources(:template => "/etc/keystone/keystone.conf")
   end
+end
+
+if ha_enabled
+  include_recipe "keystone::ha"
 end
 
 # Silly wake-up call - this is a hack; we use retries because the server was
