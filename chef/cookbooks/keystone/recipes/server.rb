@@ -87,7 +87,7 @@ end
 # These are used in keystone.conf
 node[:keystone][:api][:public_URL] = \
   KeystoneHelper.service_URL(node, my_public_host,
-                             node[:keystone][:api][:api_port])
+                             node[:keystone][:api][:service_port])
 node[:keystone][:api][:admin_URL] = \
   KeystoneHelper.service_URL(node, my_admin_host,
                              node[:keystone][:api][:admin_port])
@@ -136,7 +136,7 @@ if node[:keystone][:frontend] == 'uwsgi'
       :log => "/var/log/keystone/keystone.log"
     })
     instances ([
-      {:socket => "#{node[:keystone][:api][:api_host]}:#{node[:keystone][:api][:api_port]}", :env => "name=main"},
+      {:socket => "#{node[:keystone][:api][:api_host]}:#{node[:keystone][:api][:service_port]}", :env => "name=main"},
       {:socket => "#{node[:keystone][:api][:admin_host]}:#{node[:keystone][:api][:admin_port]}", :env => "name=admin"}
     ])
     service_name "keystone-uwsgi"
@@ -200,7 +200,7 @@ elsif node[:keystone][:frontend] == 'apache'
     variables(
       :admin_api_port => node[:keystone][:api][:admin_port], # Auth port
       :admin_api_host => node[:keystone][:api][:admin_host],
-      :api_port => node[:keystone][:api][:api_port], # public port
+      :service_port => node[:keystone][:api][:service_port], # public port
       :api_host => node[:keystone][:api][:api_host],
       :processes => 3,
       :venv => node[:keystone][:use_virtualenv],
@@ -285,9 +285,9 @@ template "/etc/keystone/keystone.conf" do
       :admin_token => node[:keystone][:service][:token],
       :bind_host => bind_host,
       :admin_api_host => my_admin_host,
-      :admin_api_port => node[:keystone][:api][:admin_port], # Auth port
+      :admin_api_port => node[:keystone][:api][:admin_port],
       :api_host => my_public_host,
-      :api_port => node[:keystone][:api][:api_port], # public port
+      :service_port => node[:keystone][:api][:service_port],
       :public_endpoint => node[:keystone][:api][:public_URL],
       :admin_endpoint => node[:keystone][:api][:admin_URL],
       :use_syslog => node[:keystone][:use_syslog],

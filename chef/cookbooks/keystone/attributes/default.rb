@@ -41,7 +41,6 @@ default[:keystone][:api][:protocol] = "http"
 default[:keystone][:api][:service_port] = "5000"
 default[:keystone][:api][:admin_port] = 35357  #declared in resource as Integer
 default[:keystone][:api][:admin_host] = "0.0.0.0"
-default[:keystone][:api][:api_port] = "35357"
 default[:keystone][:api][:api_host] = "0.0.0.0"
 default[:keystone][:api][:version] = "v2.0"
 
