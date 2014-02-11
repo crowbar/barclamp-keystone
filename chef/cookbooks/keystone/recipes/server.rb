@@ -68,7 +68,11 @@ end
 # is ambiguous.
 bind_host = node[:keystone][:api][:admin_host]
 
+# Ideally this would be called admin_host, but that's already being
+# misleadingly used to store a value which actually represents the
+# service bind address.
 my_admin_host = node[:fqdn]
+
 # For the public endpoint, we prefer the public name. If not set, then we
 # use the IP address except for SSL, where we always prefer a hostname
 # (for certificate validation).
