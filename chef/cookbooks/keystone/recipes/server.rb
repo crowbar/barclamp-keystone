@@ -77,10 +77,10 @@ my_admin_host = node[:fqdn]
 # (for certificate validation).
 my_public_host = node[:crowbar][:public_name]
 if my_public_host.nil? or my_public_host.empty?
-  unless node[:keystone][:api][:protocol] == "https"
-    my_public_host = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "public").address
-  else
+  if node[:keystone][:api][:protocol] == "https"
     my_public_host = 'public.'+node[:fqdn]
+  else
+    my_public_host = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "public").address
   end
 end
 
