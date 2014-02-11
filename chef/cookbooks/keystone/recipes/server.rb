@@ -68,6 +68,19 @@ end
 # is ambiguous.
 bind_host = node[:keystone][:api][:admin_host]
 
+my_admin_host = node[:fqdn]
+# For the public endpoint, we prefer the public name. If not set, then we
+# use the IP address except for SSL, where we always prefer a hostname
+# (for certificate validation).
+my_public_host = node[:crowbar][:public_name]
+if my_public_host.nil? or my_public_host.empty?
+  unless node[:keystone][:api][:protocol] == "https"
+    my_public_host = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "public").address
+  else
+    my_public_host = 'public.'+node[:fqdn]
+  end
+end
+
 if node[:keystone][:frontend] == 'uwsgi'
 
   service "keystone" do
@@ -237,19 +250,6 @@ database_user "grant database access for keystone database user" do
     action :grant
 end
 sql_connection = "#{url_scheme}://#{node[:keystone][:db][:user]}:#{node[:keystone][:db][:password]}@#{sql_address}/#{node[:keystone][:db][:database]}"
-
-my_admin_host = node[:fqdn]
-# For the public endpoint, we prefer the public name. If not set, then we
-# use the IP address except for SSL, where we always prefer a hostname
-# (for certificate validation).
-my_public_host = node[:crowbar][:public_name]
-if my_public_host.nil? or my_public_host.empty?
-  unless node[:keystone][:api][:protocol] == "https"
-    my_public_host = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "public").address
-  else
-    my_public_host = 'public.'+node[:fqdn]
-  end
-end
 
 template "/etc/keystone/keystone.conf" do
     source "keystone.conf.erb"
