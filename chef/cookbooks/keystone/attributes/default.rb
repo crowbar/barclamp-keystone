@@ -43,6 +43,7 @@ default[:keystone][:api][:admin_port] = 35357  #declared in resource as Integer
 default[:keystone][:api][:admin_host] = "0.0.0.0"
 default[:keystone][:api][:api_port] = "35357"
 default[:keystone][:api][:api_host] = "0.0.0.0"
+default[:keystone][:api][:version] = "v2.0"
 
 default[:keystone][:identity][:driver] = "keystone.identity.backends.sql.Identity"
 default[:keystone][:assignment][:driver] = "keystone.assignment.backends.sql.Assignment"

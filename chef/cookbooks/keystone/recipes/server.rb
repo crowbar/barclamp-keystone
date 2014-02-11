@@ -17,7 +17,6 @@
 # Creating virtualenv for @cookbook_name and install pfs_deps with pp
 #
 
-
 unless node[:keystone][:use_gitrepo]
 
   package "keystone" do
@@ -84,6 +83,25 @@ if my_public_host.nil? or my_public_host.empty?
     my_public_host = 'public.'+node[:fqdn]
   end
 end
+
+# These are used in keystone.conf
+node[:keystone][:api][:public_URL] = \
+  KeystoneHelper.service_URL(node, my_public_host,
+                             node[:keystone][:api][:api_port])
+node[:keystone][:api][:admin_URL] = \
+  KeystoneHelper.service_URL(node, my_admin_host,
+                             node[:keystone][:api][:admin_port])
+
+# These URLs will be registered as endpoints in keystone's database
+node[:keystone][:api][:versioned_public_URL] = \
+  KeystoneHelper.versioned_service_URL(node, my_public_host,
+                                       node[:keystone][:api][:service_port])
+node[:keystone][:api][:versioned_admin_URL] = \
+  KeystoneHelper.versioned_service_URL(node, my_admin_host,
+                                       node[:keystone][:api][:admin_port])
+node[:keystone][:api][:versioned_internal_URL] = \
+  KeystoneHelper.versioned_service_URL(node, my_admin_host,
+                                       node[:keystone][:api][:service_port])
 
 if node[:keystone][:frontend] == 'uwsgi'
 
@@ -270,6 +288,8 @@ template "/etc/keystone/keystone.conf" do
       :admin_api_port => node[:keystone][:api][:admin_port], # Auth port
       :api_host => my_public_host,
       :api_port => node[:keystone][:api][:api_port], # public port
+      :public_endpoint => node[:keystone][:api][:public_URL],
+      :admin_endpoint => node[:keystone][:api][:admin_URL],
       :use_syslog => node[:keystone][:use_syslog],
       :signing_token_format => node[:keystone][:signing][:token_format],
       :signing_certfile => node[:keystone][:signing][:certfile],
@@ -519,9 +539,9 @@ keystone_register "register keystone endpoint" do
   token node[:keystone][:service][:token]
   endpoint_service "keystone"
   endpoint_region "RegionOne"
-  endpoint_publicURL "#{node[:keystone][:api][:protocol]}://#{my_public_host}:#{node[:keystone][:api][:service_port]}/v2.0"
-  endpoint_adminURL "#{node[:keystone][:api][:protocol]}://#{my_admin_host}:#{node[:keystone][:api][:admin_port]}/v2.0"
-  endpoint_internalURL "#{node[:keystone][:api][:protocol]}://#{my_admin_host}:#{node[:keystone][:api][:service_port]}/v2.0"
+  endpoint_publicURL   node[:keystone][:api][:versioned_public_URL]
+  endpoint_adminURL    node[:keystone][:api][:versioned_admin_URL]
+  endpoint_internalURL node[:keystone][:api][:versioned_internal_URL]
 #  endpoint_global true
 #  endpoint_enabled true
   action :add_endpoint_template
