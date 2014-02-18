@@ -1,0 +1,16 @@
+{
+    "crowbar_keystone": {
+        "db": {
+            "identity": {
+                "username": "default_username"
+            }
+        },
+        "identity": {
+                "admin_user": "default_admin_user" ,
+                "monitoring": "default_monitoring_user"
+        },
+        "secrets": {
+             "bootstrap_token": "bootstrap_token"
+        }
+    }
+}
