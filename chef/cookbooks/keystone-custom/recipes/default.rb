@@ -18,4 +18,4 @@ node.default['openstack']['identity']['admin_user'] = node['crowbar_keystone']['
 node.default['openstack']['secrets']['openstack_bootstrap_token'] = node['crowbar_keystone']['secrets']['bootstrap_token']
 node.default['openstack']['db']['identity']['migrate'] = false
 node.default['openstack']['memcached_servers'] = ''
-
+node.override['openstack']['endpoints']['identity-bind']['host'] = '0.0.0.0'
