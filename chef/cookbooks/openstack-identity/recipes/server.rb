@@ -97,6 +97,7 @@ execute 'keystone-manage pki_setup' do
   not_if { ::FileTest.exists? node['openstack']['identity']['signing']['keyfile'] }
 end
 
+bind_endpoint = endpoint 'identity-bind'
 identity_admin_endpoint = endpoint 'identity-admin'
 identity_endpoint = endpoint 'identity-api'
 compute_endpoint = endpoint 'compute-api'
@@ -111,7 +112,7 @@ sql_connection = db_uri('identity', db_user, db_pass)
 
 bootstrap_token = secret 'secrets', 'openstack_identity_bootstrap_token'
 
-ip_address = address_for node['openstack']['identity']['bind_interface']
+ip_address = bind_endpoint.host
 
 # If the search role is set, we search for memcache
 # servers via a Chef search. If not, we look at the
