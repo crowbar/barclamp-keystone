@@ -244,6 +244,7 @@ Attributes
 * `openstack['identity']['users']` - Array of users to create in the keystone server
 TODO: Add DB2 support on other platforms
 * `openstack['identity']['platform']['db2_python_packages']` - Array of DB2 python packages, only available on redhat platform
+* `openstack['identity']['token']['expiration']` - Token validity time in seconds
 
 Testing
 =====

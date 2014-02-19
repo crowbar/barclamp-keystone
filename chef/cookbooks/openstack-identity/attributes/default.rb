@@ -38,8 +38,8 @@ default['openstack']['identity']['debug'] = 'False'
 default['openstack']['identity']['service_port'] = '5000'
 default['openstack']['identity']['admin_port'] = '35357'
 default['openstack']['identity']['region'] = 'RegionOne'
-
 default['openstack']['identity']['bind_interface'] = 'lo'
+default['openstack']['identity']['token']['expiration'] = '86400'
 
 # Logging stuff
 default['openstack']['identity']['syslog']['use'] = false

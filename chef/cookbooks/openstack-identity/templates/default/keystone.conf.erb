@@ -171,7 +171,7 @@ template_file = /etc/keystone/default_catalog.templates
 driver = keystone.token.backends.<%= node["openstack"]["identity"]["token"]["backend"] %>.Token
 provider = keystone.token.providers.<%= node["openstack"]["auth"]["strategy"] %>.Provider
 # Amount of time a token should remain valid (in seconds)
-expiration = 86400
+expiration = <%= node["openstack"]["identity"]["token"]["expiration"] %>
 
 [policy]
 driver = keystone.policy.backends.<%= node["openstack"]["identity"]["policy"]["backend"] %>.Policy
