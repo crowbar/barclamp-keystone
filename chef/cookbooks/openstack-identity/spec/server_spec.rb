@@ -340,6 +340,11 @@ describe 'openstack-identity::server' do
           r = line_regexp('driver = keystone.token.backends.sql.Token')
           expect(chef_run).to render_file(path).with_content(r)
         end
+
+        it 'sets token expiration time' do
+          r = line_regexp('expiration = 86400')
+          expect(chef_run).to render_file(path).with_content(r)
+        end
       end
 
       describe '[policy] section' do

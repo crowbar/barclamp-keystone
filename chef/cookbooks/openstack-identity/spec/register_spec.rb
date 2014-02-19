@@ -5,7 +5,7 @@ require_relative 'spec_helper'
 
 describe Chef::Provider::Execute do
   before do
-    @chef_run = ::ChefSpec::Runner.new ::OPENSUSE_OPTS
+    @chef_run = ::ChefSpec::Runner.new ::SUSE_OPTS
     @chef_run.converge 'openstack-identity::default'
     @node = @chef_run.node
     @node.set['openstack'] = {

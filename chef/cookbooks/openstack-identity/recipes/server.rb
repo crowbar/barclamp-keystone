@@ -116,7 +116,7 @@ ip_address = address_for node['openstack']['identity']['bind_interface']
 # If the search role is set, we search for memcache
 # servers via a Chef search. If not, we look at the
 # memcache.servers attribute.
-memcache_servers = ''#memcached_servers.join ','  # from openstack-common lib
+memcache_servers = memcached_servers.join ','  # from openstack-common lib
 
 uris = {
   'identity-admin' => identity_admin_endpoint.to_s.gsub('%25', '%'),
@@ -149,7 +149,8 @@ template '/etc/keystone/keystone.conf' do
     uris: uris,
     public_endpoint: public_endpoint,
     admin_endpoint: admin_endpoint,
-    ldap: node['openstack']['identity']['ldap']
+    ldap: node['openstack']['identity']['ldap'],
+    token_expiration: node['openstack']['identity']['token']['expiration']
   )
 
   notifies :restart, 'service[keystone]', :immediately
@@ -169,9 +170,9 @@ template '/etc/keystone/default_catalog.templates' do
 end
 
 # sync db after keystone.conf is generated
-#execute 'keystone-manage db_sync' do
-#  user node['openstack']['identity']['user']
-#  group node['openstack']['identity']['group']
+execute 'keystone-manage db_sync' do
+  user node['openstack']['identity']['user']
+  group node['openstack']['identity']['group']
 
-#  only_if { node['openstack']['db']['identity']['migrate'] }
-#end
+  only_if { node['openstack']['db']['identity']['migrate'] }
+end
