@@ -17,4 +17,5 @@ node.default['openstack']['db']['identity']['username'] = node['crowbar_keystone
 node.default['openstack']['identity']['admin_user'] = node['crowbar_keystone']['identity']['admin_user']
 node.default['openstack']['secrets']['openstack_bootstrap_token'] = node['crowbar_keystone']['secrets']['bootstrap_token']
 node.default['openstack']['db']['identity']['migrate'] = false
+node.default['openstack']['memcached_servers'] = ''
 
