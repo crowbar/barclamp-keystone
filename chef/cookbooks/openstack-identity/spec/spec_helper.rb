@@ -35,9 +35,6 @@ end
 
 shared_context 'identity_stubs' do
   before do
-    ::Chef::Recipe.any_instance.stub(:address_for)
-      .with('lo')
-      .and_return('127.0.1.1')
     ::Chef::Recipe.any_instance.stub(:memcached_servers).and_return []
     ::Chef::Recipe.any_instance.stub(:get_password)
       .with('db', anything)

@@ -8,6 +8,9 @@ describe 'openstack-identity::server' do
     let(:runner) { ChefSpec::Runner.new(UBUNTU_OPTS) }
     let(:node) { runner.node }
     let(:chef_run) do
+      node.set['openstack']['endpoints']['identity-bind'] = {
+        'host' => '127.0.1.1'
+      }
       node.set_unless['openstack']['endpoints']['identity-api'] = {
         'host' => '127.0.1.1',
         'port' => '5000',
