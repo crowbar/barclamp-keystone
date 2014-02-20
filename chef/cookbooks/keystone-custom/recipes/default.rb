@@ -19,5 +19,4 @@ node.default['openstack']['secrets']['openstack_bootstrap_token'] = node['crowba
 node.default['openstack']['db']['identity']['migrate'] = false
 node.default['openstack']['memcached_servers'] = ''
 node.default['openstack']['secret']['key_path'] = '/var/chef/data_bags/openstack_data_bag_secret'
-
-
+node.override['openstack']['endpoints']['identity-bind']['host'] = '0.0.0.0'
