@@ -1,8 +1,7 @@
 name "keystone-server"
 description "Keystone server"
 run_list(
-    "role[os-base]",
+    "role[openstack-base]",
     "recipe[keystone-custom]",
-    "recipe[openstack-identity::server]",
-    "recipe[openstack-identity::registration]"
+    "role[os-identity]"
 )

@@ -1,2 +1,2 @@
-cookbook 'openstack-common', github: 'stackforge/cookbook-openstack-common'
-cookbook 'openstack-identity', github: 'stackforge/cookbook-openstack-identity'
+cookbook 'openstack-common', path: '../../openstack/chef-solo/cookbooks/openstack-common'
+cookbook 'openstack-identity', path: 'cookbooks/openstack-identity'
