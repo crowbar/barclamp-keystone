@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-class BarclampKeystone::Server < Role
+class BarclampKeystone::Server < BarclampChef::Role
   include BarclampOpenstack
 
 # Event triggers for node creation and destruction.
