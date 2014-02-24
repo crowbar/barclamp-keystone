@@ -13,10 +13,22 @@
 # limitations under the License.
 #
 
+# Attributes related to databags set during on_deployment
 node.default['openstack']['db']['identity']['username'] = node['crowbar_keystone']['db']['identity']['username']
 node.default['openstack']['identity']['admin_user'] = node['crowbar_keystone']['identity']['admin_user']
 node.default['openstack']['secrets']['openstack_bootstrap_token'] = node['crowbar_keystone']['secrets']['bootstrap_token']
-node.default['openstack']['db']['identity']['migrate'] = false
+
+# Do not use memcache option for now
 node.default['openstack']['memcached_servers'] = ''
+
+
 node.default['openstack']['secret']['key_path'] = '/var/chef/data_bags/openstack_data_bag_secret'
+
 node.override['openstack']['endpoints']['identity-bind']['host'] = '0.0.0.0'
+
+
+# Database used by the OpenStack Identity (Keystone) service
+db_bind_address = node.address( "admin", IP::IP4 ).addr
+node.override['openstack']['db']['identity']['host'] = db_bind_address
+node.override['openstack']['endpoints']['identity']['host'] = db_bind_address
+
