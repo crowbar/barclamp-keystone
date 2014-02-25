@@ -40,7 +40,7 @@ roles:
   - name: keystone-server
     jig: chef-solo
     requires:
-      - os-base
+      - openstack-base
 
 debs:
   ubuntu-12.04:
