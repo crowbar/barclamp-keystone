@@ -42,8 +42,8 @@ roles:
     requires:
       - os-base
       - database-server
-    want-attribs:
-       - name: database-v4addr
+    wants-attribs:
+      - name: database-v4addr
         at:  'crowbar/database/server/v4addr'
 debs:
   ubuntu-12.04:

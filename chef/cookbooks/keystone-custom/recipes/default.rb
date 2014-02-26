@@ -28,7 +28,7 @@ node.override['openstack']['endpoints']['identity-bind']['host'] = '0.0.0.0'
 
 
 # Database used by the OpenStack Identity (Keystone) service
-database_server_addr = ["crowbar"]["database"]["server"]["v4addr"]
+database_server_addr = node["crowbar"]["database"]["server"]["v4addr"]
 node.override['openstack']['db']['identity']['host'] = database_server_addr
 node.override['openstack']['endpoints']['identity']['host'] = database_server_addr
 
