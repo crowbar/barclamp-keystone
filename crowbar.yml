@@ -40,11 +40,12 @@ roles:
   - name: keystone-server
     jig: chef-solo
     requires:
-      - os-base
+      - openstack-base
       - database-server
     wants-attribs:
       - name: database-v4addr
         at:  'crowbar/database/server/v4addr'
+
 debs:
   ubuntu-12.04:
     repos:
