@@ -1,3 +1,4 @@
+# -*- encoding : utf-8 -*-
 def upgrade ta, td, a, d
   a['ldap'].delete('user_domain_id_attribute')
   a['ldap']['user_default_project_id_attribute'] = ''

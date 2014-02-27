@@ -1,3 +1,4 @@
+# -*- encoding : utf-8 -*-
 maintainer       "Dell, Inc."
 maintainer_email "crowbar@Dell.com"
 license          "Apache 2.0 License, Copyright (c) 2011 Dell Inc. - http://www.apache.org/licenses/LICENSE-2.0"

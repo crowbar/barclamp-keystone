@@ -1,3 +1,4 @@
+# -*- encoding : utf-8 -*-
 name "keystone-server"
 description "Keystone server"
 
