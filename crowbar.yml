@@ -40,6 +40,8 @@ roles:
   - name: keystone-server
     jig: chef-solo
     requires:
+      - crowbar-installed-node
+      - provisioner-server
       - openstack-base
       - database-server
     wants-attribs:
