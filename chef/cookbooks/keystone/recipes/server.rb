@@ -84,32 +84,11 @@ end
 # is ambiguous.
 bind_host = bind_admin_host
 
-cluster_vname = PacemakerHelper.cluster_vhostname(node)
-public_vhost  = "public.#{cluster_vname}.#{node[:domain]}"
-admin_vhost   = "admin.#{cluster_vname}.#{node[:domain]}"
-# If we needed the VIP addresses, this is how we'd get them:
-#
-# public_net_db = data_bag_item('crowbar', 'public_network')
-# admin_net_db  = data_bag_item('crowbar', 'admin_network')
-# public_ip     = public_net_db["allocated_by_name"][public_vhost]["address"]
-# admin_ip      = admin_net_db ["allocated_by_name"][admin_vhost]["address"]
-
 # Ideally this would be called admin_host, but that's already being
 # misleadingly used to store a value which actually represents the
 # service bind address.
-my_admin_host = ha_enabled ? admin_vhost : node[:fqdn]
-
-# For the public endpoint, we prefer the public name. If not set, then we
-# use the IP address except for SSL, where we always prefer a hostname
-# (for certificate validation).
-my_public_host = ha_enabled ? public_vhost : node[:crowbar][:public_name]
-if my_public_host.nil? or my_public_host.empty?
-  if node[:keystone][:api][:protocol] == "https"
-    my_public_host = 'public.'+node[:fqdn]
-  else
-    my_public_host = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "public").address
-  end
-end
+my_admin_host = CrowbarHelper.get_host_for_admin_url(node, ha_enabled)
+my_public_host = CrowbarHelper.get_host_for_public_url(node, node[:keystone][:api][:protocol] == "https", ha_enabled)
 
 # These are used in keystone.conf
 node[:keystone][:api][:public_URL] = \
@@ -129,6 +108,10 @@ node[:keystone][:api][:versioned_admin_URL] = \
 node[:keystone][:api][:versioned_internal_URL] = \
   KeystoneHelper.versioned_service_URL(node, my_admin_host,
                                        node[:keystone][:api][:service_port])
+
+# Other barclamps need to know the hostname to reach keystone
+node[:keystone][:api][:public_URL_host] = my_public_host
+node[:keystone][:api][:internal_URL_host] = my_admin_host
 
 if node[:keystone][:frontend] == 'uwsgi'
 
