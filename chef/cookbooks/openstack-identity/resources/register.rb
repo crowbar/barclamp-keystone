@@ -60,3 +60,9 @@ attribute :user_enabled, kind_of: BOOLEAN, default: true
 
 # Used by :create_role and :grant_role specific attributes
 attribute :role_name, kind_of: String
+
+#Used by create_ec2_credentials
+attribute :admin_tenant_name, kind_of: String
+attribute :admin_user, kind_of: String
+attribute :admin_pass, kind_of: String
+attribute :identity_endpoint, kind_of: String

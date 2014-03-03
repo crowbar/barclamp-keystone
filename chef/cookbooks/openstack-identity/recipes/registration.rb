@@ -134,6 +134,10 @@ node['openstack']['identity']['users'].each do |username, user_info|
     bootstrap_token bootstrap_token
     user_name username
     tenant_name user_info['default_tenant']
+    admin_tenant_name admin_tenant_name
+    admin_user admin_user
+    admin_pass admin_pass
+    identity_endpoint identity_endpoint.to_s
 
     action :create_ec2_credentials
   end
