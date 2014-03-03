@@ -347,6 +347,90 @@ unless node.platform == "suse"
   end
 end
 
+ruby_block "synchronize PKI keys" do
+  only_if { ha_enabled && (node[:keystone][:signing][:token_format] == "PKI" || node.platform == "suse") }
+  block do
+    ca = File.open("/etc/keystone/ssl/certs/ca.pem", "rb") {|io| io.read} rescue ""
+    signing_cert = File.open("/etc/keystone/ssl/certs/signing_cert.pem", "rb") {|io| io.read} rescue ""
+    signing_key = File.open("/etc/keystone/ssl/private/signing_key.pem", "rb") {|io| io.read} rescue ""
+
+    if node.roles.include? "pacemaker-cluster-founder"
+      node[:keystone][:pki] ||= {}
+      node[:keystone][:pki][:content] ||= {}
+
+      dirty = false
+
+      if node[:keystone][:pki][:content][:ca] != ca
+        node[:keystone][:pki][:content][:ca] = ca
+        dirty = true
+      end
+      if node[:keystone][:pki][:content][:signing_cert] != signing_cert
+        node[:keystone][:pki][:content][:signing_cert] = signing_cert
+        dirty = true
+      end
+      if node[:keystone][:pki][:content][:signing_key] != signing_key
+        node[:keystone][:pki][:content][:signing_key] = signing_key
+        dirty = true
+      end
+
+      node.save if dirty
+    else # Non founders
+      require 'timeout'
+
+      founder = nil
+
+      begin
+        Timeout.timeout(60) do
+          while true
+            founder = CrowbarPacemakerHelper.cluster_nodes(node, "pacemaker-cluster-founder").first
+
+            if !founder.nil? && !(founder[:keystone][:pki][:content][:signing_key] rescue nil).nil?
+              break
+            end
+
+            Chef::Log.debug("waiting for PKI certificates from cluster founder")
+            sleep(10)
+          end # while true
+        end # Timeout
+      rescue Timeout::Error
+        message = "PKI certificates from cluster founder not found!"
+        Chef::Log.fatal(message)
+        raise message
+      end
+
+      cluster_ca = founder[:keystone][:pki][:content][:ca]
+      cluster_signing_cert = founder[:keystone][:pki][:content][:signing_cert]
+      cluster_signing_key = founder[:keystone][:pki][:content][:signing_key]
+
+      # The files exist; we will keep ownership / permissions with
+      # the code below
+      dirty = false
+      if ca != cluster_ca
+        File.open("/etc/keystone/ssl/certs/ca.pem", 'w') {|f| f.write(cluster_ca) }
+        dirty = true
+      end
+      if signing_cert != cluster_signing_cert
+        File.open("/etc/keystone/ssl/certs/signing_cert.pem", 'w') {|f| f.write(cluster_signing_cert) }
+        dirty = true
+      end
+      if signing_key != cluster_signing_key
+        File.open("/etc/keystone/ssl/private/signing_key.pem", 'w') {|f| f.write(cluster_signing_key) }
+        dirty = true
+      end
+
+      if dirty
+        if node[:keystone][:frontend] == 'native'
+          resources(:service => "keystone").run_action(:restart)
+        elsif node[:keystone][:frontend] == 'apache'
+          resources(:service => "apache2").run_action(:restart)
+        elsif node[:keystone][:frontend] == 'uwsgi'
+          resources(:service => "keystone-uwsgi").run_action(:restart)
+        end
+      end
+    end # if founder / else
+  end # block
+end
+
 if node[:keystone][:api][:protocol] == 'https'
   if node[:keystone][:ssl][:generate_certs]
     package "openssl"
