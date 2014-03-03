@@ -4,6 +4,6 @@ module KeystoneHelper
   end
 
   def self.versioned_service_URL(node, host, port)
-    service_URL(node, host, port) + '/' + node[:keystone][:api][:version]
+    service_URL(node, host, port) + '/' + node[:keystone][:api][:version] + '/'
   end
 end
