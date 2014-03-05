@@ -114,7 +114,16 @@ elsif node[:keystone][:frontend]=='uwsgi'
       :protocol => :http,
       :user => node[:keystone][:user],
       :"buffer-size" => 65535,
-      :log => "/var/log/keystone/keystone.log"
+      :log => "/var/log/keystone/keystone.log",
+      :"http-keepalive" => true,
+      :"http-websockets" => true,
+      :"socket-timeout" => 60,
+      :"http-timeout" => 60,
+      :"cgi-timeout" => 60,
+      :"harakiri" => 60,
+      :"harakiri-verbose" => true,
+      :"route-if" => "startswith:${uwsgi[status]};20 addheader:Connection:Keep-alive",
+      :"route-if-not" => "startswith:${uwsgi[status]};20 addheader:Connection:close"
     })
     instances ([
       {:socket => "#{node[:keystone][:api][:api_host]}:#{node[:keystone][:api][:api_port]}", :env => "name=main"},
