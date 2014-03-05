@@ -36,13 +36,29 @@ end
 
 private
 
+def generate_ec2_creds(resource)
+  {
+      'OS_USERNAME' => resource.admin_user,
+      'OS_PASSWORD' => resource.admin_pass,
+      'OS_TENANT_NAME' => resource.admin_tenant_name,
+      'OS_AUTH_URL' => resource.identity_endpoint
+  }
+end
+
+
+private
+
 def identity_command(resource, cmd, args = {})
   keystonecmd = ['keystone'] << cmd
   args.each do |key, val|
     keystonecmd << "--#{key}" << val.to_s
   end
   Chef::Log.debug("Running identity command: #{keystonecmd}")
-  rc = shell_out(keystonecmd, env: generate_creds(resource))
+  if  cmd.include?  'ec2'
+    rc = shell_out(keystonecmd, env: generate_ec2_creds(resource))
+  else
+    rc = shell_out(keystonecmd, env: generate_creds(resource))
+  end
   fail "#{rc.stderr} (#{rc.exitstatus})" if rc.exitstatus != 0
   rc.stdout
 end
