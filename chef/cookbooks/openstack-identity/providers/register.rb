@@ -279,7 +279,7 @@ action :create_ec2_credentials do
     user_uuid = identity_uuid(new_resource, 'user', 'name',
                               new_resource.user_name,
                               'tenant-id' => tenant_uuid)
-    unless tenant_uuid
+    unless user_uuid
       Chef::Log.error("Unable to find user '#{new_resource.user_name}'")
       new_resource.updated_by_last_action(false)
       next

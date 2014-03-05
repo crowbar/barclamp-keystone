@@ -79,7 +79,7 @@ class BarclampKeystone::Server < BarclampChef::Role
                      "identity" =>
                       {
                               "admin_user" => keystone_admin_user_id,
-                              "monitoring" => keystone_monitoring_password
+                              "monitoring" => keystone_monitoring_user_id
                       },
                       "secrets" =>
                       {
