@@ -24,6 +24,19 @@ class KeystoneService < ServiceObject
     false
   end
 
+  class << self
+    def role_constraints
+      @role_constraints ||= begin
+        {
+          "keystone-server" => {
+            "unique" => false,
+            "count" => 1
+          }
+        }
+      end
+    end
+  end
+
   def proposal_dependencies(role)
     answer = []
     answer << { "barclamp" => "database", "inst" => role.default_attributes["keystone"]["database_instance"] }
