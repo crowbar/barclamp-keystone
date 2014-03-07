@@ -18,15 +18,6 @@
 #
 
 module KeystoneBarclampHelper
-  def keystone_role_contraints
-    {
-      "keystone-server" => {
-        "unique" => false,
-        "count" => 1
-      }
-    }
-  end
-
   def server_frontends_for_keystone(selected)
     options_for_select(
       [
