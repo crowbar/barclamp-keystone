@@ -26,14 +26,12 @@ class KeystoneService < ServiceObject
 
   class << self
     def role_constraints
-      @role_constraints ||= begin
-        {
-          "keystone-server" => {
-            "unique" => false,
-            "count" => 1
-          }
+      {
+        "keystone-server" => {
+          "unique" => false,
+          "count" => 1
         }
-      end
+      }
     end
   end
 
