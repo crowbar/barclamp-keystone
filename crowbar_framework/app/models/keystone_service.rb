@@ -13,7 +13,7 @@
 # limitations under the License. 
 # 
 
-class KeystoneService < ServiceObject
+class KeystoneService < PacemakerServiceObject
 
   def initialize(thelogger)
     super(thelogger)
@@ -29,7 +29,8 @@ class KeystoneService < ServiceObject
       {
         "keystone-server" => {
           "unique" => false,
-          "count" => 1
+          "count" => 1,
+          "cluster" => true
         }
       }
     end
@@ -61,7 +62,8 @@ class KeystoneService < ServiceObject
     end
 
 
-    base[:attributes][:keystone][:service][:token] = '%012d' % rand(1e12)
+    base["attributes"][@bc_name][:service][:token] = '%012d' % rand(1e12)
+    base["attributes"][@bc_name][:db][:password] = random_password
 
     base
   end
@@ -78,13 +80,25 @@ class KeystoneService < ServiceObject
 
   def apply_role_pre_chef_call(old_role, role, all_nodes)
     @logger.debug("Keystone apply_role_pre_chef_call: entering #{all_nodes.inspect}")
-    return if all_nodes.empty?
 
-    net_svc = NetworkService.new @logger
-    tnodes = role.override_attributes["keystone"]["elements"]["keystone-server"]
-    tnodes.each do |n|
-      net_svc.allocate_ip "default", "public", "host", n
-    end unless tnodes.nil?
+    server_elements, server_nodes, ha_enabled = role_expand_elements(role, "keystone-server")
+
+    vip_networks = ["admin", "public"]
+
+    dirty = false
+    dirty = prepare_role_for_ha_with_haproxy(role, ["keystone", "ha", "enabled"], ha_enabled, vip_networks)
+    role.save if dirty
+
+    unless all_nodes.empty? || server_elements.empty?
+      net_svc = NetworkService.new @logger
+      # All nodes must have a public IP, even if part of a cluster; otherwise
+      # the VIP can't be moved to the nodes
+      server_nodes.each do |node|
+        net_svc.allocate_ip "default", "public", "host", node
+      end
+
+      allocate_virtual_ips_for_any_cluster_in_networks_and_sync_dns(server_elements, vip_networks)
+    end
 
     @logger.debug("Keystone apply_role_pre_chef_call: leaving")
   end
