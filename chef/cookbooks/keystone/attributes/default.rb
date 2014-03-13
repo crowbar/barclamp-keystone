@@ -34,11 +34,11 @@ default[:keystone][:db][:user] = "keystone"
 default[:keystone][:db][:password] = "" # Set by Recipe
 
 default[:keystone][:api][:protocol] = "http"
-default[:keystone][:api][:service_port] = "5000"
-default[:keystone][:api][:admin_port] = 35357  #declared in resource as Integer
+default[:keystone][:api][:service_port] = 5000
+default[:keystone][:api][:admin_port] = 35357
 default[:keystone][:api][:admin_host] = "0.0.0.0"
-default[:keystone][:api][:api_port] = "35357"
 default[:keystone][:api][:api_host] = "0.0.0.0"
+default[:keystone][:api][:version] = "v2.0"
 
 default[:keystone][:identity][:driver] = "keystone.identity.backends.sql.Identity"
 default[:keystone][:assignment][:driver] = "keystone.assignment.backends.sql.Assignment"
@@ -138,3 +138,11 @@ default[:keystone][:ldap][:group_allow_delete] = true
 # default[:keystone][:ldap][:domain_allow_delete] = true
 # default[:keystone][:ldap][:domain_enabled_emulation] = false
 # default[:keystone][:ldap][:domain_enabled_emulation_dn] = ""
+
+default[:keystone][:ha][:enabled] = false
+# Ports to bind to when haproxy is used for the real ports
+default[:keystone][:ha][:ports][:service_port] = 5500
+default[:keystone][:ha][:ports][:admin_port] = 5501
+# Pacemaker bits
+default[:keystone][:ha][:agent] = "ocf:openstack:keystone"
+default[:keystone][:ha][:op][:monitor][:interval] = "10s"

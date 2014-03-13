@@ -4,8 +4,8 @@ WSGIDaemonProcess keystone user=keystone group=nogroup processes=<%= @processes 
 WSGIDaemonProcess keystone user=keystone group=nogroup processes=<%= @processes %> threads=<%= @threads %>
 <% end -%>
 
-Listen <%= @api_host %>:<%= @api_port %>
-<VirtualHost <%= @api_host %>:<%= @api_port %>>
+Listen <%= @bind_service_host %>:<%= @bind_service_port %>
+<VirtualHost <%= @bind_service_host %>:<%= @bind_service_port %>>
     AddDefaultCharset utf-8
     LogLevel warn
     ErrorLog ${APACHE_LOG_DIR}/keystone_error.log
@@ -14,8 +14,8 @@ Listen <%= @api_host %>:<%= @api_port %>
     WSGIProcessGroup keystone
 </VirtualHost>
 
-Listen <%= @admin_api_host %>:<%= @admin_api_port %>
-<VirtualHost <%= @admin_api_host %>:<%= @admin_api_port %>>
+Listen <%= @bind_admin_host %>:<%= @bind_admin_port %>
+<VirtualHost <%= @bind_admin_host %>:<%= @bind_admin_port %>>
     AddDefaultCharset utf-8
     LogLevel warn
     ErrorLog ${APACHE_LOG_DIR}/keystone_error.log

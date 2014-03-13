@@ -17,7 +17,6 @@
 # Creating virtualenv for @cookbook_name and install pfs_deps with pp
 #
 
-
 unless node[:keystone][:use_gitrepo]
 
   package "keystone" do
@@ -64,6 +63,56 @@ else
   end
 end
 
+ha_enabled = node[:keystone][:ha][:enabled]
+
+if ha_enabled
+  log "HA support for keystone is enabled"
+  admin_address = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
+  bind_admin_host = admin_address
+  bind_admin_port = node[:keystone][:ha][:ports][:admin_port]
+  bind_service_host = admin_address
+  bind_service_port = node[:keystone][:ha][:ports][:service_port]
+else
+  log "HA support for keystone is disabled"
+  bind_admin_host = node[:keystone][:api][:admin_host]
+  bind_admin_port = node[:keystone][:api][:admin_port]
+  bind_service_host = node[:keystone][:api][:api_host]
+  bind_service_port = node[:keystone][:api][:service_port]
+end
+
+# Ideally this would be called bind_host, not admin_host; the latter
+# is ambiguous.
+bind_host = bind_admin_host
+
+# Ideally this would be called admin_host, but that's already being
+# misleadingly used to store a value which actually represents the
+# service bind address.
+my_admin_host = CrowbarHelper.get_host_for_admin_url(node, ha_enabled)
+my_public_host = CrowbarHelper.get_host_for_public_url(node, node[:keystone][:api][:protocol] == "https", ha_enabled)
+
+# These are used in keystone.conf
+node[:keystone][:api][:public_URL] = \
+  KeystoneHelper.service_URL(node, my_public_host,
+                             node[:keystone][:api][:service_port])
+node[:keystone][:api][:admin_URL] = \
+  KeystoneHelper.service_URL(node, my_admin_host,
+                             node[:keystone][:api][:admin_port])
+
+# These URLs will be registered as endpoints in keystone's database
+node[:keystone][:api][:versioned_public_URL] = \
+  KeystoneHelper.versioned_service_URL(node, my_public_host,
+                                       node[:keystone][:api][:service_port])
+node[:keystone][:api][:versioned_admin_URL] = \
+  KeystoneHelper.versioned_service_URL(node, my_admin_host,
+                                       node[:keystone][:api][:admin_port])
+node[:keystone][:api][:versioned_internal_URL] = \
+  KeystoneHelper.versioned_service_URL(node, my_admin_host,
+                                       node[:keystone][:api][:service_port])
+
+# Other barclamps need to know the hostname to reach keystone
+node[:keystone][:api][:public_URL_host] = my_public_host
+node[:keystone][:api][:internal_URL_host] = my_admin_host
+
 if node[:keystone][:frontend] == 'uwsgi'
 
   service "keystone" do
@@ -97,8 +146,8 @@ if node[:keystone][:frontend] == 'uwsgi'
       :log => "/var/log/keystone/keystone.log"
     })
     instances ([
-      {:socket => "#{node[:keystone][:api][:api_host]}:#{node[:keystone][:api][:api_port]}", :env => "name=main"},
-      {:socket => "#{node[:keystone][:api][:admin_host]}:#{node[:keystone][:api][:admin_port]}", :env => "name=admin"}
+      {:socket => "#{bind_service_host}:#{bind_service_port}", :env => "name=main"},
+      {:socket => "#{bind_admin_host}:#{bind_admin_port}", :env => "name=admin"}
     ])
     service_name "keystone-uwsgi"
   end
@@ -159,10 +208,10 @@ elsif node[:keystone][:frontend] == 'apache'
     path "/etc/httpd/sites-available/keystone.conf" if %w(redhat centos).include?(node.platform)
     source "apache_keystone.conf.erb"
     variables(
-      :admin_api_port => node[:keystone][:api][:admin_port], # Auth port
-      :admin_api_host => node[:keystone][:api][:admin_host],
-      :api_port => node[:keystone][:api][:api_port], # public port
-      :api_host => node[:keystone][:api][:api_host],
+      :bind_admin_port => bind_admin_port, # Auth port
+      :bind_admin_host => bind_admin_host,
+      :bind_service_port => bind_service_port, # public port
+      :bind_service_host => bind_service_host,
       :processes => 3,
       :venv => node[:keystone][:use_virtualenv],
       :venv_path => venv_path,
@@ -193,10 +242,6 @@ db_provider = Chef::Recipe::Database::Util.get_database_provider(sql)
 db_user_provider = Chef::Recipe::Database::Util.get_user_provider(sql)
 privs = Chef::Recipe::Database::Util.get_default_priviledges(sql)
 url_scheme = backend_name
-
-::Chef::Recipe.send(:include, Opscode::OpenSSL::Password)
-node.set_unless['keystone']['db']['password'] = secure_password
-
 
 sql_address = Chef::Recipe::Barclamp::Inventory.get_network_by_type(sql, "admin").address if sql_address.nil?
 Chef::Log.info("Database server found at #{sql_address}")
@@ -234,19 +279,6 @@ database_user "grant database access for keystone database user" do
 end
 sql_connection = "#{url_scheme}://#{node[:keystone][:db][:user]}:#{node[:keystone][:db][:password]}@#{sql_address}/#{node[:keystone][:db][:database]}"
 
-my_admin_host = node[:fqdn]
-# For the public endpoint, we prefer the public name. If not set, then we
-# use the IP address except for SSL, where we always prefer a hostname
-# (for certificate validation).
-my_public_host = node[:crowbar][:public_name]
-if my_public_host.nil? or my_public_host.empty?
-  unless node[:keystone][:api][:protocol] == "https"
-    my_public_host = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "public").address
-  else
-    my_public_host = 'public.'+node[:fqdn]
-  end
-end
-
 template "/etc/keystone/keystone.conf" do
     source "keystone.conf.erb"
     owner node[:keystone][:user]
@@ -257,11 +289,11 @@ template "/etc/keystone/keystone.conf" do
       :debug => node[:keystone][:debug],
       :verbose => node[:keystone][:verbose],
       :admin_token => node[:keystone][:service][:token],
-      :bind_admin_api_host => node[:keystone][:api][:admin_host],
-      :admin_api_host => my_admin_host,
-      :admin_api_port => node[:keystone][:api][:admin_port], # Auth port
-      :api_host => my_public_host,
-      :api_port => node[:keystone][:api][:api_port], # public port
+      :bind_host => bind_host,
+      :bind_admin_port => bind_admin_port,
+      :bind_service_port => bind_service_port,
+      :public_endpoint => node[:keystone][:api][:public_URL],
+      :admin_endpoint => node[:keystone][:api][:admin_URL],
       :use_syslog => node[:keystone][:use_syslog],
       :signing_token_format => node[:keystone][:signing][:token_format],
       :signing_certfile => node[:keystone][:signing][:certfile],
@@ -313,6 +345,90 @@ unless node.platform == "suse"
       action :run
     end
   end
+end
+
+ruby_block "synchronize PKI keys" do
+  only_if { ha_enabled && (node[:keystone][:signing][:token_format] == "PKI" || node.platform == "suse") }
+  block do
+    ca = File.open("/etc/keystone/ssl/certs/ca.pem", "rb") {|io| io.read} rescue ""
+    signing_cert = File.open("/etc/keystone/ssl/certs/signing_cert.pem", "rb") {|io| io.read} rescue ""
+    signing_key = File.open("/etc/keystone/ssl/private/signing_key.pem", "rb") {|io| io.read} rescue ""
+
+    if node.roles.include? "pacemaker-cluster-founder"
+      node[:keystone][:pki] ||= {}
+      node[:keystone][:pki][:content] ||= {}
+
+      dirty = false
+
+      if node[:keystone][:pki][:content][:ca] != ca
+        node[:keystone][:pki][:content][:ca] = ca
+        dirty = true
+      end
+      if node[:keystone][:pki][:content][:signing_cert] != signing_cert
+        node[:keystone][:pki][:content][:signing_cert] = signing_cert
+        dirty = true
+      end
+      if node[:keystone][:pki][:content][:signing_key] != signing_key
+        node[:keystone][:pki][:content][:signing_key] = signing_key
+        dirty = true
+      end
+
+      node.save if dirty
+    else # Non founders
+      require 'timeout'
+
+      founder = nil
+
+      begin
+        Timeout.timeout(60) do
+          while true
+            founder = CrowbarPacemakerHelper.cluster_nodes(node, "pacemaker-cluster-founder").first
+
+            if !founder.nil? && !(founder[:keystone][:pki][:content][:signing_key] rescue nil).nil?
+              break
+            end
+
+            Chef::Log.debug("waiting for PKI certificates from cluster founder")
+            sleep(10)
+          end # while true
+        end # Timeout
+      rescue Timeout::Error
+        message = "PKI certificates from cluster founder not found!"
+        Chef::Log.fatal(message)
+        raise message
+      end
+
+      cluster_ca = founder[:keystone][:pki][:content][:ca]
+      cluster_signing_cert = founder[:keystone][:pki][:content][:signing_cert]
+      cluster_signing_key = founder[:keystone][:pki][:content][:signing_key]
+
+      # The files exist; we will keep ownership / permissions with
+      # the code below
+      dirty = false
+      if ca != cluster_ca
+        File.open("/etc/keystone/ssl/certs/ca.pem", 'w') {|f| f.write(cluster_ca) }
+        dirty = true
+      end
+      if signing_cert != cluster_signing_cert
+        File.open("/etc/keystone/ssl/certs/signing_cert.pem", 'w') {|f| f.write(cluster_signing_cert) }
+        dirty = true
+      end
+      if signing_key != cluster_signing_key
+        File.open("/etc/keystone/ssl/private/signing_key.pem", 'w') {|f| f.write(cluster_signing_key) }
+        dirty = true
+      end
+
+      if dirty
+        if node[:keystone][:frontend] == 'native'
+          resources(:service => "keystone").run_action(:restart)
+        elsif node[:keystone][:frontend] == 'apache'
+          resources(:service => "apache2").run_action(:restart)
+        elsif node[:keystone][:frontend] == 'uwsgi'
+          resources(:service => "keystone-uwsgi").run_action(:restart)
+        end
+      end
+    end # if founder / else
+  end # block
 end
 
 if node[:keystone][:api][:protocol] == 'https'
@@ -389,6 +505,10 @@ if node[:keystone][:frontend] == 'native'
     action [ :enable, :start ]
     subscribes :restart, resources(:template => "/etc/keystone/keystone.conf")
   end
+end
+
+if ha_enabled
+  include_recipe "keystone::ha"
 end
 
 # Silly wake-up call - this is a hack; we use retries because the server was
@@ -511,9 +631,9 @@ keystone_register "register keystone endpoint" do
   token node[:keystone][:service][:token]
   endpoint_service "keystone"
   endpoint_region "RegionOne"
-  endpoint_publicURL "#{node[:keystone][:api][:protocol]}://#{my_public_host}:#{node[:keystone][:api][:service_port]}/v2.0"
-  endpoint_adminURL "#{node[:keystone][:api][:protocol]}://#{my_admin_host}:#{node[:keystone][:api][:admin_port]}/v2.0"
-  endpoint_internalURL "#{node[:keystone][:api][:protocol]}://#{my_admin_host}:#{node[:keystone][:api][:service_port]}/v2.0"
+  endpoint_publicURL   node[:keystone][:api][:versioned_public_URL]
+  endpoint_adminURL    node[:keystone][:api][:versioned_admin_URL]
+  endpoint_internalURL node[:keystone][:api][:versioned_internal_URL]
 #  endpoint_global true
 #  endpoint_enabled true
   action :add_endpoint_template
