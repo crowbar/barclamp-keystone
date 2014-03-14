@@ -3,18 +3,18 @@
 admin_token = <%= @admin_token %>
 
 # The IP address of the network interface to listen on
-bind_host = <%= @bind_admin_api_host %>
+bind_host = <%= @bind_host %>
 
 # The port number which the public service listens on
-public_port = <%= @api_port %>
+public_port = <%= @bind_service_port %>
 
 # The port number which the public admin listens on
-admin_port = <%= @admin_api_port %>
+admin_port = <%= @bind_admin_port %>
 
 # The base endpoint URLs for keystone that are advertised to clients
 # (NOTE: this does NOT affect how keystone listens for connections)
-public_endpoint = <%= @protocol %>://<%= @api_host %>:<%= @api_port %>/
-admin_endpoint = <%= @protocol %>://<%= @admin_api_host %>:<%= @admin_api_port %>/
+public_endpoint = <%= @public_endpoint %>
+admin_endpoint = <%= @admin_endpoint %>
 
 # The port number which the OpenStack Compute service listens on
 # compute_port = 8774

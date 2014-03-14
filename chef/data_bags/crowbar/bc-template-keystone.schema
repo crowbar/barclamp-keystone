@@ -39,7 +39,6 @@
                     "api": { "type": "map", "required": true, "mapping": {
                       "protocol": { "type" : "str", "required" : true },
                       "service_port": { "type" : "int", "required" : true },
-                      "api_port": { "type" : "int", "required" : true },
                       "admin_port": { "type" : "int", "required" : true },
                       "api_host": { "type" : "str", "required" : true },
                       "admin_host": { "type" : "str", "required" : true }
