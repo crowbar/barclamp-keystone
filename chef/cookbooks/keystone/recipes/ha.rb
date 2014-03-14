@@ -29,42 +29,39 @@ haproxy_loadbalancer "keystone-admin" do
   action :nothing
 end.run_action(:create)
 
-# FIXME: re-enable pacemaker bits once we get clone support
-
 ## Pacemaker is only used with native frontend
-#if node[:keystone][:frontend] == 'native'
-#  proposal_name = node[:keystone][:config][:environment]
-#  monitor_creds = node[:keystone][:admin]
-#
-#  # Wait for all nodes to reach this point so we know that all nodes will have
-#  # all the required packages installed before we create the pacemaker
-#  # resources
-#  crowbar_pacemaker_sync_mark "sync-keystone_before_ha"
-#
-#  # Avoid races when creating pacemaker resources
-#  # (as a side-effect, if starting the service also does the db migration,
-#  # then we will avoid races there too as pacemaker will start the service).
-#  crowbar_pacemaker_sync_mark "wait-keystone_ha_resources"
-#
-#  service_name = proposal_name + '-service'
-#  pacemaker_primitive service_name do
-#    agent node[:keystone][:ha][:agent]
-#    params ({
-#      "os_auth_url"    => node[:keystone][:api][:versioned_admin_URL],
-#      "os_tenant_name" => monitor_creds[:tenant],
-#      "os_username"    => monitor_creds[:username],
-#      "os_password"    => monitor_creds[:password],
-#      "user"           => node[:keystone][:user]
-#    })
-#    op node[:keystone][:ha][:op]
-#    action [:create, :start]
-#  end
-#
-#  pacemaker_clone "clone-#{service_name}" do
-#    rsc service_name
-#    action :create
-#  end
-#
-#  crowbar_pacemaker_sync_mark "create-keystone_ha_resources"
-#
-#end
+if node[:keystone][:frontend] == 'native'
+  proposal_name = node[:keystone][:config][:environment]
+  monitor_creds = node[:keystone][:admin]
+
+  # Wait for all nodes to reach this point so we know that all nodes will have
+  # all the required packages installed before we create the pacemaker
+  # resources
+  crowbar_pacemaker_sync_mark "sync-keystone_before_ha"
+
+  # Avoid races when creating pacemaker resources
+  # (as a side-effect, if starting the service also does the db migration,
+  # then we will avoid races there too as pacemaker will start the service).
+  crowbar_pacemaker_sync_mark "wait-keystone_ha_resources"
+
+  service_name = proposal_name + '-service'
+  pacemaker_primitive service_name do
+    agent node[:keystone][:ha][:agent]
+    # params ({
+    #   "os_auth_url"    => node[:keystone][:api][:versioned_admin_URL],
+    #   "os_tenant_name" => monitor_creds[:tenant],
+    #   "os_username"    => monitor_creds[:username],
+    #   "os_password"    => monitor_creds[:password],
+    #   "user"           => node[:keystone][:user]
+    # })
+    op node[:keystone][:ha][:op]
+    action [:create, :start]
+  end
+
+  pacemaker_clone "clone-#{service_name}" do
+    rsc service_name
+    action :create
+  end
+
+  crowbar_pacemaker_sync_mark "create-keystone_ha_resources"
+end
