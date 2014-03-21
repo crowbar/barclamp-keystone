@@ -496,7 +496,7 @@ if node[:keystone][:frontend] == 'native'
     service_name node[:keystone][:service_name]
     supports :status => true, :start => true, :restart => true
     action [ :enable, :start ]
-    subscribes :restart, resources(:template => "/etc/keystone/keystone.conf")
+    subscribes :restart, resources(:template => "/etc/keystone/keystone.conf"), :immediately
   end
 end
 
