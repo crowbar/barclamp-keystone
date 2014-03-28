@@ -379,8 +379,6 @@ ruby_block "synchronize PKI keys for founder" do
   end
 end
 
-crowbar_pacemaker_sync_mark "create-keystone_pki"
-
 ruby_block "synchronize PKI keys for non-founder" do
   only_if { ha_enabled && !CrowbarPacemakerHelper.is_cluster_founder?(node) && (node[:keystone][:signing][:token_format] == "PKI" || node.platform == "suse") }
   block do
@@ -421,6 +419,8 @@ ruby_block "synchronize PKI keys for non-founder" do
     end
   end # block
 end
+
+crowbar_pacemaker_sync_mark "create-keystone_pki"
 
 if node[:keystone][:api][:protocol] == 'https'
   if node[:keystone][:ssl][:generate_certs]
