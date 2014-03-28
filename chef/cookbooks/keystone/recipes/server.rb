@@ -488,13 +488,14 @@ if node[:keystone][:api][:protocol] == 'https'
 end
 
 if node[:keystone][:frontend] == 'native'
-  # we define the service after we define all our config files, so that it's
-  # started only when all files are created
+  # We define the service after we define all our config files, so that it's
+  # started only when all files are created.
   service "keystone" do
     service_name node[:keystone][:service_name]
     supports :status => true, :start => true, :restart => true
     action [ :enable, :start ]
     subscribes :restart, resources(:template => "/etc/keystone/keystone.conf"), :immediately
+    provider Chef::Provider::CrowbarPacemakerService if ha_enabled
   end
 end
 

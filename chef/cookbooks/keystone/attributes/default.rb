@@ -148,5 +148,6 @@ default[:keystone][:ha][:enabled] = false
 default[:keystone][:ha][:ports][:service_port] = 5500
 default[:keystone][:ha][:ports][:admin_port] = 5501
 # Pacemaker bits
-default[:keystone][:ha][:agent] = "ocf:openstack:keystone"
+#default[:keystone][:ha][:agent] = "ocf:openstack:keystone"
+default[:keystone][:ha][:agent] = "lsb:openstack-keystone"
 default[:keystone][:ha][:op][:monitor][:interval] = "10s"
