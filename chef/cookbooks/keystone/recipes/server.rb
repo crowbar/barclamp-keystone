@@ -351,7 +351,7 @@ unless node.platform == "suse"
 end
 
 ruby_block "synchronize PKI keys for founder" do
-  only_if { ha_enabled && node.roles.include?("pacemaker-cluster-founder") && (node[:keystone][:signing][:token_format] == "PKI" || node.platform == "suse") }
+  only_if { ha_enabled && CrowbarPacemakerHelper.is_cluster_founder?(node) && (node[:keystone][:signing][:token_format] == "PKI" || node.platform == "suse") }
   block do
     ca = File.open("/etc/keystone/ssl/certs/ca.pem", "rb") {|io| io.read} rescue ""
     signing_cert = File.open("/etc/keystone/ssl/certs/signing_cert.pem", "rb") {|io| io.read} rescue ""
@@ -382,13 +382,13 @@ end
 crowbar_pacemaker_sync_mark "create-keystone_pki"
 
 ruby_block "synchronize PKI keys for non-founder" do
-  only_if { ha_enabled && !node.roles.include?("pacemaker-cluster-founder") && (node[:keystone][:signing][:token_format] == "PKI" || node.platform == "suse") }
+  only_if { ha_enabled && !CrowbarPacemakerHelper.is_cluster_founder?(node) && (node[:keystone][:signing][:token_format] == "PKI" || node.platform == "suse") }
   block do
     ca = File.open("/etc/keystone/ssl/certs/ca.pem", "rb") {|io| io.read} rescue ""
     signing_cert = File.open("/etc/keystone/ssl/certs/signing_cert.pem", "rb") {|io| io.read} rescue ""
     signing_key = File.open("/etc/keystone/ssl/private/signing_key.pem", "rb") {|io| io.read} rescue ""
 
-    founder = CrowbarPacemakerHelper.cluster_nodes(node, "pacemaker-cluster-founder").first
+    founder = CrowbarPacemakerHelper.cluster_founder(node)
 
     cluster_ca = founder[:keystone][:pki][:content][:ca]
     cluster_signing_cert = founder[:keystone][:pki][:content][:signing_cert]
