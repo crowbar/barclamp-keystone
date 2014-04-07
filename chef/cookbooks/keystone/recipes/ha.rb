@@ -55,12 +55,12 @@ if node[:keystone][:frontend] == 'native'
     #   "user"           => node[:keystone][:user]
     # })
     op node[:keystone][:ha][:op]
-    action [:create, :start]
+    action :create
   end
 
   pacemaker_clone "cl-#{service_name}" do
     rsc service_name
-    action :create
+    action [:create, :start]
   end
 
   crowbar_pacemaker_sync_mark "create-keystone_ha_resources"
