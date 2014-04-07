@@ -44,7 +44,7 @@ if node[:keystone][:frontend] == 'native'
   # then we will avoid races there too as pacemaker will start the service).
   crowbar_pacemaker_sync_mark "wait-keystone_ha_resources"
 
-  service_name = proposal_name + '-service'
+  service_name = "keystone"
   pacemaker_primitive service_name do
     agent node[:keystone][:ha][:agent]
     # params ({
@@ -58,7 +58,7 @@ if node[:keystone][:frontend] == 'native'
     action [:create, :start]
   end
 
-  pacemaker_clone "clone-#{service_name}" do
+  pacemaker_clone "cl-#{service_name}" do
     rsc service_name
     action :create
   end
