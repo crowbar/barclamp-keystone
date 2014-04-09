@@ -321,19 +321,26 @@ if %w(redhat centos).include?(node.platform)
   end
 end
 
+crowbar_pacemaker_sync_mark "wait-keystone_db_sync"
+
+execute "keystone-manage db_sync" do
+  command "keystone-manage db_sync"
+  user node[:keystone][:user]
+  group node[:keystone][:group]
+  action :run
+  # On SUSE, we only need this when HA is enabled as the init script is doing
+  # this (but that creates races with HA)
+  only_if { node.platform != "suse" || ha_enabled }
+end
+
+crowbar_pacemaker_sync_mark "create-keystone_db_sync"
+
 # Make sure the PKI bits are done on the founder first
 crowbar_pacemaker_sync_mark "wait-keystone_pki" do
   fatal true
 end
 
 unless node.platform == "suse"
-  execute "keystone-manage db_sync" do
-    command "keystone-manage db_sync"
-    user node[:keystone][:user]
-    group node[:keystone][:group]
-    action :run
-  end
-
   if node[:keystone][:signing][:token_format] == "PKI"
     execute "keystone-manage ssl_setup" do
       user node[:keystone][:user]
