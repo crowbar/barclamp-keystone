@@ -225,14 +225,7 @@ elsif node[:keystone][:frontend] == 'apache'
   end
 end
 
-env_filter = " AND database_config_environment:database-config-#{node[:keystone][:database_instance]}"
-sqls = search(:node, "roles:database-server#{env_filter}") || []
-if sqls.length > 0
-    sql = sqls[0]
-    sql = node if sql.name == node.name
-else
-    sql = node
-end
+sql = get_instance("roles:database-server")
 include_recipe "database::client"
 backend_name = Chef::Recipe::Database::Util.get_backend_name(sql)
 include_recipe "#{backend_name}::client"
@@ -243,12 +236,14 @@ db_user_provider = Chef::Recipe::Database::Util.get_user_provider(sql)
 privs = Chef::Recipe::Database::Util.get_default_priviledges(sql)
 url_scheme = backend_name
 
-sql_address = Chef::Recipe::Barclamp::Inventory.get_network_by_type(sql, "admin").address if sql_address.nil?
+sql_address = CrowbarDatabaseHelper.get_listen_address(sql)
 Chef::Log.info("Database server found at #{sql_address}")
 
 db_conn = { :host => sql_address,
             :username => "db_maker",
             :password => sql["database"][:db_maker_password] }
+
+crowbar_pacemaker_sync_mark "wait-keystone_database"
 
 # Create the Keystone Database
 database "create #{node[:keystone][:db][:database]} database" do
@@ -277,6 +272,9 @@ database_user "grant database access for keystone database user" do
     provider db_user_provider
     action :grant
 end
+
+crowbar_pacemaker_sync_mark "create-keystone_database"
+
 sql_connection = "#{url_scheme}://#{node[:keystone][:db][:user]}:#{node[:keystone][:db][:password]}@#{sql_address}/#{node[:keystone][:db][:database]}"
 
 template "/etc/keystone/keystone.conf" do
@@ -323,6 +321,11 @@ if %w(redhat centos).include?(node.platform)
   end
 end
 
+# Make sure the PKI bits are done on the founder first
+crowbar_pacemaker_sync_mark "wait-keystone_pki" do
+  fatal true
+end
+
 unless node.platform == "suse"
   execute "keystone-manage db_sync" do
     command "keystone-manage db_sync"
@@ -347,89 +350,77 @@ unless node.platform == "suse"
   end
 end
 
-ruby_block "synchronize PKI keys" do
-  only_if { ha_enabled && (node[:keystone][:signing][:token_format] == "PKI" || node.platform == "suse") }
+ruby_block "synchronize PKI keys for founder" do
+  only_if { ha_enabled && CrowbarPacemakerHelper.is_cluster_founder?(node) && (node[:keystone][:signing][:token_format] == "PKI" || node.platform == "suse") }
   block do
     ca = File.open("/etc/keystone/ssl/certs/ca.pem", "rb") {|io| io.read} rescue ""
     signing_cert = File.open("/etc/keystone/ssl/certs/signing_cert.pem", "rb") {|io| io.read} rescue ""
     signing_key = File.open("/etc/keystone/ssl/private/signing_key.pem", "rb") {|io| io.read} rescue ""
 
-    if node.roles.include? "pacemaker-cluster-founder"
-      node[:keystone][:pki] ||= {}
-      node[:keystone][:pki][:content] ||= {}
+    node[:keystone][:pki] ||= {}
+    node[:keystone][:pki][:content] ||= {}
 
-      dirty = false
+    dirty = false
 
-      if node[:keystone][:pki][:content][:ca] != ca
-        node[:keystone][:pki][:content][:ca] = ca
-        dirty = true
+    if node[:keystone][:pki][:content][:ca] != ca
+      node[:keystone][:pki][:content][:ca] = ca
+      dirty = true
+    end
+    if node[:keystone][:pki][:content][:signing_cert] != signing_cert
+      node[:keystone][:pki][:content][:signing_cert] = signing_cert
+      dirty = true
+    end
+    if node[:keystone][:pki][:content][:signing_key] != signing_key
+      node[:keystone][:pki][:content][:signing_key] = signing_key
+      dirty = true
+    end
+
+    node.save if dirty
+  end
+end
+
+ruby_block "synchronize PKI keys for non-founder" do
+  only_if { ha_enabled && !CrowbarPacemakerHelper.is_cluster_founder?(node) && (node[:keystone][:signing][:token_format] == "PKI" || node.platform == "suse") }
+  block do
+    ca = File.open("/etc/keystone/ssl/certs/ca.pem", "rb") {|io| io.read} rescue ""
+    signing_cert = File.open("/etc/keystone/ssl/certs/signing_cert.pem", "rb") {|io| io.read} rescue ""
+    signing_key = File.open("/etc/keystone/ssl/private/signing_key.pem", "rb") {|io| io.read} rescue ""
+
+    founder = CrowbarPacemakerHelper.cluster_founder(node)
+
+    cluster_ca = founder[:keystone][:pki][:content][:ca]
+    cluster_signing_cert = founder[:keystone][:pki][:content][:signing_cert]
+    cluster_signing_key = founder[:keystone][:pki][:content][:signing_key]
+
+    # The files exist; we will keep ownership / permissions with
+    # the code below
+    dirty = false
+    if ca != cluster_ca
+      File.open("/etc/keystone/ssl/certs/ca.pem", 'w') {|f| f.write(cluster_ca) }
+      dirty = true
+    end
+    if signing_cert != cluster_signing_cert
+      File.open("/etc/keystone/ssl/certs/signing_cert.pem", 'w') {|f| f.write(cluster_signing_cert) }
+      dirty = true
+    end
+    if signing_key != cluster_signing_key
+      File.open("/etc/keystone/ssl/private/signing_key.pem", 'w') {|f| f.write(cluster_signing_key) }
+      dirty = true
+    end
+
+    if dirty
+      if node[:keystone][:frontend] == 'native'
+        resources(:service => "keystone").run_action(:restart)
+      elsif node[:keystone][:frontend] == 'apache'
+        resources(:service => "apache2").run_action(:restart)
+      elsif node[:keystone][:frontend] == 'uwsgi'
+        resources(:service => "keystone-uwsgi").run_action(:restart)
       end
-      if node[:keystone][:pki][:content][:signing_cert] != signing_cert
-        node[:keystone][:pki][:content][:signing_cert] = signing_cert
-        dirty = true
-      end
-      if node[:keystone][:pki][:content][:signing_key] != signing_key
-        node[:keystone][:pki][:content][:signing_key] = signing_key
-        dirty = true
-      end
-
-      node.save if dirty
-    else # Non founders
-      require 'timeout'
-
-      founder = nil
-
-      begin
-        Timeout.timeout(60) do
-          while true
-            founder = CrowbarPacemakerHelper.cluster_nodes(node, "pacemaker-cluster-founder").first
-
-            if !founder.nil? && !(founder[:keystone][:pki][:content][:signing_key] rescue nil).nil?
-              break
-            end
-
-            Chef::Log.debug("waiting for PKI certificates from cluster founder")
-            sleep(10)
-          end # while true
-        end # Timeout
-      rescue Timeout::Error
-        message = "PKI certificates from cluster founder not found!"
-        Chef::Log.fatal(message)
-        raise message
-      end
-
-      cluster_ca = founder[:keystone][:pki][:content][:ca]
-      cluster_signing_cert = founder[:keystone][:pki][:content][:signing_cert]
-      cluster_signing_key = founder[:keystone][:pki][:content][:signing_key]
-
-      # The files exist; we will keep ownership / permissions with
-      # the code below
-      dirty = false
-      if ca != cluster_ca
-        File.open("/etc/keystone/ssl/certs/ca.pem", 'w') {|f| f.write(cluster_ca) }
-        dirty = true
-      end
-      if signing_cert != cluster_signing_cert
-        File.open("/etc/keystone/ssl/certs/signing_cert.pem", 'w') {|f| f.write(cluster_signing_cert) }
-        dirty = true
-      end
-      if signing_key != cluster_signing_key
-        File.open("/etc/keystone/ssl/private/signing_key.pem", 'w') {|f| f.write(cluster_signing_key) }
-        dirty = true
-      end
-
-      if dirty
-        if node[:keystone][:frontend] == 'native'
-          resources(:service => "keystone").run_action(:restart)
-        elsif node[:keystone][:frontend] == 'apache'
-          resources(:service => "apache2").run_action(:restart)
-        elsif node[:keystone][:frontend] == 'uwsgi'
-          resources(:service => "keystone-uwsgi").run_action(:restart)
-        end
-      end
-    end # if founder / else
+    end
   end # block
 end
+
+crowbar_pacemaker_sync_mark "create-keystone_pki"
 
 if node[:keystone][:api][:protocol] == 'https'
   if node[:keystone][:ssl][:generate_certs]
@@ -497,19 +488,22 @@ if node[:keystone][:api][:protocol] == 'https'
 end
 
 if node[:keystone][:frontend] == 'native'
-  # we define the service after we define all our config files, so that it's
-  # started only when all files are created
+  # We define the service after we define all our config files, so that it's
+  # started only when all files are created.
   service "keystone" do
     service_name node[:keystone][:service_name]
     supports :status => true, :start => true, :restart => true
     action [ :enable, :start ]
-    subscribes :restart, resources(:template => "/etc/keystone/keystone.conf")
+    subscribes :restart, resources(:template => "/etc/keystone/keystone.conf"), :immediately
+    provider Chef::Provider::CrowbarPacemakerService if ha_enabled
   end
 end
 
 if ha_enabled
   include_recipe "keystone::ha"
 end
+
+crowbar_pacemaker_sync_mark "wait-keystone_register"
 
 # Silly wake-up call - this is a hack; we use retries because the server was
 # just (re)started, and might not answer on the first try
@@ -638,6 +632,8 @@ keystone_register "register keystone endpoint" do
 #  endpoint_enabled true
   action :add_endpoint_template
 end
+
+crowbar_pacemaker_sync_mark "create-keystone_register"
 
 node[:keystone][:monitor] = {} if node[:keystone][:monitor].nil?
 node[:keystone][:monitor][:svcs] = [] if node[:keystone][:monitor][:svcs].nil?
