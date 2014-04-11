@@ -329,8 +329,22 @@ execute "keystone-manage db_sync" do
   group node[:keystone][:group]
   action :run
   # On SUSE, we only need this when HA is enabled as the init script is doing
-  # this (but that creates races with HA)
-  only_if { node.platform != "suse" || ha_enabled }
+  # this (but that creates races with HA); we only care about it for the
+  # initial sync, though, so we'll do that once, on the founder.
+  only_if { node.platform != "suse" || (!node[:keystone][:db_synced] && ha_enabled && CrowbarPacemakerHelper.is_cluster_founder?(node)) }
+end
+
+# We want to keep a note that we've done db_sync, so we don't do it again.
+# If we were doing that outside a ruby_block, we would add the note in the
+# compile phase, before the actual db_sync is done (which is wrong, since it
+# could possibly not be reached in case of errors).
+ruby_block "mark node for keystone db_sync" do
+  block do
+    node[:keystone][:db_synced] = true
+    node.save
+  end
+  action :nothing
+  subscribes :create, "execute[keystone-manage db_sync]", :immediately
 end
 
 crowbar_pacemaker_sync_mark "create-keystone_db_sync"
