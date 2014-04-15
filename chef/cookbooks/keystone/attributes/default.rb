@@ -16,14 +16,13 @@
 
 case node["platform"]
   when "centos", "redhat", "suse"
-    default[:keystone][:user] = "keystone"
-    default[:keystone][:group] = "keystone"
     default[:keystone][:service_name] = "openstack-keystone"
   else
-    default[:keystone][:user] = "keystone"
-    default[:keystone][:group] = "keystone"
     default[:keystone][:service_name] = "keystone"
 end
+
+default[:keystone][:user] = "keystone"
+default[:keystone][:group] = "keystone"
 
 default[:keystone][:debug] = false
 default[:keystone][:frontend] = 'apache'
