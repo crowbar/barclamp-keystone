@@ -624,7 +624,7 @@ keystone_register "register keystone endpoint" do
   port node[:keystone][:api][:admin_port]
   token node[:keystone][:service][:token]
   endpoint_service "keystone"
-  endpoint_region "RegionOne"
+  endpoint_region      node[:keystone][:api][:region]
   endpoint_publicURL   node[:keystone][:api][:versioned_public_URL]
   endpoint_adminURL    node[:keystone][:api][:versioned_admin_URL]
   endpoint_internalURL node[:keystone][:api][:versioned_internal_URL]

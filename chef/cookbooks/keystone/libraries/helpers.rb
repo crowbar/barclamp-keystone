@@ -20,6 +20,7 @@ module KeystoneHelper
       "public_auth_url" => node[:keystone][:api][:versioned_public_URL] || versioned_service_URL(node, public_host, node["keystone"]["api"]["service_port"]),
       "internal_auth_url" => node[:keystone][:api][:versioned_internal_URL] || versioned_service_URL(node, node[:fqdn], node["keystone"]["api"]["service_port"]),
       "use_ssl" => use_ssl,
+      "endpoint_region" => node["keystone"]["api"]["region"],
       "insecure" => use_ssl && node[:keystone][:ssl][:insecure],
       "protocol" => node["keystone"]["api"]["protocol"],
       "public_url_host" => node[:keystone][:api][:public_URL_host] || public_host,
