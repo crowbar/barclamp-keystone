@@ -321,19 +321,39 @@ if %w(redhat centos).include?(node.platform)
   end
 end
 
+crowbar_pacemaker_sync_mark "wait-keystone_db_sync"
+
+execute "keystone-manage db_sync" do
+  command "keystone-manage db_sync"
+  user node[:keystone][:user]
+  group node[:keystone][:group]
+  action :run
+  # We only do the sync the first time, and only if we're not doing HA or if we
+  # are the founder of the HA cluster (so that it's really only done once).
+  only_if { !node[:keystone][:db_synced] && (!ha_enabled || CrowbarPacemakerHelper.is_cluster_founder?(node)) }
+end
+
+# We want to keep a note that we've done db_sync, so we don't do it again.
+# If we were doing that outside a ruby_block, we would add the note in the
+# compile phase, before the actual db_sync is done (which is wrong, since it
+# could possibly not be reached in case of errors).
+ruby_block "mark node for keystone db_sync" do
+  block do
+    node[:keystone][:db_synced] = true
+    node.save
+  end
+  action :nothing
+  subscribes :create, "execute[keystone-manage db_sync]", :immediately
+end
+
+crowbar_pacemaker_sync_mark "create-keystone_db_sync"
+
 # Make sure the PKI bits are done on the founder first
 crowbar_pacemaker_sync_mark "wait-keystone_pki" do
   fatal true
 end
 
 unless node.platform == "suse"
-  execute "keystone-manage db_sync" do
-    command "keystone-manage db_sync"
-    user node[:keystone][:user]
-    group node[:keystone][:group]
-    action :run
-  end
-
   if node[:keystone][:signing][:token_format] == "PKI"
     execute "keystone-manage ssl_setup" do
       user node[:keystone][:user]
