@@ -1,3 +1,4 @@
+# -*- encoding : utf-8 -*-
 module KeystoneHelper
   def self.service_URL(node, host, port)
     "#{node[:keystone][:api][:protocol]}://#{host}:#{port}"
