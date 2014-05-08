@@ -7,7 +7,7 @@
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#   http://www.apache.org/licenses/LICENSE-2.0
+#  http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,35 +16,10 @@
 # limitations under the License.
 #
 
-module KeystoneBarclampHelper
-  def server_frontends_for_keystone(selected)
-    options_for_select(
-      [
-        ["native", "native"],
-        ["apache","apache"],
-        ["uwsgi","uwsgi"]
-      ],
-      selected.to_s
-    )
-  end
+module Crowbar
+  module Registry
+    class Keystone < Base
 
-  def token_formats_for_keystone(selected)
-    options_for_select(
-      [
-        ["PKI","PKI"], 
-        ["UUID", "UUID"]
-      ],
-      selected.to_s
-    )
-  end
-
-  def api_protocols_for_keystone(selected)
-    options_for_select(
-      [
-        ["HTTP","http"],
-        ["HTTPS", "https"]
-      ],
-      selected.to_s
-    )
+    end
   end
 end

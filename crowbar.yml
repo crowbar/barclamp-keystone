@@ -16,15 +16,15 @@
 #
 
 barclamp:
-  name: keystone
-  display: Keystone
+  name: 'keystone'
+  display: 'Keystone'
   description: 'OpenStack Identity: Authentication and authorization service'
   version: 0
-  requires:
-    - pacemaker
-    - database
   member:
-    - openstack
+    - 'crowbar'
+  requires:
+    - 'pacemaker'
+    - 'database'
 
 crowbar:
   layout: 1
@@ -36,27 +36,27 @@ crowbar:
 debs:
   ubuntu-12.04:
     repos:
-      - deb http://ubuntu-cloud.archive.canonical.com/ubuntu precise-updates/icehouse main
-      - deb http://ubuntu-cloud.archive.canonical.com/ubuntu precise-proposed/icehouse main
+      - 'deb http://ubuntu-cloud.archive.canonical.com/ubuntu precise-updates/icehouse main'
+      - 'deb http://ubuntu-cloud.archive.canonical.com/ubuntu precise-proposed/icehouse main'
   pkgs:
-    - keystone
-    - python-keystone
-    - apache2
-    - libapache2-mod-wsgi
+    - 'keystone'
+    - 'python-keystone'
+    - 'apache2'
+    - 'libapache2-mod-wsgi'
 
 rpms:
   centos-6.4:
     repos:
-      - bare openstack icehouse http://repos.fedorapeople.org/repos/openstack/openstack-icehouse/epel-6/
+      - 'bare openstack icehouse http://repos.fedorapeople.org/repos/openstack/openstack-icehouse/epel-6/'
   redhat-6.4:
     repos:
-      - bare openstack icehouse http://repos.fedorapeople.org/repos/openstack/openstack-icehouse/epel-6/
+      - 'bare openstack icehouse http://repos.fedorapeople.org/repos/openstack/openstack-icehouse/epel-6/'
   pkgs:
-    - openstack-keystone
-    - python-keystone
-    - python-keystoneclient
-    - httpd
-    - mod_wsgi
+    - 'openstack-keystone'
+    - 'python-keystone'
+    - 'python-keystoneclient'
+    - 'httpd'
+    - 'mod_wsgi'
 
 git_repo:
-   - keystone https://github.com/openstack/keystone.git stable/icehouse
+   - 'keystone https://github.com/openstack/keystone.git stable/icehouse'
