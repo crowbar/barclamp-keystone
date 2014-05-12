@@ -666,6 +666,6 @@ template "/root/.openrc" do
   group "root"
   mode 0600
   variables(
-    :keystone_settings => KeystoneHelper.keystone_settings(node)
+    :keystone_settings => KeystoneHelper.keystone_settings(node, @cookbook_name)
     )
 end
