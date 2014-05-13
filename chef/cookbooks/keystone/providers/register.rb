@@ -367,7 +367,13 @@ def _find_id(http, headers, svc_name, spath, dir, key = 'name', ret = 'id')
   # Construct the path
   my_service_id = nil
   error = false
-  resp, data = http.request_get(spath, headers)
+  begin
+    resp, data = http.request_get(spath, headers)
+  rescue
+    error = true
+    Chef::Log.error("_find_id call failed, during wakeup action")
+    return [ my_service_id, error ]
+  end
   if resp.is_a?(Net::HTTPOK)
     data = JSON.parse(data)
     data = data[dir]
