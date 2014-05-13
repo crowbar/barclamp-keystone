@@ -659,3 +659,13 @@ node[:keystone][:monitor] = {} if node[:keystone][:monitor].nil?
 node[:keystone][:monitor][:svcs] = [] if node[:keystone][:monitor][:svcs].nil?
 node[:keystone][:monitor][:svcs] << ["keystone"] if node[:keystone][:monitor][:svcs].empty?
 node.save
+
+template "/root/.openrc" do
+  source "openrc.erb"
+  owner "root"
+  group "root"
+  mode 0600
+  variables(
+    :keystone_settings => KeystoneHelper.keystone_settings(node)
+    )
+end
