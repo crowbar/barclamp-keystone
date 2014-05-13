@@ -1,3 +1,4 @@
+# -*- encoding : utf-8 -*-
 def upgrade ta, td, a, d
   # Old proposals had passwords created in the cookbook, so we need to migrate
   # them in the proposal and in the role. We use a class variable to set the

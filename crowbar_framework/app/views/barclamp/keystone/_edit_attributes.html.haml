@@ -1,13 +1,11 @@
-- register_javascripts "barclamps/keystone/form"
-
 = attributes_for @proposal do
   .panel-sub
-    = header @dep_raw, true
+    = header dep_raw, true
 
   .panel-body
     = instance_field :database
-    = select_field %w(frontend), :collection => :server_frontends_for_keystone
-    = select_field %w(signing token_format), :collection => :token_formats_for_keystone
+    = select_field %w(frontend), collection: :server_frontends_for_keystone
+    = select_field %w(signing token_format), collection: :token_formats_for_keystone
 
     %fieldset
       %legend
@@ -23,14 +21,14 @@
       %legend
         = t(".ssl_header")
 
-      = select_field %w(api protocol), :collection => :api_protocols_for_keystone, "data-sslprefix" => "ssl", "data-sslcert" => "/etc/keystone/ssl/certs/signing_cert.pem", "data-sslkey" => "/etc/keystone/ssl/private/signing_key.pem"
+      = select_field %w(api protocol), collection: :api_protocols_for_keystone, data: { sslprefix: "ssl", sslcert: "/etc/keystone/ssl/certs/signing_cert.pem", sslkey: "/etc/keystone/ssl/private/signing_key.pem" }
 
       #ssl_container
         = boolean_field %w(ssl generate_certs)
         = string_field %w(ssl certfile)
         = string_field %w(ssl keyfile)
         = boolean_field %w(ssl insecure)
-        = boolean_field %w(ssl cert_required), "data-enabler" => "true", "data-enabler-target" => "#ssl_ca_certs"
+        = boolean_field %w(ssl cert_required), data: { enabler: "true", enabler_target: "#ssl_ca_certs" }
         = string_field %w(ssl ca_certs)
 
     = render "barclamp/git/pfsdeps"
