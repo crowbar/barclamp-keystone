@@ -51,13 +51,12 @@ module KeystoneHelper
 
   private
   def self.search_for_keystone(node, cookbook_name)
-    nodes = []
-    Chef::Search::Query.new.search(:node, "roles:keystone-server AND keystone_config_environment:keystone-config-#{node[cookbook_name][:keystone_instance]}") { |o| nodes << o }
-    if nodes.empty?
-      keystone_node = node
-    else
-      keystone_node = nodes[0]
+    nodes, _, _ = Chef::Search::Query.new.search(:node, "roles:keystone-server AND keystone_config_environment:keystone-config-#{node[cookbook_name][:keystone_instance]}")
+    if nodes.first
+      keystone_node = nodes.first
       keystone_node = node if keystone_node.name == node.name
+    else
+      keystone_node = node
     end
     Chef::Log.info("Keystone server found at #{keystone_node[:keystone][:api][:internal_URL_host]}")
     return keystone_node
