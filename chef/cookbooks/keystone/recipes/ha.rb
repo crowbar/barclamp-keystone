@@ -48,7 +48,7 @@ if node[:keystone][:frontend] == 'native'
   pacemaker_primitive service_name do
     agent node[:keystone][:ha][:agent]
     # params ({
-    #   "os_auth_url"    => node[:keystone][:api][:versioned_admin_URL],
+    #   "os_auth_url"    => node[:keystone][:api][:admin_auth_URL],
     #   "os_tenant_name" => monitor_creds[:tenant],
     #   "os_username"    => monitor_creds[:username],
     #   "os_password"    => monitor_creds[:password],
