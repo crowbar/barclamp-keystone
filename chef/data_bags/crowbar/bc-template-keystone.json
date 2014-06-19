@@ -137,6 +137,7 @@
   "deployment": {
     "keystone": {
       "crowbar-revision": 0,
+      "crowbar-applied": false,
       "schema-revision": 5,
       "element_states": {
         "keystone-server": [ "readying", "ready", "applying" ]
