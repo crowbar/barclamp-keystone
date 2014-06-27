@@ -660,6 +660,11 @@ node[:keystone][:monitor][:svcs] = [] if node[:keystone][:monitor][:svcs].nil?
 node[:keystone][:monitor][:svcs] << ["keystone"] if node[:keystone][:monitor][:svcs].empty?
 node.save
 
+# Install openstackclient so that .openrc (created below) can be used
+package "python-openstackclient" do
+  action :install
+end
+
 template "/root/.openrc" do
   source "openrc.erb"
   owner "root"
