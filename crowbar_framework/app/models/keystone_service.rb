@@ -64,7 +64,7 @@ class KeystoneService < PacemakerServiceObject
     end
 
 
-    base["attributes"][@bc_name][:service][:token] = '%012d' % rand(1e12)
+    base["attributes"][@bc_name][:service][:token] = random_password
     base["attributes"][@bc_name][:db][:password] = random_password
 
     base
