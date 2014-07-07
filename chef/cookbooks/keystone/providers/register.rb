@@ -118,20 +118,20 @@ action :add_user do
     if resp.is_a?(Net::HTTPCreated) or resp.is_a?(Net::HTTPOK)
       Chef::Log.info "User '#{new_resource.user_name}' already exists. No password change."
       new_resource.updated_by_last_action(false)
+      data = JSON.parse(data)
+      token_id = data["access"]["token"]["id"]
+      resp, data = http.delete("#{path}/#{token_id}", headers)
+      if !resp.is_a?(Net::HTTPNoContent) and !resp.is_a?(Net::HTTPOK)
+        Chef::Log.warn("Failed to delete temporary token")
+        Chef::Log.warn("Response Code: #{resp.code}")
+        Chef::Log.warn("Response Message: #{resp.message}")
+      end
     else
       Chef::Log.info "User '#{new_resource.user_name}' already exists. Updating password."
       path = "/v2.0/users/#{item_id}/OS-KSADM/password"
       body = _build_user_password_object(item_id, new_resource.user_password)
       ret = _update_item(http, headers, path, body, new_resource.user_name)
       new_resource.updated_by_last_action(ret)
-    end
-    data = JSON.parse(data)
-    token_id = data["access"]["token"]["id"]
-    resp, data = http.delete("#{path}/#{token_id}", headers)
-    if !resp.is_a?(Net::HTTPNoContent) and !resp.is_a?(Net::HTTPOK)
-      Chef::Log.warn("Failed to delete temporary token")
-      Chef::Log.warn("Response Code: #{resp.code}")
-      Chef::Log.warn("Response Message: #{resp.message}")
     end
   end
 end
