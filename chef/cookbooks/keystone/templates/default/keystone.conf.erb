@@ -14,12 +14,12 @@ admin_token = <%= @admin_token %>
 # The IP Address of the network interface to for the public
 # service to listen on. (string value)
 # Deprecated group/name - [DEFAULT]/bind_host
-public_bind_host = <%= @bind_host %>
+public_bind_host = <%= @bind_service_host %>
 
 # The IP Address of the network interface to for the admin
 # service to listen on. (string value)
 # Deprecated group/name - [DEFAULT]/bind_host
-admin_bind_host = <%= @bind_host %>
+admin_bind_host = <%= @bind_admin_host %>
 
 # The port which the OpenStack Compute service listens on.
 # (integer value)
