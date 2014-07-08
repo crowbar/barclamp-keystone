@@ -1,4 +1,5 @@
 [DEFAULT]
+
 #
 # Options defined in keystone
 #
@@ -29,7 +30,7 @@ admin_bind_host = <%= @bind_host %>
 # value)
 admin_port = <%= @bind_admin_port %>
 
-# The port number which the public service listens on
+# The port number which the public service listens on.
 # (integer value)
 public_port = <%= @bind_service_port %>
 
@@ -116,6 +117,7 @@ admin_endpoint = <%= @admin_endpoint %>
 # restricted by use of an appropriate policy file (see
 # policy.v3cloudsample as an example). (boolean value)
 #domain_id_immutable=true
+
 
 #
 # Options defined in oslo.messaging
@@ -503,7 +505,7 @@ driver = <%= node[:keystone][:assignment][:driver] %>
 #
 
 # Default auth methods. (list value)
-#methods = external,password,token
+#methods=external,password,token
 
 # The password auth plugin module. (string value)
 #password=keystone.auth.plugins.password.Password
@@ -1082,6 +1084,17 @@ group_allow_delete = <%= node[:keystone][:ldap][:group_allow_delete] %>
 #tls_req_cert=demand
 
 
+[matchmaker_ring]
+
+#
+# Options defined in oslo.messaging
+#
+
+# Matchmaker ring file (JSON). (string value)
+# Deprecated group/name - [DEFAULT]/matchmaker_ringfile
+#ringfile=/etc/oslo/matchmaker_ring.json
+
+
 [memcache]
 
 #
@@ -1323,3 +1336,5 @@ provider = keystone.token.providers.uuid.Provider
 
 # Keystone Trust backend driver. (string value)
 driver = keystone.trust.backends.sql.Trust
+
+
