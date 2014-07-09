@@ -195,11 +195,11 @@ admin_endpoint = <%= @admin_endpoint %>
 
 # The RabbitMQ broker address where a single node is used.
 # (string value)
-#rabbit_host=localhost
+rabbit_host=<%= @rabbit_settings[:address] %>
 
 # The RabbitMQ broker port where a single node is used.
 # (integer value)
-#rabbit_port=5672
+<%= "rabbit_port=#{@rabbit_settings[:port]}" unless @rabbit_settings[:port].nil? %>
 
 # RabbitMQ HA cluster host:port pairs. (list value)
 #rabbit_hosts=$rabbit_host:$rabbit_port
@@ -208,16 +208,16 @@ admin_endpoint = <%= @admin_endpoint %>
 #rabbit_use_ssl=false
 
 # The RabbitMQ userid. (string value)
-#rabbit_userid=guest
+rabbit_userid=<%= @rabbit_settings[:user] %>
 
 # The RabbitMQ password. (string value)
-#rabbit_password=guest
+rabbit_password=<%= @rabbit_settings[:password] %>
 
 # the RabbitMQ login method (string value)
 #rabbit_login_method=AMQPLAIN
 
 # The RabbitMQ virtual host. (string value)
-#rabbit_virtual_host=/
+rabbit_virtual_host=<%= @rabbit_settings[:vhost] %>
 
 # How frequently to retry connecting with RabbitMQ. (integer
 # value)
