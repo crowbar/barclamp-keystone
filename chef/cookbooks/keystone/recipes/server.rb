@@ -80,10 +80,6 @@ else
   bind_service_port = node[:keystone][:api][:service_port]
 end
 
-# Ideally this would be called bind_host, not admin_host; the latter
-# is ambiguous.
-bind_host = bind_admin_host
-
 # Ideally this would be called admin_host, but that's already being
 # misleadingly used to store a value which actually represents the
 # service bind address.
@@ -287,7 +283,8 @@ template "/etc/keystone/keystone.conf" do
       :debug => node[:keystone][:debug],
       :verbose => node[:keystone][:verbose],
       :admin_token => node[:keystone][:service][:token],
-      :bind_host => bind_host,
+      :bind_admin_host => bind_admin_host,
+      :bind_service_host => bind_service_host,
       :bind_admin_port => bind_admin_port,
       :bind_service_port => bind_service_port,
       :public_endpoint => node[:keystone][:api][:public_URL],
