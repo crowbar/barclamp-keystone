@@ -273,6 +273,16 @@ crowbar_pacemaker_sync_mark "create-keystone_database"
 
 sql_connection = "#{url_scheme}://#{node[:keystone][:db][:user]}:#{node[:keystone][:db][:password]}@#{sql_address}/#{node[:keystone][:db][:database]}"
 
+rabbit = get_instance('roles:rabbitmq-server')
+Chef::Log.info("Rabbit server found at #{rabbit[:rabbitmq][:address]}")
+rabbit_settings = {
+  :address => rabbit[:rabbitmq][:address],
+  :port => rabbit[:rabbitmq][:port],
+  :user => rabbit[:rabbitmq][:user],
+  :password => rabbit[:rabbitmq][:password],
+  :vhost => rabbit[:rabbitmq][:vhost]
+}
+
 template "/etc/keystone/keystone.conf" do
     source "keystone.conf.erb"
     owner node[:keystone][:user]
@@ -300,7 +310,8 @@ template "/etc/keystone/keystone.conf" do
       :ssl_certfile => node[:keystone][:ssl][:certfile],
       :ssl_keyfile => node[:keystone][:ssl][:keyfile],
       :ssl_cert_required => node[:keystone][:ssl][:cert_required],
-      :ssl_ca_certs => node[:keystone][:ssl][:ca_certs]
+      :ssl_ca_certs => node[:keystone][:ssl][:ca_certs],
+      :rabbit_settings => rabbit_settings
     )
     if node[:keystone][:frontend] == 'apache'
       notifies :restart, resources(:service => "apache2"), :immediately

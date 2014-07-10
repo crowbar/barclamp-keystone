@@ -23,14 +23,15 @@ barclamp:
   requires:
     - pacemaker
     - database
+    - rabbitmq
   member:
     - openstack
 
 crowbar:
   layout: 1
-  order: 75
-  run_order: 75
-  chef_order: 75
+  order: 78
+  run_order: 78
+  chef_order: 78
   proposal_schema_version: 3
 
 debs:
