@@ -90,6 +90,7 @@ my_public_host = CrowbarHelper.get_host_for_public_url(node, node[:keystone][:ap
 node[:keystone][:api][:public_URL] = \
   KeystoneHelper.service_URL(node, my_public_host,
                              node[:keystone][:api][:service_port])
+# This is also used for admin requests of keystoneclient
 node[:keystone][:api][:admin_URL] = \
   KeystoneHelper.service_URL(node, my_admin_host,
                              node[:keystone][:api][:admin_port])
