@@ -21,6 +21,7 @@ en:
       edit_attributes:
         frontend: 'Frontend'
         database_instance: 'Database Instance'
+        rabbitmq_instance: 'RabbitMQ'
         signing:
           token_format: 'Algorithm for Token Generation'
         default_credentials: 'Default Credentials'

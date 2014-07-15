@@ -20,6 +20,7 @@
       ],
       "use_syslog": false,
       "database_instance": "none",
+      "rabbitmq_instance": "none",
       "db": {
         "database": "keystone",
         "user": "keystone"
@@ -138,7 +139,7 @@
     "keystone": {
       "crowbar-revision": 0,
       "crowbar-applied": false,
-      "schema-revision": 5,
+      "schema-revision": 10,
       "element_states": {
         "keystone-server": [ "readying", "ready", "applying" ]
       },
