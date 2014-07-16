@@ -20,6 +20,7 @@
                     "pfs_deps": { "type": "seq", "required": true, "sequence": [ { "type": "str" } ] },
                     "use_syslog": { "type": "bool", "required": true },
                     "database_instance": { "type": "str", "required": true },
+                    "rabbitmq_instance": { "type": "str", "required": true },
                     "db": { "type": "map", "required": true, "mapping": {
                       "database": { "type" : "str", "required" : true },
                       "user": { "type" : "str", "required" : true },

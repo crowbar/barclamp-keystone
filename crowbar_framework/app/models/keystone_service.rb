@@ -41,6 +41,7 @@ class KeystoneService < PacemakerServiceObject
   def proposal_dependencies(role)
     answer = []
     answer << { "barclamp" => "database", "inst" => role.default_attributes["keystone"]["database_instance"] }
+    answer << { "barclamp" => "rabbitmq", "inst" => role.default_attributes["keystone"]["rabbitmq_instance"] }
     if role.default_attributes[@bc_name]["use_gitrepo"]
       answer << { "barclamp" => "git", "inst" => role.default_attributes[@bc_name]["git_instance"] }
     end
@@ -55,6 +56,7 @@ class KeystoneService < PacemakerServiceObject
 
     base["attributes"][@bc_name]["git_instance"] = find_dep_proposal("git", true)
     base["attributes"][@bc_name]["database_instance"] = find_dep_proposal("database")
+    base["attributes"][@bc_name]["rabbitmq_instance"] = find_dep_proposal("rabbitmq")
 
     if nodes.size >= 1
       controller = nodes.find { |n| n.intended_role == "controller" } || nodes.first
