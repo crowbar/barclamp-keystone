@@ -379,8 +379,9 @@ unless node.platform == "suse"
   end
 end
 
-ruby_block "synchronize PKI keys for founder" do
-  only_if { ha_enabled && CrowbarPacemakerHelper.is_cluster_founder?(node) && (node[:keystone][:signing][:token_format] == "PKI" || node.platform == "suse") }
+ruby_block "synchronize PKI keys for founder and remember them for non-HA case" do
+  only_if { (!ha_enabled || (ha_enabled && CrowbarPacemakerHelper.is_cluster_founder?(node))) &&
+            (node[:keystone][:signing][:token_format] == "PKI" || node.platform == "suse") }
   block do
     ca = File.open("/etc/keystone/ssl/certs/ca.pem", "rb") {|io| io.read} rescue ""
     signing_cert = File.open("/etc/keystone/ssl/certs/signing_cert.pem", "rb") {|io| io.read} rescue ""
