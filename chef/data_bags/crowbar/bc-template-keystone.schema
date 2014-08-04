@@ -90,7 +90,7 @@
                       "user_pass_attribute": { "type": "str" },
                       "user_enabled_attribute": { "type": "str" },
                       "user_enabled_mask": { "type": "int" },
-                      "user_enabled_default": { "type": "bool" },
+                      "user_enabled_default": { "type": "str" },
                       "user_attribute_ignore": { "type": "str" },
                       "user_default_project_id_attribute": { "type": "str" },
                       "user_allow_create": { "type": "bool" },
