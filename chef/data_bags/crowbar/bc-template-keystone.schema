@@ -132,7 +132,11 @@
                       "group_attribute_ignore": { "type": "str" },
                       "group_allow_create": { "type": "bool" },
                       "group_allow_update": { "type": "bool" },
-                      "group_allow_delete": { "type": "bool" }
+                      "group_allow_delete": { "type": "bool" },
+                      "tls_cacertfile": { "type": "str" },
+                      "tls_cacertdir": { "type": "str" },
+                      "use_tls": { "type": "bool" },
+                      "tls_req_cert": { "type": "str" }
                     }}
               }}
      }},

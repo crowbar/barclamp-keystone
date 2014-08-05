@@ -1069,19 +1069,19 @@ group_allow_delete = <%= node[:keystone][:ldap][:group_allow_delete] %>
 
 # CA certificate file path for communicating with LDAP
 # servers. (string value)
-#tls_cacertfile=<None>
+tls_cacertfile = <%= node[:keystone][:ldap][:tls_cacertfile] %>
 
 # CA certificate directory path for communicating with LDAP
 # servers. (string value)
-#tls_cacertdir=<None>
+tls_cacertdir = <%= node[:keystone][:ldap][:tls_cacertdir] %>
 
 # Enable TLS for communicating with LDAP servers. (boolean
 # value)
-#use_tls=false
+use_tls = <%= node[:keystone][:ldap][:use_tls] %>
 
 # valid options for tls_req_cert are demand, never, and allow.
 # (string value)
-#tls_req_cert=demand
+tls_req_cert = <%= node[:keystone][:ldap][:tls_req_cert] %>
 
 
 [matchmaker_ring]
