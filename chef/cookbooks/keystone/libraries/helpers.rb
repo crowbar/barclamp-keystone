@@ -50,7 +50,7 @@ module KeystoneHelper
 
   private
   def self.search_for_keystone(node, cookbook_name)
-    instance = node[cookbook_name][:keystone_instance]
+    instance = node[cookbook_name][:keystone_instance] || "default"
 
     if @keystone_node && @keystone_node.include?(instance)
       Chef::Log.info("Keystone server found at #{@keystone_node[instance][:keystone][:api][:internal_URL_host]} [cached]")
