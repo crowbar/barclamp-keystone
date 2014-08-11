@@ -222,67 +222,44 @@ elsif node[:keystone][:frontend] == 'apache'
   end
 end
 
-sql = get_instance("roles:database-server")
+db_settings = fetch_database_settings
 include_recipe "database::client"
-backend_name = Chef::Recipe::Database::Util.get_backend_name(sql)
-include_recipe "#{backend_name}::client"
-include_recipe "#{backend_name}::python-client"
-
-db_provider = Chef::Recipe::Database::Util.get_database_provider(sql)
-db_user_provider = Chef::Recipe::Database::Util.get_user_provider(sql)
-privs = Chef::Recipe::Database::Util.get_default_priviledges(sql)
-url_scheme = backend_name
-
-sql_address = CrowbarDatabaseHelper.get_listen_address(sql)
-Chef::Log.info("Database server found at #{sql_address}")
-
-db_conn = { :host => sql_address,
-            :username => "db_maker",
-            :password => sql["database"][:db_maker_password] }
+include_recipe "#{db_settings[:backend_name]}::client"
+include_recipe "#{db_settings[:backend_name]}::python-client"
 
 crowbar_pacemaker_sync_mark "wait-keystone_database"
 
 # Create the Keystone Database
 database "create #{node[:keystone][:db][:database]} database" do
-    connection db_conn
+    connection db_settings[:connection]
     database_name node[:keystone][:db][:database]
-    provider db_provider
+    provider db_settings[:provider]
     action :create
 end
 
 database_user "create keystone database user" do
-    connection db_conn
+    connection db_settings[:connection]
     username node[:keystone][:db][:user]
     password node[:keystone][:db][:password]
     host '%'
-    provider db_user_provider
+    provider db_settings[:user_provider]
     action :create
 end
 
 database_user "grant database access for keystone database user" do
-    connection db_conn
+    connection db_settings[:connection]
     username node[:keystone][:db][:user]
     password node[:keystone][:db][:password]
     database_name node[:keystone][:db][:database]
     host '%'
-    privileges privs
-    provider db_user_provider
+    privileges db_settings[:privs]
+    provider db_settings[:user_provider]
     action :grant
 end
 
 crowbar_pacemaker_sync_mark "create-keystone_database"
 
-sql_connection = "#{url_scheme}://#{node[:keystone][:db][:user]}:#{node[:keystone][:db][:password]}@#{sql_address}/#{node[:keystone][:db][:database]}"
-
-rabbit = get_instance('roles:rabbitmq-server')
-Chef::Log.info("Rabbit server found at #{rabbit[:rabbitmq][:address]}")
-rabbit_settings = {
-  :address => rabbit[:rabbitmq][:address],
-  :port => rabbit[:rabbitmq][:port],
-  :user => rabbit[:rabbitmq][:user],
-  :password => rabbit[:rabbitmq][:password],
-  :vhost => rabbit[:rabbitmq][:vhost]
-}
+sql_connection = "#{db_settings[:url_scheme]}://#{node[:keystone][:db][:user]}:#{node[:keystone][:db][:password]}@#{db_settings[:address]}/#{node[:keystone][:db][:database]}"
 
 template "/etc/keystone/keystone.conf" do
     source "keystone.conf.erb"
@@ -312,7 +289,7 @@ template "/etc/keystone/keystone.conf" do
       :ssl_keyfile => node[:keystone][:ssl][:keyfile],
       :ssl_cert_required => node[:keystone][:ssl][:cert_required],
       :ssl_ca_certs => node[:keystone][:ssl][:ca_certs],
-      :rabbit_settings => rabbit_settings
+      :rabbit_settings => fetch_rabbitmq_settings
     )
     if node[:keystone][:frontend] == 'apache'
       notifies :restart, resources(:service => "apache2"), :immediately
