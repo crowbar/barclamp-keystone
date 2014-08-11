@@ -8,12 +8,12 @@ module KeystoneHelper
   end
 
   def self.keystone_settings(current_node, cookbook_name)
-    node = search_for_keystone(current_node, cookbook_name)
-
     # cache the result for each cookbook in an instance variable hash
     if @keystone_settings && @keystone_settings.include?(cookbook_name)
       return @keystone_settings[cookbook_name]
     end
+
+    node = search_for_keystone(current_node, cookbook_name)
 
     use_ssl = node["keystone"]["api"]["protocol"] == "https"
     if node[:keystone][:api][:versioned_public_URL].nil? || node[:keystone][:api][:public_URL_host].nil?
