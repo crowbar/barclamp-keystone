@@ -119,7 +119,8 @@ if node[:keystone][:frontend] == 'uwsgi'
   end
 
   directory "/usr/lib/cgi-bin/keystone/" do
-    owner node[:keystone][:user]
+    owner "root"
+    group "root"
     mode 0755
     action :create
     recursive true
@@ -173,7 +174,8 @@ elsif node[:keystone][:frontend] == 'apache'
 
 
   directory "/usr/lib/cgi-bin/keystone/" do
-    owner node[:keystone][:user]
+    owner "root"
+    group "root"
     mode 0755
     action :create
     recursive true
@@ -263,7 +265,8 @@ sql_connection = "#{db_settings[:url_scheme]}://#{node[:keystone][:db][:user]}:#
 
 template "/etc/keystone/keystone.conf" do
     source "keystone.conf.erb"
-    owner node[:keystone][:user]
+    owner "root"
+    group node[:keystone][:group]
     mode 0640
     variables(
       :sql_connection => sql_connection,
@@ -302,8 +305,9 @@ if %w(redhat centos).include?(node.platform)
   # Permissions for /etc/keystone are wrong in the RDO repo
   directory "/etc/keystone" do
     action :create
-    owner node[:keystone][:user]
+    owner "root"
     group node[:keystone][:group]
+    mode 0750
   end
 end
 
