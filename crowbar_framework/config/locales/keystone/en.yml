@@ -35,6 +35,7 @@ en:
         ssl_header: 'SSL Support'
         api:
           protocol: 'Protocol'
+          region: 'Region name'
         ssl:
           generate_certs: 'Generate (self-signed) certificates (implies insecure)'
           certfile: 'SSL Certificate File'
