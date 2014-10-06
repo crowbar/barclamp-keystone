@@ -502,7 +502,8 @@ end
 def endpoint_needs_update(endpoint, new_resource)
   if endpoint["publicurl"] == new_resource.endpoint_publicURL and
         endpoint["adminurl"] == new_resource.endpoint_adminURL and
-        endpoint["internalurl"] == new_resource.endpoint_internalURL
+        endpoint["internalurl"] == new_resource.endpoint_internalURL and
+        endpoint["region"] == new_resource.endpoint_region
     return false
   else
     return true

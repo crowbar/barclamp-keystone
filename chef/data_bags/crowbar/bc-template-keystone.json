@@ -41,7 +41,8 @@
         "service_port": 5000,
         "api_host": "0.0.0.0",
         "admin_port": 35357,
-        "admin_host": "0.0.0.0"
+        "admin_host": "0.0.0.0",
+        "region": "RegionOne"
       },
       "admin": {
         "tenant": "admin",
@@ -143,7 +144,7 @@
     "keystone": {
       "crowbar-revision": 0,
       "crowbar-applied": false,
-      "schema-revision": 12,
+      "schema-revision": 20,
       "element_states": {
         "keystone-server": [ "readying", "ready", "applying" ]
       },
