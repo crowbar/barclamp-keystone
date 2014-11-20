@@ -124,21 +124,6 @@ default[:keystone][:ldap][:group_allow_create] = true
 default[:keystone][:ldap][:group_allow_update] = true
 default[:keystone][:ldap][:group_allow_delete] = true
 
-# default[:keystone][:ldap][:domain_tree_dn] = ""
-# default[:keystone][:ldap][:domain_filter] = ""
-# default[:keystone][:ldap][:domain_objectclass] = 'groupOfNames'
-# default[:keystone][:ldap][:domain_id_attribute] = 'cn'
-# default[:keystone][:ldap][:domain_name_attribute] = 'ou'
-# default[:keystone][:ldap][:domain_member_attribute] = 'member'
-# default[:keystone][:ldap][:domain_desc_attribute] = 'description'
-# default[:keystone][:ldap][:domain_enabled_attribute] = 'enabled'
-# default[:keystone][:ldap][:domain_attribute_ignore] = ''
-# default[:keystone][:ldap][:domain_allow_create] = true
-# default[:keystone][:ldap][:domain_allow_update] = true
-# default[:keystone][:ldap][:domain_allow_delete] = true
-# default[:keystone][:ldap][:domain_enabled_emulation] = false
-# default[:keystone][:ldap][:domain_enabled_emulation_dn] = ""
-
 default[:keystone][:ha][:enabled] = false
 # Ports to bind to when haproxy is used for the real ports
 default[:keystone][:ha][:ports][:service_port] = 5500
