@@ -934,60 +934,60 @@ user_enabled_emulation_dn = <%= node[:keystone][:ldap][:user_enabled_emulation_d
 #user_additional_attribute_mapping=
 
 # Search base for projects (string value)
-tenant_tree_dn = <%= node[:keystone][:ldap][:tenant_tree_dn] %>
+project_tree_dn = <%= node[:keystone][:ldap][:project_tree_dn] %>
 
 # LDAP search filter for projects. (string value)
-tenant_filter = <%= node[:keystone][:ldap][:tenant_filter] %>
+project_filter = <%= node[:keystone][:ldap][:project_filter] %>
 
-# LDAP objectClass for projects. (string value)
-tenant_objectclass = <%= node[:keystone][:ldap][:tenant_objectclass] %>
+# LDAP objectclass for projects. (string value)
+project_objectclass = <%= node[:keystone][:ldap][:project_objectclass] %>
 
 # LDAP attribute mapped to project id. (string value)
-tenant_id_attribute = <%= node[:keystone][:ldap][:tenant_id_attribute] %>
+project_id_attribute = <%= node[:keystone][:ldap][:project_id_attribute] %>
 
 # LDAP attribute mapped to project membership for user.
 # (string value)
-tenant_member_attribute = <%= node[:keystone][:ldap][:tenant_member_attribute] %>
+project_member_attribute = <%= node[:keystone][:ldap][:project_member_attribute] %>
 
 # LDAP attribute mapped to project name. (string value)
-tenant_name_attribute = <%= node[:keystone][:ldap][:tenant_name_attribute] %>
+project_name_attribute = <%= node[:keystone][:ldap][:project_name_attribute] %>
 
 # LDAP attribute mapped to project description. (string value)
-tenant_desc_attribute = <%= node[:keystone][:ldap][:tenant_desc_attribute] %>
+project_desc_attribute = <%= node[:keystone][:ldap][:project_desc_attribute] %>
 
 # LDAP attribute mapped to project enabled. (string value)
-tenant_enabled_attribute = <%= node[:keystone][:ldap][:tenant_enabled_attribute] %>
+project_enabled_attribute = <%= node[:keystone][:ldap][:project_enabled_attribute] %>
 
 # LDAP attribute mapped to project domain_id. (string value)
-tenant_domain_id_attribute = <%= node[:keystone][:ldap][:tenant_domain_id_attribute] %>
+project_domain_id_attribute = <%= node[:keystone][:ldap][:project_domain_id_attribute] %>
 
 # List of attributes stripped off the project on update. (list
 # value)
-tenant_attribute_ignore = <%= node[:keystone][:ldap][:tenant_attribute_ignore] %>
+project_attribute_ignore = <%= node[:keystone][:ldap][:project_attribute_ignore] %>
 
-# Allow tenant creation in LDAP backend. (boolean value)
-tenant_allow_create = <%= node[:keystone][:ldap][:tenant_allow_create] %>
+# Allow project creation in LDAP backend. (boolean value)
+project_allow_create = <%= node[:keystone][:ldap][:project_allow_create] %>
 
-# Allow tenant update in LDAP backend. (boolean value)
-tenant_allow_update = <%= node[:keystone][:ldap][:tenant_allow_update] %>
+# Allow project update in LDAP backend. (boolean value)
+project_allow_update = <%= node[:keystone][:ldap][:project_allow_update] %>
 
-# Allow tenant deletion in LDAP backend. (boolean value)
-tenant_allow_delete = <%= node[:keystone][:ldap][:tenant_allow_delete] %>
+# Allow project deletion in LDAP backend. (boolean value)
+project_allow_delete = <%= node[:keystone][:ldap][:project_allow_delete] %>
 
-# If True, Keystone uses an alternative method to determine if
+# If true, Keystone uses an alternative method to determine if
 # a project is enabled or not by checking if they are a member
-# of the "tenant_enabled_emulation_dn" group. (boolean value)
-tenant_enabled_emulation = <%= node[:keystone][:ldap][:tenant_enabled_emulation] %>
+# of the "project_enabled_emulation_dn" group. (boolean value)
+project_enabled_emulation = <%= node[:keystone][:ldap][:project_enabled_emulation] %>
 
 # DN of the group entry to hold enabled projects when using
 # enabled emulation. (string value)
-tenant_enabled_emulation_dn = <%= node[:keystone][:ldap][:tenant_enabled_emulation_dn] %>
+project_enabled_emulation_dn = <%= node[:keystone][:ldap][:project_enabled_emulation_dn] %>
 
 # Additional attribute mappings for projects. Attribute
 # mapping format is <ldap_attr>:<user_attr>, where ldap_attr
 # is the attribute in the LDAP entry and user_attr is the
 # Identity API attribute. (list value)
-#tenant_additional_attribute_mapping=
+#project_additional_attribute_mapping=
 
 # Search base for roles. (string value)
 role_tree_dn = <%= node[:keystone][:ldap][:role_tree_dn] %>
