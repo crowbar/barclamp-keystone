@@ -59,12 +59,15 @@ public_endpoint = <%= @public_endpoint %>
 # server. (string value)
 admin_endpoint = <%= @admin_endpoint %>
 
-# onready allows you to send a notification when the process
-# is ready to serve For example, to have it notify using
-# systemd, one could set shell command: "onready = systemd-
-# notify --ready" or a module with notify() method: "onready =
-# keystone.common.systemd". (string value)
-#onready=<None>
+# The number of worker processes to serve the public WSGI
+# application. Defaults to number of CPUs (minimum of 2).
+# (integer value)
+#public_workers=<None>
+
+# The number of worker processes to serve the admin WSGI
+# application. Defaults to number of CPUs (minimum of 2).
+# (integer value)
+#admin_workers=<None>
 
 # Enforced by optional sizelimit middleware
 # (keystone.middleware:RequestBodySizeLimiter). (integer
@@ -120,6 +123,13 @@ admin_endpoint = <%= @admin_endpoint %>
 # policy.v3cloudsample as an example). (boolean value)
 #domain_id_immutable=true
 
+# If set to true, strict password length checking is performed
+# for password manipulation. If a password exceeds the maximum
+# length, the operation will fail with an HTTP 403 Forbidden
+# error. If set to false, passwords are automatically
+# truncated to the maximum length. (boolean value)
+#strict_password_check=false
+
 
 #
 # Options defined in oslo.messaging
@@ -134,10 +144,6 @@ admin_endpoint = <%= @admin_endpoint %>
 
 # Size of RPC connection pool. (integer value)
 #rpc_conn_pool_size=30
-
-# Modules of exceptions that are permitted to be recreated
-# upon receiving exception data from an rpc call. (list value)
-#allowed_rpc_exception_modules=oslo.messaging.exceptions,nova.exception,cinder.exception,exceptions
 
 # Qpid broker hostname. (string value)
 #qpid_hostname=localhost
@@ -167,6 +173,10 @@ admin_endpoint = <%= @admin_endpoint %>
 
 # Whether to disable the Nagle algorithm. (boolean value)
 #qpid_tcp_nodelay=true
+
+# The number of prefetched messages held by receiver. (integer
+# value)
+#qpid_receiver_capacity=1
 
 # The qpid topology version to use.  Version 1 is what was
 # originally used by impl_qpid.  Version 2 includes some
@@ -303,7 +313,7 @@ rabbit_virtual_host=<%= @rabbit_settings[:vhost] %>
 # The default exchange under which topics are scoped. May be
 # overridden by an exchange name specified in the
 # transport_url option. (string value)
-#control_exchange=openstack
+#control_exchange=keystone
 
 
 #
@@ -503,12 +513,6 @@ driver = <%= node[:keystone][:assignment][:driver] %>
 # can use the dogpile.cache.memory backend. (string value)
 #backend=keystone.common.cache.noop
 
-# Use a key-mangling function (sha1) to ensure fixed length
-# cache-keys. This is toggle-able for debugging purposes, it
-# is highly recommended to always leave this set to True.
-# (boolean value)
-#use_key_mangler=true
-
 # Arguments supplied to the backend module. Specify this
 # option once per argument to be passed to the dogpile.cache
 # backend. Example format: "<argname>:<value>". (multi valued)
@@ -530,6 +534,35 @@ driver = <%= node[:keystone][:assignment][:driver] %>
 # false. (boolean value)
 #debug_cache_backend=false
 
+# Memcache servers in the format of "host:port".
+# (dogpile.cache.memcache and keystone.cache.memcache_pool
+# backends only) (list value)
+#memcache_servers=localhost:11211
+
+# Number of seconds memcached server is considered dead before
+# it is tried again. (dogpile.cache.memcache and
+# keystone.cache.memcache_pool backends only) (integer value)
+#memcache_dead_retry=300
+
+# Timeout in seconds for every call to a server.
+# (dogpile.cache.memcache and keystone.cache.memcache_pool
+# backends only) (integer value)
+#memcache_socket_timeout=3
+
+# Max total number of open connections to every memcached
+# server. (keystone.cache.memcache_pool backend only) (integer
+# value)
+#memcache_pool_maxsize=10
+
+# Number of seconds a connection to memcached is held unused
+# in the pool before it is closed.
+# (keystone.cache.memcache_pool backend only) (integer value)
+#memcache_pool_unused_timeout=60
+
+# Number of seconds that an operation will wait to get a
+# memcache client connection. (integer value)
+#memcache_pool_connection_get_timeout=10
+
 
 [catalog]
 
@@ -543,6 +576,15 @@ driver = <%= node[:keystone][:assignment][:driver] %>
 
 # Catalog backend driver. (string value)
 #driver=keystone.catalog.backends.sql.Catalog
+
+# Toggle for catalog caching. This has no effect unless global
+# caching is enabled. (boolean value)
+#caching=true
+
+# Time to cache catalog data (in seconds). This has no effect
+# unless global and catalog caching are enabled. (integer
+# value)
+#cache_time=<None>
 
 # Maximum number of entities that will be returned in a
 # catalog collection. (integer value)
@@ -581,6 +623,10 @@ driver = <%= node[:keystone][:assignment][:driver] %>
 # Deprecated group/name - [DATABASE]/sql_connection
 # Deprecated group/name - [sql]/connection
 connection = <%= @sql_connection %>
+
+# The SQLAlchemy connection string to use to connect to the
+# slave database. (string value)
+#slave_connection=<None>
 
 # The SQL mode to be used for MySQL sessions. This option,
 # including the default, overrides any server-set SQL mode. To
@@ -686,6 +732,16 @@ driver=keystone.contrib.ec2.backends.sql.Ec2
 #return_all_endpoints_if_no_filter=true
 
 
+[endpoint_policy]
+
+#
+# Options defined in keystone
+#
+
+# Endpoint policy backend driver (string value)
+#driver=keystone.contrib.endpoint_policy.backends.sql.EndpointPolicy
+
+
 [federation]
 
 #
@@ -739,6 +795,39 @@ driver = <%= node[:keystone][:identity][:driver] %>
 # Maximum number of entities that will be returned in an
 # identity collection. (integer value)
 #list_limit=<None>
+
+
+[identity_mapping]
+
+#
+# Options defined in keystone
+#
+
+# Keystone Identity Mapping backend driver. (string value)
+#driver=keystone.identity.mapping_backends.sql.Mapping
+
+# Public ID generator for user and group entities. The
+# Keystone identity mapper only supports generators that
+# produce no more than 64 characters. (string value)
+#generator=keystone.identity.id_generators.sha256.Generator
+
+# The format of user and group IDs changed in Juno for
+# backends that do not generate UUIDs (e.g. LDAP), with
+# keystone providing a hash mapping to the underlying
+# attribute in LDAP. By default this mapping is disabled,
+# which ensures that existing IDs will not change. Even when
+# the mapping is enabled by using domain specific drivers, any
+# users and groups from the default domain being handled by
+# LDAP will still not be mapped to ensure their IDs remain
+# backward compatible. Setting this value to False will enable
+# the mapping for even the default LDAP driver. It is only
+# safe to do this if you do not already have assignments for
+# users and groups from the default LDAP domain, and it is
+# acceptable for Keystone to provide the different IDs to
+# clients than it did previously.  Typically this means that
+# the only time you can set this value to False is when
+# configuring a fresh installation. (boolean value)
+#backward_compatible_ids=true
 
 
 [kvs]
@@ -816,6 +905,12 @@ page_size = <%= node[:keystone][:ldap][:page_size] %>
 # dereferencing configured by your ldap.conf. (string value)
 alias_dereferencing = <%= node[:keystone][:ldap][:alias_dereferencing] %>
 
+# Sets the LDAP debugging level for LDAP calls. A value of 0
+# means that debugging is not enabled. This value is a
+# bitmask, consult your LDAP documentation for possible
+# values. (integer value)
+#debug_level=<None>
+
 # Override the system's default referral chasing behavior for
 # queries. (boolean value)
 #chase_referrals=<None>
@@ -844,6 +939,15 @@ user_pass_attribute = <%= node[:keystone][:ldap][:user_pass_attribute] %>
 
 # LDAP attribute mapped to user enabled flag. (string value)
 user_enabled_attribute = <%= node[:keystone][:ldap][:user_enabled_attribute] %>
+
+# Invert the meaning of the boolean enabled values. Some LDAP
+# servers use a boolean lock attribute where "true" means an
+# account is disabled. Setting "user_enabled_invert = true"
+# will allow these lock attributes to be used. This setting
+# will have no effect if "user_enabled_mask" or
+# "user_enabled_emulation" settings are in use. (boolean
+# value)
+#user_enabled_invert=false
 
 # Bitmask integer to indicate the bit that the enabled value
 # is stored in if the LDAP server represents "enabled" as a
@@ -1045,6 +1149,39 @@ use_tls = <%= node[:keystone][:ldap][:use_tls] %>
 # (string value)
 tls_req_cert = <%= node[:keystone][:ldap][:tls_req_cert] %>
 
+# Enable LDAP connection pooling. (boolean value)
+#use_pool=false
+
+# Connection pool size. (integer value)
+#pool_size=10
+
+# Maximum count of reconnect trials. (integer value)
+#pool_retry_max=3
+
+# Time span in seconds to wait between two reconnect trials.
+# (floating point value)
+#pool_retry_delay=0.1
+
+# Connector timeout in seconds. Value -1 indicates indefinite
+# wait for response. (integer value)
+#pool_connection_timeout=-1
+
+# Connection lifetime in seconds. (integer value)
+#pool_connection_lifetime=600
+
+# Enable LDAP connection pooling for end user authentication.
+# If use_pool is disabled, then this setting is meaningless
+# and is not used at all. (boolean value)
+#use_auth_pool=false
+
+# End user auth connection pool size. (integer value)
+#auth_pool_size=100
+
+# End user auth connection lifetime in seconds. (integer
+# value)
+#auth_pool_connection_lifetime=60
+
+
 [matchmaker_redis]
 
 #
@@ -1081,10 +1218,33 @@ tls_req_cert = <%= node[:keystone][:ldap][:tls_req_cert] %>
 # Memcache servers in the format of "host:port". (list value)
 #servers=localhost:11211
 
-# Number of compare-and-set attempts to make when using
-# compare-and-set in the token memcache back end. (integer
-# value)
-#max_compare_and_set_retry=16
+# Number of seconds memcached server is considered dead before
+# it is tried again. This is used by the key value store
+# system (e.g. token pooled memcached persistence backend).
+# (integer value)
+#dead_retry=300
+
+# Timeout in seconds for every call to a server. This is used
+# by the key value store system (e.g. token pooled memcached
+# persistence backend). (integer value)
+#socket_timeout=3
+
+# Max total number of open connections to every memcached
+# server. This is used by the key value store system (e.g.
+# token pooled memcached persistence backend). (integer value)
+#pool_maxsize=10
+
+# Number of seconds a connection to memcached is held unused
+# in the pool before it is closed. This is used by the key
+# value store system (e.g. token pooled memcached persistence
+# backend). (integer value)
+#pool_unused_timeout=60
+
+# Number of seconds that an operation will wait to get a
+# memcache client connection. This is used by the key value
+# store system (e.g. token pooled memcached persistence
+# backend). (integer value)
+#pool_connection_get_timeout=10
 
 
 [oauth1]
@@ -1159,6 +1319,84 @@ driver=keystone.contrib.revoke.backends.sql.Revoke
 # Toggle for revocation event caching. This has no effect
 # unless global caching is enabled. (boolean value)
 #caching=true
+
+
+[saml]
+
+#
+# Options defined in keystone
+#
+
+# Default TTL, in seconds, for any generated SAML assertion
+# created by Keystone. (integer value)
+#assertion_expiration_time=3600
+
+# Binary to be called for XML signing. Install the appropriate
+# package, specify absolute path or adjust your PATH
+# environment variable if the binary cannot be found. (string
+# value)
+#xmlsec1_binary=xmlsec1
+
+# Path of the certfile for SAML signing. For non-production
+# environments, you may be interested in using `keystone-
+# manage pki_setup` to generate self-signed certificates.
+# Note, the path cannot contain a comma. (string value)
+#certfile=/etc/keystone/ssl/certs/signing_cert.pem
+
+# Path of the keyfile for SAML signing. Note, the path cannot
+# contain a comma. (string value)
+#keyfile=/etc/keystone/ssl/private/signing_key.pem
+
+# Entity ID value for unique Identity Provider identification.
+# Usually FQDN is set with a suffix. A value is required to
+# generate IDP Metadata. For example:
+# https://keystone.example.com/v3/OS-FEDERATION/saml2/idp
+# (string value)
+#idp_entity_id=<None>
+
+# Identity Provider Single-Sign-On service value, required in
+# the Identity Provider's metadata. A value is required to
+# generate IDP Metadata. For example:
+# https://keystone.example.com/v3/OS-FEDERATION/saml2/sso
+# (string value)
+#idp_sso_endpoint=<None>
+
+# Language used by the organization. (string value)
+#idp_lang=en
+
+# Organization name the installation belongs to. (string
+# value)
+#idp_organization_name=<None>
+
+# Organization name to be displayed. (string value)
+#idp_organization_display_name=<None>
+
+# URL of the organization. (string value)
+#idp_organization_url=<None>
+
+# Company of contact person. (string value)
+#idp_contact_company=<None>
+
+# Given name of contact person (string value)
+#idp_contact_name=<None>
+
+# Surname of contact person. (string value)
+#idp_contact_surname=<None>
+
+# Email address of contact person. (string value)
+#idp_contact_email=<None>
+
+# Telephone number of contact person. (string value)
+#idp_contact_telephone=<None>
+
+# Contact type. Allowed values are: technical, support,
+# administrative billing, and other (string value)
+#idp_contact_type=other
+
+# Path to the Identity Provider Metadata file. This file
+# should be generated with the keystone-manage
+# saml_idp_metadata command. (string value)
+#idp_metadata_path=/etc/keystone/saml2_idp_metadata.xml
 
 
 [signing]
@@ -1305,6 +1543,13 @@ provider = keystone.token.providers.uuid.Provider
 # other than KVS, which stores events in memory. (boolean
 # value)
 #revoke_by_id=true
+
+# The hash algorithm to use for PKI tokens. This can be set to
+# any algorithm that hashlib supports. WARNING: Before
+# changing this value, the auth_token middleware must be
+# configured with the hash_algorithms, otherwise token
+# revocation will not be processed correctly. (string value)
+#hash_algorithm=md5
 
 
 [trust]
