@@ -277,15 +277,6 @@ rabbit_virtual_host=<%= @rabbit_settings[:vhost] %>
 # Heartbeat time-to-live. (integer value)
 #matchmaker_heartbeat_ttl=600
 
-# Host to locate redis. (string value)
-#host=127.0.0.1
-
-# Use this port to connect to redis host. (integer value)
-#port=6379
-
-# Password for Redis server (optional). (string value)
-#password=<None>
-
 # Size of RPC greenthread pool. (integer value)
 #rpc_thread_pool_size=64
 
@@ -1088,6 +1079,21 @@ use_tls = <%= node[:keystone][:ldap][:use_tls] %>
 # Valid options for tls_req_cert are demand, never, and allow.
 # (string value)
 tls_req_cert = <%= node[:keystone][:ldap][:tls_req_cert] %>
+
+[matchmaker_redis]
+
+#
+# Options defined in oslo.messaging
+#
+
+# Host to locate redis. (string value)
+#host=127.0.0.1
+
+# Use this port to connect to redis host. (integer value)
+#port=6379
+
+# Password for Redis server (optional). (string value)
+#password=<None>
 
 
 [matchmaker_ring]
