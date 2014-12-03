@@ -96,6 +96,7 @@
         "user_allow_create": true,
         "user_allow_update": true,
         "user_allow_delete": true,
+        "user_enabled_invert": false,
         "user_enabled_emulation": false,
         "user_enabled_emulation_dn": "",
         "project_tree_dn": "",
@@ -136,7 +137,8 @@
         "tls_cacertfile": "",
         "tls_cacertdir": "",
         "use_tls": false,
-        "tls_req_cert": "demand"
+        "tls_req_cert": "demand",
+        "use_pool":false
       }
     }
   },
@@ -144,7 +146,7 @@
     "keystone": {
       "crowbar-revision": 0,
       "crowbar-applied": false,
-      "schema-revision": 21,
+      "schema-revision": 22,
       "element_states": {
         "keystone-server": [ "readying", "ready", "applying" ]
       },

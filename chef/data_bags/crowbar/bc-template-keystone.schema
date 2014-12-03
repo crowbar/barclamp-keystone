@@ -97,6 +97,7 @@
                       "user_allow_create": { "type": "bool" },
                       "user_allow_update": { "type": "bool" },
                       "user_allow_delete": { "type": "bool" },
+                      "user_enabled_invert": { "type": "bool" },
                       "user_enabled_emulation": { "type": "bool" },
                       "user_enabled_emulation_dn": { "type": "str" },
                       "project_tree_dn": { "type": "str" },
@@ -137,6 +138,7 @@
                       "tls_cacertfile": { "type": "str" },
                       "tls_cacertdir": { "type": "str" },
                       "use_tls": { "type": "bool" },
+                      "use_pool": { "type": "bool" },
                       "tls_req_cert": { "type": "str" }
                     }}
               }}

@@ -76,6 +76,7 @@ default[:keystone][:ldap][:user_name_attribute] = 'sn'
 default[:keystone][:ldap][:user_mail_attribute] = 'email'
 default[:keystone][:ldap][:user_pass_attribute] = 'userPassword'
 default[:keystone][:ldap][:user_enabled_attribute] = 'enabled'
+default[:keystone][:ldap][:user_enabled_invert] = false
 default[:keystone][:ldap][:user_enabled_mask] = 0
 default[:keystone][:ldap][:user_enabled_default] = 'True'
 default[:keystone][:ldap][:user_attribute_ignore] = 'tenant_id,tenants'
@@ -123,6 +124,7 @@ default[:keystone][:ldap][:group_attribute_ignore] = ''
 default[:keystone][:ldap][:group_allow_create] = true
 default[:keystone][:ldap][:group_allow_update] = true
 default[:keystone][:ldap][:group_allow_delete] = true
+default[:keystone][:ldap][:use_pool] = false
 
 default[:keystone][:ha][:enabled] = false
 # Ports to bind to when haproxy is used for the real ports
