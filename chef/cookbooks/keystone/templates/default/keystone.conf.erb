@@ -62,12 +62,12 @@ admin_endpoint = <%= @admin_endpoint %>
 # The number of worker processes to serve the public WSGI
 # application. Defaults to number of CPUs (minimum of 2).
 # (integer value)
-#public_workers=<None>
+public_workers=<%= [node["cpu"]["total"], 2, 4].sort[1] %>
 
 # The number of worker processes to serve the admin WSGI
 # application. Defaults to number of CPUs (minimum of 2).
 # (integer value)
-#admin_workers=<None>
+admin_workers=<%= [node["cpu"]["total"], 2, 4].sort[1] %>
 
 # Enforced by optional sizelimit middleware
 # (keystone.middleware:RequestBodySizeLimiter). (integer
