@@ -138,7 +138,7 @@
         "tls_cacertdir": "",
         "use_tls": false,
         "tls_req_cert": "demand",
-        "use_pool":false
+        "use_pool": false
       }
     }
   },
