@@ -20,6 +20,7 @@ module KeystoneHelper
       end
       @keystone_settings ||= Hash.new
       @keystone_settings[cookbook_name] = {
+        "api_version" => node[:keystone][:api][:version].sub(/^v/, ""),
         "admin_auth_url" => node[:keystone][:api][:admin_URL] || service_URL(node, node[:fqdn], node["keystone"]["api"]["admin_port"]),
         "public_auth_url" => node[:keystone][:api][:versioned_public_URL] || versioned_service_URL(node, public_host, node["keystone"]["api"]["service_port"]),
         "internal_auth_url" => node[:keystone][:api][:versioned_internal_URL] || versioned_service_URL(node, node[:fqdn], node["keystone"]["api"]["service_port"]),
