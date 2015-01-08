@@ -114,13 +114,13 @@ action :add_user do
   else
     path = "/v2.0/tokens"
     body = _build_auth(new_resource.user_name, new_resource.user_password, tenant_id)
-    resp, data = http.send_request('POST', path, JSON.generate(body), headers)
+    resp = http.send_request('POST', path, JSON.generate(body), headers)
     if resp.is_a?(Net::HTTPCreated) or resp.is_a?(Net::HTTPOK)
       Chef::Log.info "User '#{new_resource.user_name}' already exists. No password change."
       new_resource.updated_by_last_action(false)
-      data = JSON.parse(data)
+      data = JSON.parse(resp.read_body)
       token_id = data["access"]["token"]["id"]
-      resp, data = http.delete("#{path}/#{token_id}", headers)
+      resp = http.delete("#{path}/#{token_id}", headers)
       if !resp.is_a?(Net::HTTPNoContent) and !resp.is_a?(Net::HTTPOK)
         Chef::Log.warn("Failed to delete temporary token")
         Chef::Log.warn("Response Code: #{resp.code}")
@@ -196,8 +196,8 @@ action :add_ec2 do
   http, headers = _build_connection(new_resource)
 
   headers.delete('X-Auth-Token')
-  _, data = http.send_request('POST', '/v2.0/tokens', JSON.generate({:auth => {:tenantName => new_resource.auth[:tenant], :passwordCredentials => {:username => new_resource.auth[:user], :password => new_resource.auth[:password]}}}),headers)
-  data = JSON.parse(data)
+  resp = http.send_request('POST', '/v2.0/tokens', JSON.generate({:auth => {:tenantName => new_resource.auth[:tenant], :passwordCredentials => {:username => new_resource.auth[:user], :password => new_resource.auth[:password]}}}),headers)
+  data = JSON.parse(resp.read_body)
   headers.store('X-Auth-Token', data["access"]["token"]["id"])
 
   # Lets verify that the item does not exist yet
@@ -240,12 +240,12 @@ action :add_endpoint_template do
   path = '/v2.0/endpoints'
 
   # Lets verify that the endpoint does not exist yet
-  resp, data = http.request_get(path, headers)
+  resp = http.request_get(path, headers)
   if resp.is_a?(Net::HTTPOK)
       matched_endpoint = false
       replace_old = false
       old_endpoint_id = ""
-      data = JSON.parse(data)
+      data = JSON.parse(resp.read_body)
       data["endpoints"].each do |endpoint|
           if endpoint["service_id"].to_s == my_service_id.to_s
               if endpoint_needs_update endpoint, new_resource
@@ -265,7 +265,7 @@ action :add_endpoint_template do
           # Delete the old existing endpoint first if required
           if replace_old
               Chef::Log.info("Deleting old endpoint #{old_endpoint_id}")
-              resp, data = http.delete("#{path}/#{old_endpoint_id}", headers)
+              resp = http.delete("#{path}/#{old_endpoint_id}", headers)
               if !resp.is_a?(Net::HTTPNoContent) and !resp.is_a?(Net::HTTPOK)
                   Chef::Log.warn("Failed to delete old endpoint")
                   Chef::Log.warn("Response Code: #{resp.code}")
@@ -281,7 +281,7 @@ action :add_endpoint_template do
                  new_resource.endpoint_publicURL,
                  new_resource.endpoint_global,
                  new_resource.endpoint_enabled)
-          resp, data = http.send_request('POST', path, JSON.generate(body), headers)
+          resp = http.send_request('POST', path, JSON.generate(body), headers)
           if resp.is_a?(Net::HTTPCreated)
               Chef::Log.info("Created keystone endpointTemplate for '#{new_resource.endpoint_service}'")
               new_resource.updated_by_last_action(true)
@@ -309,7 +309,7 @@ end
 # Return true on success
 private
 def _create_item(http, headers, path, body, name)
-  resp, data = http.send_request('POST', path, JSON.generate(body), headers)
+  resp = http.send_request('POST', path, JSON.generate(body), headers)
   if resp.is_a?(Net::HTTPCreated)
     Chef::Log.info("Created keystone item '#{name}'")
     return true
@@ -328,9 +328,9 @@ end
 private
 def _update_item(http, headers, path, body, name)
   unless body.nil?
-    resp, data = http.send_request('PUT', path, JSON.generate(body), headers)
+    resp = http.send_request('PUT', path, JSON.generate(body), headers)
   else
-    resp, data = http.send_request('PUT', path, nil, headers)
+    resp = http.send_request('PUT', path, nil, headers)
   end
   if resp.is_a?(Net::HTTPOK)
     Chef::Log.info("Updated keystone item '#{name}'")
@@ -367,9 +367,9 @@ def _find_id(http, headers, svc_name, spath, dir, key = 'name', ret = 'id')
   # Construct the path
   my_service_id = nil
   error = false
-  resp, data = http.request_get(spath, headers)
+  resp = http.request_get(spath, headers)
   if resp.is_a?(Net::HTTPOK)
-    data = JSON.parse(data)
+    data = JSON.parse(resp.read_body)
     data = data[dir]
 
     data.each do |svc|
