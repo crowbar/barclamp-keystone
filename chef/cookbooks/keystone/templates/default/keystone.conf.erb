@@ -856,6 +856,11 @@ driver = <%= node[:keystone][:identity][:driver] %>
 # value)
 #default_lock_timeout=5
 
+<% if node[:keystone][:assignment][:driver] == 'keystone.assignment.backends.hybrid.Assignment' %>
+[ldap_hybrid]
+default_roles = Member
+default_project = <%= node[:keystone][:default][:tenant] %>
+<% end %>
 
 [ldap]
 
