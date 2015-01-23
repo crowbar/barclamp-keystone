@@ -1,9 +1,13 @@
 def upgrade ta, td, a, d
-  a['api']['region'] = ta['api']['region']
+  unless a['api'].has_key? 'region'
+    a['api']['region'] = ta['api']['region']
+  end
   return a, d
 end
 
 def downgrade ta, td, a, d
-  a['api'].delete('region')
+  unless ta['api'].has_key? 'region'
+    a['api'].delete('region')
+  end
   return a, d
 end
