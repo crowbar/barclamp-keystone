@@ -23,6 +23,7 @@ attribute :protocol, :kind_of => String
 attribute :host, :kind_of => String
 attribute :port, :kind_of => Integer
 attribute :token, :kind_of => String
+attribute :insecure, :kind_of => [TrueClass, FalseClass], :default => false
 
 # use tenant name, user name and password. This used now only for ec2 creation
 attribute :auth, :kind_of => Hash

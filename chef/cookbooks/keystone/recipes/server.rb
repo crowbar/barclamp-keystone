@@ -516,10 +516,13 @@ end
 
 crowbar_pacemaker_sync_mark "wait-keystone_register"
 
+keystone_insecure = node["keystone"]["api"]["protocol"] == "https" && node[:keystone][:ssl][:insecure]
+
 # Silly wake-up call - this is a hack; we use retries because the server was
 # just (re)started, and might not answer on the first try
 keystone_register "wakeup keystone" do
   protocol node[:keystone][:api][:protocol]
+  insecure keystone_insecure
   host my_admin_host
   port node[:keystone][:api][:admin_port]
   token node[:keystone][:service][:token]
@@ -535,6 +538,7 @@ end
 ].each do |tenant|
   keystone_register "add default #{tenant} tenant" do
     protocol node[:keystone][:api][:protocol]
+    insecure keystone_insecure
     host my_admin_host
     port node[:keystone][:api][:admin_port]
     token node[:keystone][:service][:token]
@@ -549,6 +553,7 @@ end
 ].each do |user_data|
   keystone_register "add default #{user_data[0]} user" do
     protocol node[:keystone][:api][:protocol]
+    insecure keystone_insecure
     host my_admin_host
     port node[:keystone][:api][:admin_port]
     token node[:keystone][:service][:token]
@@ -566,6 +571,7 @@ roles = %w[admin Member]
 roles.each do |role|
   keystone_register "add default #{role} role" do
     protocol node[:keystone][:api][:protocol]
+    insecure keystone_insecure
     host my_admin_host
     port node[:keystone][:api][:admin_port]
     token node[:keystone][:service][:token]
@@ -583,6 +589,7 @@ user_roles = [
 user_roles.each do |args|
   keystone_register "add default #{args[2]}:#{args[0]} -> #{args[1]} role" do
     protocol node[:keystone][:api][:protocol]
+    insecure keystone_insecure
     host my_admin_host
     port node[:keystone][:api][:admin_port]
     token node[:keystone][:service][:token]
@@ -603,6 +610,7 @@ ec2_creds = [
 ec2_creds.each do |args|
   keystone_register "add default ec2 creds for #{args[1]}:#{args[0]}" do
     protocol node[:keystone][:api][:protocol]
+    insecure keystone_insecure
     host my_admin_host
     auth ({
         :tenant => node[:keystone][:admin][:tenant],
@@ -619,6 +627,7 @@ end
 # Create keystone service
 keystone_register "register keystone service" do
   protocol node[:keystone][:api][:protocol]
+  insecure keystone_insecure
   host my_admin_host
   port node[:keystone][:api][:admin_port]
   token node[:keystone][:service][:token]
@@ -631,6 +640,7 @@ end
 # Create keystone endpoint
 keystone_register "register keystone endpoint" do
   protocol node[:keystone][:api][:protocol]
+  insecure keystone_insecure
   host my_admin_host
   port node[:keystone][:api][:admin_port]
   token node[:keystone][:service][:token]

@@ -355,6 +355,7 @@ def _build_connection(new_resource)
   # Construct the http object
   http = Net::HTTP.new(new_resource.host, new_resource.port)
   http.use_ssl = true if new_resource.protocol == "https"
+  http.verify_mode = OpenSSL::SSL::VERIFY_NONE if new_resource.insecure
 
   # Fill out the headers
   headers = _build_headers(new_resource.token)
