@@ -20,10 +20,10 @@
 actions :add_service, :add_endpoint_template, :add_tenant, :add_user, :add_role, :add_access, :add_ec2, :wakeup
 
 attribute :protocol, :kind_of => String
+attribute :insecure, :kind_of => [TrueClass, FalseClass], :default => false
 attribute :host, :kind_of => String
 attribute :port, :kind_of => Integer
 attribute :token, :kind_of => String
-attribute :insecure, :kind_of => [TrueClass, FalseClass], :default => false
 
 # use tenant name, user name and password. This used now only for ec2 creation
 attribute :auth, :kind_of => Hash
