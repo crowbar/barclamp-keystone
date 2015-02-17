@@ -56,11 +56,13 @@ if node[:keystone][:frontend] == 'native'
     # })
     op node[:keystone][:ha][:op]
     action :create
+    only_if { CrowbarPacemakerHelper.is_cluster_founder?(node) }
   end
 
   pacemaker_clone "cl-#{service_name}" do
     rsc service_name
     action [:create, :start]
+    only_if { CrowbarPacemakerHelper.is_cluster_founder?(node) }
   end
 
   crowbar_pacemaker_sync_mark "create-keystone_ha_resources"
