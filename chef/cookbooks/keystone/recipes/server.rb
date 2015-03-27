@@ -63,6 +63,9 @@ else
   end
 end
 
+# useful with .openrc
+package "python-openstackclient"
+
 ha_enabled = node[:keystone][:ha][:enabled]
 
 if ha_enabled
@@ -680,11 +683,6 @@ node[:keystone][:monitor] = {} if node[:keystone][:monitor].nil?
 node[:keystone][:monitor][:svcs] = [] if node[:keystone][:monitor][:svcs].nil?
 node[:keystone][:monitor][:svcs] << ["keystone"] if node[:keystone][:monitor][:svcs].empty?
 node.save
-
-# Install openstackclient so that .openrc (created below) can be used
-package "python-openstackclient" do
-  action :install
-end
 
 template "/root/.openrc" do
   source "openrc.erb"
