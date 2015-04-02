@@ -28,6 +28,8 @@ default[:keystone][:debug] = false
 default[:keystone][:frontend] = 'apache'
 default[:keystone][:verbose] = false
 
+default[:keystone][:policy_file] = "policy.json"
+
 default[:keystone][:db][:database] = "keystone"
 default[:keystone][:db][:user] = "keystone"
 default[:keystone][:db][:password] = "" # Set by Recipe
