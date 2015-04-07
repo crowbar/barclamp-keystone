@@ -440,6 +440,7 @@ use_syslog = <%= @use_syslog ? "True" : "False" %>
 
 # The JSON file that defines policies. (string value)
 #policy_file=policy.json
+policy_file = <%= node[:keystone][:policy_file] %>
 
 # Default rule. Enforced when a requested rule is not found.
 # (string value)
