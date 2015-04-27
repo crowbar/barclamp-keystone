@@ -34,6 +34,3 @@ crowbar:
   run_order: 78
   chef_order: 78
   proposal_schema_version: 3
-
-git_repo:
-   - 'keystone https://github.com/openstack/keystone.git stable/juno'

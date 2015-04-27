@@ -1,8 +1,4 @@
-<% if @venv -%>
-WSGIDaemonProcess keystone user=keystone group=nogroup processes=<%= @processes %> threads=<%= @threads %> python-path=<%= @venv_path %>
-<% else -%>
 WSGIDaemonProcess keystone user=keystone group=nogroup processes=<%= @processes %> threads=<%= @threads %>
-<% end -%>
 
 Listen <%= @bind_service_host %>:<%= @bind_service_port %>
 <VirtualHost <%= @bind_service_host %>:<%= @bind_service_port %>>

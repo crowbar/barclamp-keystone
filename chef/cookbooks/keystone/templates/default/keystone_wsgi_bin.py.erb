@@ -14,10 +14,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-<% if @venv -%>
-execfile('<%= @venv_path %>/bin/activate_this.py', dict(__file__='<%= @venv_path %>/bin/activate_this.py'))
-<% end -%>
-
 
 import logging
 import os

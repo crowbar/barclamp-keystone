@@ -7,7 +7,6 @@ version          "1.0"
 
 depends "database"
 depends "nagios"
-depends "git"
 depends "uwsgi"
 depends "crowbar-openstack"
 depends "crowbar-pacemaker"
