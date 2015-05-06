@@ -6,18 +6,6 @@
       "debug": false,
       "frontend": "uwsgi",
       "verbose": true,
-      "gitrepo": "http://github.com/openstack/keystone.git",
-      "git_instance": "",
-      "git_refspec": "stable/icehouse",
-      "use_gitbarclamp": true,
-      "use_pip_cache": true,
-      "use_gitrepo": false,
-      "use_virtualenv": true,
-      "pfs_deps": [
-          "pip://setuptools-git",
-          "pip://distribute>=0.6.28",
-          "pip://MySQL-python"
-      ],
       "use_syslog": false,
       "policy_file": "policy.json",
       "database_instance": "none",
@@ -147,7 +135,7 @@
     "keystone": {
       "crowbar-revision": 0,
       "crowbar-applied": false,
-      "schema-revision": 23,
+      "schema-revision": 30,
       "element_states": {
         "keystone-server": [ "readying", "ready", "applying" ]
       },

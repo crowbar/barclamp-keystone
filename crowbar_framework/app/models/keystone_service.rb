@@ -46,9 +46,6 @@ class KeystoneService < PacemakerServiceObject
     answer = []
     answer << { "barclamp" => "database", "inst" => role.default_attributes["keystone"]["database_instance"] }
     answer << { "barclamp" => "rabbitmq", "inst" => role.default_attributes["keystone"]["rabbitmq_instance"] }
-    if role.default_attributes[@bc_name]["use_gitrepo"]
-      answer << { "barclamp" => "git", "inst" => role.default_attributes[@bc_name]["git_instance"] }
-    end
     answer
   end
 
@@ -58,7 +55,6 @@ class KeystoneService < PacemakerServiceObject
     nodes = NodeObject.all
     nodes.delete_if { |n| n.nil? or n.admin? }
 
-    base["attributes"][@bc_name]["git_instance"] = find_dep_proposal("git", true)
     base["attributes"][@bc_name]["database_instance"] = find_dep_proposal("database")
     base["attributes"][@bc_name]["rabbitmq_instance"] = find_dep_proposal("rabbitmq")
 
@@ -78,10 +74,6 @@ class KeystoneService < PacemakerServiceObject
 
   def validate_proposal_after_save proposal
     validate_one_for_role proposal, "keystone-server"
-
-    if proposal["attributes"][@bc_name]["use_gitrepo"]
-      validate_dep_proposal_is_active "git", proposal["attributes"][@bc_name]["git_instance"]
-    end
 
     super
   end

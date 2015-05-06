@@ -32,5 +32,3 @@
         = boolean_field %w(ssl insecure)
         = boolean_field %w(ssl cert_required), "data-enabler" => "true", "data-enabler-target" => "#ssl_ca_certs"
         = string_field %w(ssl ca_certs)
-
-    = render "barclamp/git/pfsdeps"
