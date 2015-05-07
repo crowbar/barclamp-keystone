@@ -75,6 +75,11 @@ class KeystoneService < PacemakerServiceObject
   def validate_proposal_after_save proposal
     validate_one_for_role proposal, "keystone-server"
 
+    api_versions = ["v2.0", "v3"]
+    unless api_versions.include? proposal["attributes"][@bc_name]["api"]["version"]
+      validation_error("API version #{proposal[:attributes][@bc_name][:api][:version]} not recognized.")
+    end
+
     super
   end
 
