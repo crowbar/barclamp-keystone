@@ -88,23 +88,31 @@ my_public_host = CrowbarHelper.get_host_for_public_url(node, node[:keystone][:ap
 
 # These are used in keystone.conf
 node[:keystone][:api][:public_URL] = \
-  KeystoneHelper.service_URL(node, my_public_host,
+  KeystoneHelper.service_URL(node[:keystone][:api][:protocol],
+                             my_public_host,
                              node[:keystone][:api][:service_port])
 # This is also used for admin requests of keystoneclient
 node[:keystone][:api][:admin_URL] = \
-  KeystoneHelper.service_URL(node, my_admin_host,
+  KeystoneHelper.service_URL(node[:keystone][:api][:protocol],
+                             my_admin_host,
                              node[:keystone][:api][:admin_port])
 
 # These URLs will be registered as endpoints in keystone's database
 node[:keystone][:api][:versioned_public_URL] = \
-  KeystoneHelper.versioned_service_URL(node, my_public_host,
-                                       node[:keystone][:api][:service_port])
+  KeystoneHelper.versioned_service_URL(node[:keystone][:api][:protocol],
+                                       my_public_host,
+                                       node[:keystone][:api][:service_port],
+                                       node[:keystone][:api][:version])
 node[:keystone][:api][:versioned_admin_URL] = \
-  KeystoneHelper.versioned_service_URL(node, my_admin_host,
-                                       node[:keystone][:api][:admin_port])
+  KeystoneHelper.versioned_service_URL(node[:keystone][:api][:protocol],
+                                       my_admin_host,
+                                       node[:keystone][:api][:admin_port],
+                                       node[:keystone][:api][:version])
 node[:keystone][:api][:versioned_internal_URL] = \
-  KeystoneHelper.versioned_service_URL(node, my_admin_host,
-                                       node[:keystone][:api][:service_port])
+  KeystoneHelper.versioned_service_URL(node[:keystone][:api][:protocol],
+                                       my_admin_host,
+                                       node[:keystone][:api][:service_port],
+                                       node[:keystone][:api][:version])
 
 # Other barclamps need to know the hostname to reach keystone
 node[:keystone][:api][:public_URL_host] = my_public_host

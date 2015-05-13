@@ -1,10 +1,13 @@
 module KeystoneHelper
-  def self.service_URL(node, host, port)
-    "#{node[:keystone][:api][:protocol]}://#{host}:#{port}"
+  def self.service_URL(protocol, host, port)
+    "#{protocol}://#{host}:#{port}"
   end
 
-  def self.versioned_service_URL(node, host, port)
-    service_URL(node, host, port) + '/' + node[:keystone][:api][:version] + '/'
+  def self.versioned_service_URL(protocol, host, port, version)
+    unless version.start_with?('v')
+      version = "v#{version}"
+    end
+    service_URL(protocol, host, port) + '/' + version + '/'
   end
 
   def self.keystone_settings(current_node, cookbook_name)
@@ -18,12 +21,25 @@ module KeystoneHelper
         # be fixed on next run of chef-client on keystone node
         public_host = CrowbarHelper.get_host_for_public_url(node, use_ssl)
       end
+
+      admin_auth_url = service_URL(node[:keystone][:api][:protocol],
+                                   node[:fqdn],
+                                   node[:keystone][:api][:admin_port])
+      public_auth_url = versioned_service_URL(node[:keystone][:api][:protocol],
+                                              public_host,
+                                              node[:keystone][:api][:service_port],
+                                              node[:keystone][:api][:version])
+      internal_auth_url = versioned_service_URL(node[:keystone][:api][:protocol],
+                                                node[:fqdn],
+                                                node[:keystone][:api][:service_port],
+                                                node[:keystone][:api][:version])
+
       @keystone_settings ||= Hash.new
       @keystone_settings[cookbook_name] = {
         "api_version" => node[:keystone][:api][:version].sub(/^v/, ""),
-        "admin_auth_url" => node[:keystone][:api][:admin_URL] || service_URL(node, node[:fqdn], node["keystone"]["api"]["admin_port"]),
-        "public_auth_url" => node[:keystone][:api][:versioned_public_URL] || versioned_service_URL(node, public_host, node["keystone"]["api"]["service_port"]),
-        "internal_auth_url" => node[:keystone][:api][:versioned_internal_URL] || versioned_service_URL(node, node[:fqdn], node["keystone"]["api"]["service_port"]),
+        "admin_auth_url" => node[:keystone][:api][:admin_URL] || admin_auth_url,
+        "public_auth_url" => node[:keystone][:api][:versioned_public_URL] || public_auth_url,
+        "internal_auth_url" => node[:keystone][:api][:versioned_internal_URL] || internal_auth_url,
         "use_ssl" => use_ssl,
         "endpoint_region" => node["keystone"]["api"]["region"],
         "insecure" => use_ssl && node[:keystone][:ssl][:insecure],
