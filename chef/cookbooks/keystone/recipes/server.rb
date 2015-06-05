@@ -561,7 +561,7 @@ end
 
   ruby_block "saving id for default #{tenant} tenant" do
     block do
-      tenant_id = %x[openstack --os-token "#{node[:keystone][:service][:token]}" --os-url "#{node[:keystone][:api][:versioned_admin_URL]}" --os-region "#{node["keystone"]["api"]["region"]}" -f value -c id project show #{tenant}'].chomp
+      tenant_id = %x[openstack --os-token "#{node[:keystone][:service][:token]}" --os-url "#{node[:keystone][:api][:versioned_admin_URL]}" --os-region "#{node[:keystone][:api][:region]}" project show -f value -c id #{tenant}].chomp
       if !tenant_id.empty? && node[:keystone][tenant_type][:tenant_id] != tenant_id
         node[:keystone][tenant_type][:tenant_id] = tenant_id
         node.save
