@@ -83,7 +83,7 @@ class KeystoneService < PacemakerServiceObject
       validate_dep_proposal_is_active "git", proposal["attributes"][@bc_name]["git_instance"]
     end
 
-    api_versions = ["v2.0", "v3"]
+    api_versions = ["2.0", "3"]
     unless api_versions.include? proposal["attributes"][@bc_name]["api"]["version"]
       validation_error("API version #{proposal[:attributes][@bc_name][:api][:version]} not recognized.")
     end
