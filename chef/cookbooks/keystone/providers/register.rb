@@ -61,27 +61,15 @@ action :add_service do
   end
 end
 
+action :add_project do
+  add_project(new_resource.project_name)
+end
+
 # :add_tenant specific attributes
 # attribute :tenant_name, :kind_of => String
 action :add_tenant do
-  http, headers = _build_connection(new_resource)
-
-  # Construct the path
-  path = '/v3/projects'
-  dir = 'projects'
-
-  # Lets verify that the service does not exist yet
-  item_id, error = _find_id(http, headers, new_resource.tenant_name, path, dir)
-  unless item_id or error
-    # Service does not exist yet
-    body = _build_project_object(new_resource.tenant_name)
-    ret = _create_item(http, headers, path, body, new_resource.tenant_name)
-    new_resource.updated_by_last_action(ret)
-  else
-    raise "Failed to talk to keystone in add_tenant" if error
-    Chef::Log.info "Tenant '#{new_resource.tenant_name}' already exists. Not creating." unless error
-    new_resource.updated_by_last_action(false)
-  end
+  Chef::Log.warn "keystone_register action ':add_tenant' is deprecated please use ':add_project'"
+  add_project(new_resource.tenant_name)
 end
 
 # :add_user specific attributes
@@ -312,6 +300,27 @@ action :add_endpoint_template do
   end
 end
 
+private
+def add_project(project_name)
+  http, headers = _build_connection(new_resource)
+
+  # Construct the path
+  path = '/v3/projects'
+  dir = 'projects'
+
+  # Lets verify that the service does not exist yet
+  item_id, error = _find_id(http, headers, project_name, path, dir)
+  unless item_id or error
+    # Service does not exist yet
+    body = _build_project_object(project_name)
+    ret = _create_item(http, headers, path, body, project_name)
+    new_resource.updated_by_last_action(ret)
+  else
+    raise "Failed to talk to keystone in add_project" if error
+    Chef::Log.info "Project '#{project_name}' already exists. Not creating." unless error
+    new_resource.updated_by_last_action(false)
+  end
+end
 
 # Return true on success
 private
