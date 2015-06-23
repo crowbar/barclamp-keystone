@@ -220,9 +220,9 @@ action :add_endpoint_template do
   dir = 'services'
   my_service_id, error = _find_id(http, headers, new_resource.endpoint_service, path, dir)
   unless my_service_id
-      Chef::Log.error "Couldn't find service #{new_resource.endpoint_service} in keystone"
-      raise "Failed to talk to keystone in add_endpoint_template" if error
-      new_resource.updated_by_last_action(false)
+    Chef::Log.error "Couldn't find service #{new_resource.endpoint_service} in keystone"
+    raise "Failed to talk to keystone in add_endpoint_template" if error
+    new_resource.updated_by_last_action(false)
   end
 
   # Construct the path
@@ -239,63 +239,62 @@ action :add_endpoint_template do
     # Lets verify that the endpoint does not exist yet
     resp = http.request_get("#{path}?interface=#{interface}", headers)
     if resp.is_a?(Net::HTTPOK)
-        matched_endpoint = false
-        replace_old = false
-        old_endpoint_id = ""
-        data = JSON.parse(resp.read_body)
-        data["endpoints"].each do |endpoint|
-            if endpoint["service_id"].to_s == my_service_id.to_s
-                if endpoint_needs_update(endpoint, new_resource, endpoint_url)
-                    replace_old = true
-                    old_endpoint_id = endpoint["id"]
-                    break
-                else
-                    matched_endpoint = true
-                    break
-                end
-            end
+      matched_endpoint = false
+      replace_old = false
+      old_endpoint_id = ""
+      data = JSON.parse(resp.read_body)
+      data["endpoints"].each do |endpoint|
+        if endpoint["service_id"].to_s == my_service_id.to_s
+          if endpoint_needs_update(endpoint, new_resource, endpoint_url)
+            replace_old = true
+            old_endpoint_id = endpoint["id"]
+            break
+          else
+            matched_endpoint = true
+            break
+          end
         end
-        if matched_endpoint
-            Chef::Log.info("Already existing keystone endpointTemplate for '#{new_resource.endpoint_service}' - not creating")
-            new_resource.updated_by_last_action(false)
-        else
-            # Delete the old existing endpoint first if required
-            if replace_old
-                Chef::Log.info("Deleting old endpoint #{old_endpoint_id}")
-                resp = http.delete("#{path}/#{old_endpoint_id}", headers)
-                if !resp.is_a?(Net::HTTPNoContent) and !resp.is_a?(Net::HTTPOK)
-                    Chef::Log.warn("Failed to delete old endpoint")
-                    Chef::Log.warn("Response Code: #{resp.code}")
-                    Chef::Log.warn("Response Message: #{resp.message}")
-                end
-            end
-            # endpointTemplate does not exist yet
-            body = _build_endpoint_template_object(
-                   my_service_id,
-                   new_resource.endpoint_region,
-                   endpoint_url,
-                   interface)
-            resp = http.send_request('POST', path, JSON.generate(body), headers)
-            if resp.is_a?(Net::HTTPCreated)
-                Chef::Log.info("Created keystone endpointTemplate for '#{new_resource.endpoint_service}'")
-                new_resource.updated_by_last_action(true)
-            elsif resp.is_a?(Net::HTTPOK)
-                Chef::Log.info("Updated keystone endpointTemplate for '#{new_resource.endpoint_service}'")
-                new_resource.updated_by_last_action(true)
-            else
-                Chef::Log.error("Unable to create endpointTemplate for '#{new_resource.endpoint_service}'")
-                Chef::Log.error("Response Code: #{resp.code}")
-                Chef::Log.error("Response Message: #{resp.message}")
-                raise "Failed to talk to keystone in add_endpoint_template (2)" if error
-                new_resource.updated_by_last_action(false)
-            end
-        end
-    else
-        Chef::Log.error "Unknown response from Keystone Server"
-        Chef::Log.error("Response Code: #{resp.code}")
-        Chef::Log.error("Response Message: #{resp.message}")
+      end
+      if matched_endpoint
+        Chef::Log.info("Already existing keystone endpointTemplate for '#{new_resource.endpoint_service}' - not creating")
         new_resource.updated_by_last_action(false)
-        raise "Failed to talk to keystone in add_endpoint_template (3)" if error
+      else
+        # Delete the old existing endpoint first if required
+        if replace_old
+          Chef::Log.info("Deleting old endpoint #{old_endpoint_id}")
+          resp = http.delete("#{path}/#{old_endpoint_id}", headers)
+          if !resp.is_a?(Net::HTTPNoContent) and !resp.is_a?(Net::HTTPOK)
+            Chef::Log.warn("Failed to delete old endpoint")
+            Chef::Log.warn("Response Code: #{resp.code}")
+            Chef::Log.warn("Response Message: #{resp.message}")
+          end
+        end
+        # endpointTemplate does not exist yet
+        body = _build_endpoint_template_object(my_service_id,
+                                               new_resource.endpoint_region,
+                                               endpoint_url,
+                                               interface)
+        resp = http.send_request('POST', path, JSON.generate(body), headers)
+        if resp.is_a?(Net::HTTPCreated)
+          Chef::Log.info("Created keystone endpointTemplate for '#{new_resource.endpoint_service}'")
+          new_resource.updated_by_last_action(true)
+        elsif resp.is_a?(Net::HTTPOK)
+          Chef::Log.info("Updated keystone endpointTemplate for '#{new_resource.endpoint_service}'")
+          new_resource.updated_by_last_action(true)
+        else
+          Chef::Log.error("Unable to create endpointTemplate for '#{new_resource.endpoint_service}'")
+          Chef::Log.error("Response Code: #{resp.code}")
+          Chef::Log.error("Response Message: #{resp.message}")
+          raise "Failed to talk to keystone in add_endpoint_template (2)" if error
+          new_resource.updated_by_last_action(false)
+        end
+      end
+    else
+      Chef::Log.error "Unknown response from Keystone Server"
+      Chef::Log.error("Response Code: #{resp.code}")
+      Chef::Log.error("Response Message: #{resp.message}")
+      new_resource.updated_by_last_action(false)
+      raise "Failed to talk to keystone in add_endpoint_template (3)" if error
     end
   end
 end
