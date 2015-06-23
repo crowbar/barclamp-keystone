@@ -207,7 +207,8 @@ action :add_ec2 do
   tenant_id, terror = _find_id(http, headers, tenant, '/v3/projects', 'projects')
 
   path = "/v3/users/#{user_id}/credentials/OS-EC2"
-  t_tenant_id, aerror = _find_id(http, headers, tenant_id, path, 'credentials', 'project_id', 'project_id')
+  # Note: tenant_id is correct here even when using the V3 API
+  t_tenant_id, aerror = _find_id(http, headers, tenant_id, path, 'credentials', 'tenant_id', 'tenant_id')
 
   error = (aerror or uerror or terror)
   unless tenant_id == t_tenant_id or error
@@ -480,6 +481,7 @@ end
 private
 def _build_ec2_object(tenant_id)
   ret = Hash.new
+  # Note: tenant_id is correct here even when using the V3 API
   ret.store("tenant_id", tenant_id)
   return ret
 end
