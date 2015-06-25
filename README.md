@@ -19,6 +19,7 @@ About this barclamp
 [![Code Climate](https://codeclimate.com/github/crowbar/barclamp-keystone/badges/gpa.svg)](https://codeclimate.com/github/crowbar/barclamp-keystone)
 [![Test Coverage](https://codeclimate.com/github/crowbar/barclamp-keystone/badges/coverage.svg)](https://codeclimate.com/github/crowbar/barclamp-keystone)
 [![Dependency Status](https://gemnasium.com/crowbar/barclamp-keystone.svg)](https://gemnasium.com/crowbar/barclamp-keystone)
+[![Join the chat at https://gitter.im/crowbar](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/crowbar)
 
 Information for this barclamp is maintained on the [Crowbar Framework Wiki](https://github.com/crowbar/crowbar/wiki)
 
