@@ -36,7 +36,11 @@ module KeystoneHelper
 
       @keystone_settings ||= Hash.new
       @keystone_settings[cookbook_name] = {
-        "api_version" => node[:keystone][:api][:version].sub(/^v/, ""),
+        "api_version" => node[:keystone][:api][:version],
+        # This is somehwat ugly but the Juno keystonemiddleware expects the
+        # version to be a "v3.0" for the v3 API instead of the "v3" or "3" that
+        # is used everywhere else.
+        "api_version_for_middleware" => "v%.1f" % node[:keystone][:api][:version],
         "admin_auth_url" => node[:keystone][:api][:admin_URL] || admin_auth_url,
         "public_auth_url" => node[:keystone][:api][:versioned_public_URL] || public_auth_url,
         "internal_auth_url" => node[:keystone][:api][:versioned_internal_URL] || internal_auth_url,
