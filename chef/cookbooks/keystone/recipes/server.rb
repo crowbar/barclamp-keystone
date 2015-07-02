@@ -503,6 +503,8 @@ if node[:keystone][:api][:version] != '2.0'
   openstack_command <<  " --os-identity-api-version #{node[:keystone][:api][:version]} --os-project-domain-id default --os-user-domain-id default"
 end
 
+openstack_command << " --insecure" if keystone_insecure
+
 [:admin, :service, :default].each do |tenant_type|
   tenant = node[:keystone][tenant_type][:tenant]
 
