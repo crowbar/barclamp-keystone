@@ -780,11 +780,15 @@ driver=keystone.contrib.ec2.backends.sql.Ec2
 # configuration file. This feature is disabled by default; set
 # to true to enable. (boolean value)
 #domain_specific_drivers_enabled=false
+domain_specific_drivers_enabled = <%= node[:keystone][:domain_specific_drivers] ? "True" : "False" %>
 
 # Path for Keystone to locate the domain specific identity
 # configuration files if domain_specific_drivers_enabled is
 # set to true. (string value)
 #domain_config_dir=/etc/keystone/domains
+<% if node[:keystone][:domain_specific_drivers] %>
+domain_config_dir = <%= node[:keystone][:domain_config_dir] %>
+<% end %>
 
 # Keystone Identity backend driver. (string value)
 driver = <%= node[:keystone][:identity][:driver] %>

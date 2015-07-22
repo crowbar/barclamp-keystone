@@ -10,6 +10,8 @@
       "policy_file": "policy.json",
       "database_instance": "none",
       "rabbitmq_instance": "none",
+      "domain_specific_drivers": false,
+      "domain_config_dir": "/etc/keystone/domains",
       "db": {
         "database": "keystone",
         "user": "keystone"

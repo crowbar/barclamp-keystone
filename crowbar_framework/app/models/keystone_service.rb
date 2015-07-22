@@ -79,6 +79,12 @@ class KeystoneService < PacemakerServiceObject
       validation_error("API version #{proposal[:attributes][@bc_name][:api][:version]} not recognized.")
     end
 
+    # Using domains requires API Version 3 or newer
+    if proposal["attributes"][@bc_name]["domain_specific_drivers"] &&
+        proposal["attributes"][@bc_name]["api"]["version"].to_f < 3.0
+      validation_error("API version 3 or newer is required when enabling domain specific drivers.")
+    end
+
     super
   end
 
