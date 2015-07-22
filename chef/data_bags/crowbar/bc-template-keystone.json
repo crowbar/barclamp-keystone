@@ -23,6 +23,8 @@
       "database_instance": "none",
       "rabbitmq_instance": "none",
       "token_expiration": 14400,
+      "domain_specific_drivers": false,
+      "domain_config_dir": "/etc/keystone/domains",
       "db": {
         "database": "keystone",
         "user": "keystone"
@@ -149,7 +151,7 @@
     "keystone": {
       "crowbar-revision": 0,
       "crowbar-applied": false,
-      "schema-revision": 25,
+      "schema-revision": 26,
       "element_states": {
         "keystone-server": [ "readying", "ready", "applying" ]
       },
