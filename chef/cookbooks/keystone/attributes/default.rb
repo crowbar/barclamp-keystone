@@ -27,6 +27,8 @@ default[:keystone][:group] = "keystone"
 default[:keystone][:debug] = false
 default[:keystone][:frontend] = 'apache'
 default[:keystone][:verbose] = false
+default[:keystone][:domain_specific_drivers] = false
+default[:keystone][:domain_config_dir] = "/etc/keystone/domains"
 
 default[:keystone][:policy_file] = "policy.json"
 
