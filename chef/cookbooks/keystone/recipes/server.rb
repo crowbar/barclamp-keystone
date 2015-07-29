@@ -63,6 +63,9 @@ else
   end
 end
 
+# useful with .openrc
+package "python-openstackclient"
+
 ha_enabled = node[:keystone][:ha][:enabled]
 
 if ha_enabled
@@ -543,10 +546,14 @@ keystone_register "wakeup keystone" do
 end
 
 # Create tenants
-[ node[:keystone][:admin][:tenant],
-  node[:keystone][:service][:tenant],
-  node[:keystone][:default][:tenant]
-].each do |tenant|
+openstack_command = "openstack --os-token \"#{node[:keystone][:service][:token]}\" --os-url \"#{node[:keystone][:api][:versioned_admin_URL]}\" --os-region \"#{node[:keystone][:api][:region]}\""
+if node[:keystone][:api][:version] != '2.0'
+  openstack_command <<  " --os-identity-api-version #{node[:keystone][:api][:version]} --os-project-domain-id default --os-user-domain-id default"
+end
+
+[:admin, :service, :default].each do |tenant_type|
+  tenant = node[:keystone][tenant_type][:tenant]
+
   keystone_register "add default #{tenant} tenant" do
     protocol node[:keystone][:api][:protocol]
     insecure keystone_insecure
@@ -555,6 +562,16 @@ end
     token node[:keystone][:service][:token]
     tenant_name tenant
     action :add_tenant
+  end
+
+  ruby_block "saving id for default #{tenant} tenant" do
+    block do
+      tenant_id = %x[#{openstack_command} project show -f value -c id #{tenant}].chomp
+      if !tenant_id.empty? && node[:keystone][tenant_type][:tenant_id] != tenant_id
+        node[:keystone][tenant_type][:tenant_id] = tenant_id
+        node.save
+      end
+    end
   end
 end
 
@@ -671,11 +688,6 @@ node[:keystone][:monitor] = {} if node[:keystone][:monitor].nil?
 node[:keystone][:monitor][:svcs] = [] if node[:keystone][:monitor][:svcs].nil?
 node[:keystone][:monitor][:svcs] << ["keystone"] if node[:keystone][:monitor][:svcs].empty?
 node.save
-
-# Install openstackclient so that .openrc (created below) can be used
-package "python-openstackclient" do
-  action :install
-end
 
 template "/root/.openrc" do
   source "openrc.erb"
