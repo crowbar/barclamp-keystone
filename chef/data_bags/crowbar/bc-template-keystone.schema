@@ -22,6 +22,7 @@
                     "policy_file": { "type": "str", "required": true },
                     "database_instance": { "type": "str", "required": true },
                     "rabbitmq_instance": { "type": "str", "required": true },
+                    "token_expiration": { "type" : "int", "required" : true },
                     "db": { "type": "map", "required": true, "mapping": {
                       "database": { "type" : "str", "required" : true },
                       "user": { "type" : "str", "required" : true },
