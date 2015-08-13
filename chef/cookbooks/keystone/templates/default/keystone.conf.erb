@@ -1516,7 +1516,7 @@ cert_required = <%= @ssl_cert_required %>
 
 # Amount of time a token should remain valid (in seconds).
 # (integer value)
-#expiration=3600
+expiration=<%= @token_expiration %>
 
 # Controls the token construction, validation, and revocation
 # operations. Core providers are
