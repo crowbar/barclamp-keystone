@@ -12,6 +12,7 @@
       "rabbitmq_instance": "none",
       "domain_specific_drivers": false,
       "domain_config_dir": "/etc/keystone/domains",
+      "token_expiration": 14400,
       "db": {
         "database": "keystone",
         "user": "keystone"
