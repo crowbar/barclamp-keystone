@@ -1,9 +1,13 @@
 def upgrade ta, td, a, d
-  a['api']['version'] = ta['api']['version']
+  unless a['api'].has_key? 'version'
+    a['api']['version'] = ta['api']['version']
+  end
   return a, d
 end
 
 def downgrade ta, td, a, d
-  a['api'].delete('version')
+  unless ta['api'].has_key? 'version'
+    a['api'].delete('version')
+  end
   return a, d
 end
