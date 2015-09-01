@@ -22,6 +22,7 @@
       "policy_file": "policy.json",
       "database_instance": "none",
       "rabbitmq_instance": "none",
+      "token_expiration": 14400,
       "db": {
         "database": "keystone",
         "user": "keystone"
@@ -148,7 +149,7 @@
     "keystone": {
       "crowbar-revision": 0,
       "crowbar-applied": false,
-      "schema-revision": 24,
+      "schema-revision": 25,
       "element_states": {
         "keystone-server": [ "readying", "ready", "applying" ]
       },
