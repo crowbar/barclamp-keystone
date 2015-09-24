@@ -326,6 +326,14 @@ if %w(redhat centos).include?(node.platform)
   end
 end
 
+directory node[:keystone][:domain_config_dir] do
+  action :create
+  owner "root"
+  group node[:keystone][:group]
+  mode 0750
+  only_if { node[:keystone][:domain_specific_drivers] }
+end
+
 crowbar_pacemaker_sync_mark "wait-keystone_db_sync"
 
 execute "keystone-manage db_sync" do
